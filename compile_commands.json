@@ -1,0 +1,70 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-std=c99",
+      "-Wall",
+      "-Wextra",
+      "-Iinclude/",
+      "-ggdb",
+      "-o",
+      "obj/native/scenes/main_menu.o",
+      "src/scenes/main_menu.c"
+    ],
+    "directory": "/home/jacob/src/dev/C/GJ_Moop",
+    "file": "/home/jacob/src/dev/C/GJ_Moop/src/scenes/main_menu.c",
+    "output": "/home/jacob/src/dev/C/GJ_Moop/obj/native/scenes/main_menu.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-std=c99",
+      "-Wall",
+      "-Wextra",
+      "-Iinclude/",
+      "-ggdb",
+      "-o",
+      "obj/native/scenes/scene_1.o",
+      "src/scenes/scene_1.c"
+    ],
+    "directory": "/home/jacob/src/dev/C/GJ_Moop",
+    "file": "/home/jacob/src/dev/C/GJ_Moop/src/scenes/scene_1.c",
+    "output": "/home/jacob/src/dev/C/GJ_Moop/obj/native/scenes/scene_1.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-std=c99",
+      "-Wall",
+      "-Wextra",
+      "-Iinclude/",
+      "-ggdb",
+      "-o",
+      "obj/native/mechanics.o",
+      "src/game/mechanics.c"
+    ],
+    "directory": "/home/jacob/src/dev/C/GJ_Moop",
+    "file": "/home/jacob/src/dev/C/GJ_Moop/src/game/mechanics.c",
+    "output": "/home/jacob/src/dev/C/GJ_Moop/obj/native/mechanics.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-std=c99",
+      "-Wall",
+      "-Wextra",
+      "-Iinclude/",
+      "-ggdb",
+      "-o",
+      "obj/native/main.o",
+      "src/main.c"
+    ],
+    "directory": "/home/jacob/src/dev/C/GJ_Moop",
+    "file": "/home/jacob/src/dev/C/GJ_Moop/src/main.c",
+    "output": "/home/jacob/src/dev/C/GJ_Moop/obj/native/main.o"
+  }
+]
