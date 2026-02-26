@@ -1,0 +1,120 @@
+[
+  {
+    "type"       : "WT_CONTAINER",
+    "name"       : "tab_bar",
+    "x"          : 10,
+    "y"          : 10,
+    "label"      : "Tabs",
+    "boxed"      : 1,
+    "hidden"     : 0,
+    "padding"    : 6,
+    "flex"       : 1,
+    "spacing"    : 10,
+    "fg"         : [ 255, 255,   0, 255 ],
+    "bg"         : [ 129, 151, 150, 255 ],
+    "components" : [
+    {
+      "type"   : "WT_BUTTON",
+      "name"   : "world",
+      "x"      : 10,
+      "y"      : 10,
+      "label"  : "World",
+      "boxed"  : 1,
+      "hidden" : 0,
+      "padding": 1,
+      "fg"     : [ 0, 0, 0, 255 ],
+      "bg"     : [ 164, 221, 219, 0 ]
+    },
+    {
+      "type"   : "WT_BUTTON",
+      "name"   : "item",
+      "x"      : 100,
+      "y"      : 10,
+      "label"  : "Item",
+      "boxed"  : 1,
+      "hidden" : 0,
+      "padding": 0,
+      "fg"     : [ 0, 0, 0, 255 ],
+      "bg"     : [ 115, 190, 211, 0 ]
+
+    },
+    {
+      "type"   : "WT_BUTTON",
+      "name"   : "entity",
+      "x"      : 175,
+      "y"      : 10,
+      "label"  : "Entity",
+      "boxed"  : 1,
+      "hidden" : 0,
+      "padding": 0,
+      "fg"     : [ 0, 0, 0, 255 ],
+      "bg"     : [ 79, 143, 186, 100 ]
+    },
+    {
+      "type"   : "WT_BUTTON",
+      "name"   : "colors",
+      "x"      : 280,
+      "y"      : 10,
+      "label"  : "Colors",
+      "boxed"  : 1,
+      "hidden" : 0,
+      "padding": 0,
+      "fg"     : [ 0, 0, 0, 255 ],
+      "bg"     : [ 60, 94, 139, 100 ]
+    },
+    {
+      "type"   : "WT_BUTTON",
+      "name"   : "ui",
+      "x"      : 390,
+      "y"      : 10,
+      "label"  : "UI",
+      "boxed"  : 1,
+      "hidden" : 0,
+      "padding": 1,
+      "fg"     : [ 0, 0, 0, 255 ],
+      "bg"     : [ 37, 58, 94, 100 ]
+    }
+    ]
+  },
+  {
+    "type"       : "WT_CONTAINER",
+    "name"       : "entity_menu_bar",
+    "x"          : 10,
+    "y"          : 670,
+    "label"      : "Menu",
+    "boxed"      : 1,
+    "hidden"     : 0,
+    "padding"    : 6,
+    "flex"       : 1,
+    "spacing"    : 10,
+    "fg"         : [ 255, 255,   0, 255 ],
+    "bg"         : [ 168, 181, 178, 255 ],
+    "components" : [
+      {
+        "type"    : "WT_BUTTON",
+        "name"    : "creation",
+        "x"       : 10,
+        "y"       : 670,
+        "label"   : "Creation",
+        "boxed"   : 1,
+        "hidden"  : 0,
+        "padding": 1,
+        "fg"      : [   0,   0,   0, 255 ],
+        "bg"      : [ 255, 255, 255, 255 ]
+      },
+      {
+        "type"    : "WT_BUTTON",
+        "name"    : "edit",
+        "x"       : 150,
+        "y"       : 670,
+        "label"   : "Edit",
+        "boxed"   : 1,
+        "hidden"  : 0,
+        "padding": 1,
+        "fg"      : [   0,   0,   0, 255 ],
+        "bg"      : [ 255, 255, 255, 255 ]
+      }
+    ]
+  }
+]
+
