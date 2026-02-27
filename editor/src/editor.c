@@ -7,7 +7,9 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <Archimedes.h>
+#include <Daedalus.h>
 
 #include "ed_defines.h"
 #include "ed_structs.h"
@@ -26,24 +28,12 @@ void EditorInit( void )
 {
   app.delegate.logic = ed_Logic;
   app.delegate.draw  = ed_Draw;
-}
-
-static void ed_Logic( float dt )
-{
-  a_DoInput();
   
-  if ( app.keyboard[ SDL_SCANCODE_ESCAPE ] == 1 )
-  {
-    app.keyboard[SDL_SCANCODE_ESCAPE] = 0;
-    app.running = 0;
-  }
-  
-  a_WidgetsInit( "resources/widgets/editor/editor.json" );
+  a_WidgetsInit( "resources/widgets/editor/editor.auf" );
 
   app.active_widget = a_GetWidget( "tab_bar" );
 
-  aContainerWidget_t* container = 
-    ( aContainerWidget_t* )app.active_widget->data;
+  aContainerWidget_t* container = a_GetContainerFromWidget( "tab_bar" );
 
   for ( int i = 0; i < container->num_components; i++ )
   {
@@ -64,9 +54,25 @@ static void ed_Logic( float dt )
       current->action = e_EntityEditorInit;
     }
   }
+}
 
+static void ed_Logic( float dt )
+{
+  a_DoInput();
+  
+  if ( app.keyboard[ SDL_SCANCODE_ESCAPE ] == 1 )
+  {
+    app.keyboard[SDL_SCANCODE_ESCAPE] = 0;
+    app.running = 0;
+  }
+  
+  if ( app.keyboard[A_F1] == 1 )
+  {
+    app.keyboard[A_F1] = 0;
+    a_WidgetsInit( "resources/widgets/editor/editor.auf" );
+  }
 
-  //a_DoWidget();
+  a_DoWidget();
 }
 
 static void ed_Draw( float dt )
@@ -90,6 +96,6 @@ static void ed_Draw( float dt )
 
   a_DrawText( fps_text, 600, 100, fps_style );
 
-  //a_DrawWidgets();
+  a_DrawWidgets();
 }
 

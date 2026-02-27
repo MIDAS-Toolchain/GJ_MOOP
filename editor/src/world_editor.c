@@ -43,7 +43,7 @@ void e_WorldEditorInit( void )
 
   snprintf( pos_text, 50, "%f,%f\n", selected_pos.x, selected_pos.y );
 
-  a_WidgetsInit( "resources/widgets/editor/world.json" );
+  a_WidgetsInit( "resources/widgets/editor/world.auf" );
   app.active_widget = a_GetWidget( "tab_bar" );
 
   aContainerWidget_t* tab_container = a_GetContainerFromWidget( "tab_bar" );

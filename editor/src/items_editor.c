@@ -15,7 +15,7 @@ void e_ItemEditorInit( void )
   app.delegate.logic = e_ItemEditorLogic;
   app.delegate.draw  = e_ItemEditorDraw;
   
-  a_WidgetsInit( "resources/widgets/editor/items.json" );
+  a_WidgetsInit( "resources/widgets/editor/items.auf" );
   
   app.active_widget = a_GetWidget( "tab_bar" );
 

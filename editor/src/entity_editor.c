@@ -33,7 +33,7 @@ void e_EntityEditorInit( void )
   app.delegate.logic = e_EntityEditorLogic;
   app.delegate.draw  = e_EntityEditorDraw;
   
-  a_WidgetsInit( "resources/widgets/editor/entity.json" );
+  a_WidgetsInit( "resources/widgets/editor/entity.auf" );
   
   app.active_widget = a_GetWidget( "tab_bar" );
 
