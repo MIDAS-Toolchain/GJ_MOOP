@@ -37,6 +37,7 @@ EDITOR_SRCS = editor.c \
 							entity_editor.c\
 							items_editor.c\
 							utils.c\
+							world.c\
 							world_editor.c
 
 ENTITY_EDITOR_SRCS = ee_Creation.c\

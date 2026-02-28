@@ -23,6 +23,27 @@ typedef struct
   aSpriteSheet_t* sheet;
 } TileArray_t;
 
+typedef struct
+{
+  uint32_t tile;
+  char* glyph;
+  aColor_t glyph_fg;
+  aColor_t glyph_bg;
+  uint8_t solid;
+  Ground_t base;
+} Tile_t;
+
+typedef struct
+{
+  Tile_t* background;
+  Tile_t* midground;
+  Tile_t* foreground;
+  int tile_count;
+  int tile_w, tile_h;
+  int rows, cols;
+} World_t;
+
+
 enum
 {
   APOLLO_PALETE = 0
