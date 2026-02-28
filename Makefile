@@ -50,7 +50,8 @@ SCENES_SRCS = main_menu.c \
 							class_select.c \
 							settings.c
 
-GJ_MOOP_SRCS = console.c
+GJ_MOOP_SRCS = console.c\
+							 world.c
 
 UI_SRCS     = inventory_ui.c
 UTILS_SRCS  = draw_utils.c
