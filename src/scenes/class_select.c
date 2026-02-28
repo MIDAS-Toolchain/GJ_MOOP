@@ -5,6 +5,8 @@
 #include "player.h"
 #include "items.h"
 #include "draw_utils.h"
+#include "transitions.h"
+#include "sound_manager.h"
 #include "game_scene.h"
 #include "main_menu.h"
 
@@ -38,6 +40,11 @@ static void mage_button( void );
 #define MODAL_LINE_MD     26.0f
 #define MODAL_LINE_LG     28.0f
 
+/* Drop target (outro transition) */
+#define DROP_SIZE         28.0f
+#define DROP_X_PCT        0.35f   /* fraction of container width */
+#define DROP_Y_PCT        0.90f   /* fraction of container height */
+
 /* Embark button */
 #define EMBARK_W          288.0f
 #define EMBARK_H          58.0f
@@ -59,6 +66,7 @@ static aSoundEffect_t sfx_hover;
 static aSoundEffect_t sfx_click;
 static int back_hovered = 0;
 static int embark_hovered = 0;
+static int pending_class = -1;   /* set when embark triggers outro */
 
 static void cs_RebuildFiltered( void )
 {
@@ -136,6 +144,26 @@ void ClassSelectInit( void )
 static void cs_Logic( float dt )
 {
   a_DoInput();
+
+  /* Outro in progress — blocks all input except ESC to skip */
+  if ( TransitionOutroActive() || TransitionOutroDone() )
+  {
+    if ( app.keyboard[SDL_SCANCODE_ESCAPE] == 1 )
+    {
+      app.keyboard[SDL_SCANCODE_ESCAPE] = 0;
+      TransitionOutroSkip();
+    }
+    TransitionOutroUpdate( dt );
+
+    /* Outro just finished — do the actual scene switch */
+    if ( TransitionOutroDone() )
+    {
+      cs_SelectClass( pending_class );
+      return;
+    }
+    a_DoWidget();
+    return;
+  }
 
   if ( app.keyboard[SDL_SCANCODE_ESCAPE] == 1 )
   {
@@ -292,7 +320,9 @@ static void cs_Logic( float dt )
     if ( hovering && app.mouse.pressed && app.mouse.button == SDL_BUTTON_LEFT )
     {
       a_AudioPlaySound( &sfx_click, NULL );
-      cs_SelectClass( last_class_idx );
+      pending_class = last_class_idx;
+      SoundManagerCrossfadeToGame();
+      TransitionOutroStart();
       return;
     }
 
@@ -302,7 +332,9 @@ static void cs_Logic( float dt )
       app.keyboard[SDL_SCANCODE_RETURN] = 0;
       app.keyboard[SDL_SCANCODE_SPACE] = 0;
       a_AudioPlaySound( &sfx_click, NULL );
-      cs_SelectClass( last_class_idx );
+      pending_class = last_class_idx;
+      SoundManagerCrossfadeToGame();
+      TransitionOutroStart();
       return;
     }
   }
@@ -333,15 +365,18 @@ static void cs_Logic( float dt )
 
 static void cs_Draw( float dt )
 {
+  float outro_a = TransitionGetOutroAlpha();
+  int in_outro = TransitionOutroActive();
+
   /* Draw item panel backgrounds at correct auto-sized height (AUF boxed:0) */
-  if ( last_class_idx >= 0 && num_filtered > 0 )
+  if ( last_class_idx >= 0 && num_filtered > 0 && outro_a > 0.01f )
   {
     int nc = 0, no = 0;
     for ( int i = 0; i < num_filtered; i++ )
       if ( filtered[i].type == FILTERED_CONSUMABLE ) nc++; else no++;
 
-    aColor_t panel_bg = (aColor_t){ 0, 0, 0, 200 };
-    aColor_t panel_fg = (aColor_t){ 255, 255, 255, 255 };
+    aColor_t panel_bg = (aColor_t){ 0, 0, 0, (int)( 200 * outro_a ) };
+    aColor_t panel_fg = (aColor_t){ 255, 255, 255, (int)( 255 * outro_a ) };
 
     aContainerWidget_t* cp = a_GetContainerFromWidget( "consumables_panel" );
     float cp_th = 0;
@@ -358,267 +393,308 @@ static void cs_Draw( float dt )
     a_DrawRect( (aRectf_t){ dp->rect.x, dp->rect.y, dp->rect.w, dp_h }, panel_fg );
   }
 
-  a_DrawWidgets();
+  /* Widget labels — skip once fade is underway (can't modulate widget alpha) */
+  if ( !in_outro )
+    a_DrawWidgets();
 
   /* Update WT_OUTPUT widgets with hovered class data */
   aContainerWidget_t* panel = a_GetContainerFromWidget( "info_panel" );
 
   if ( last_class_idx >= 0 )
   {
-    char stat_buf[128];
-
-    for ( int i = 0; i < panel->num_components; i++ )
+    /* Output widget text — only when not fading */
+    if ( !in_outro )
     {
-      aWidget_t* w = &panel->components[i];
+      char stat_buf[128];
 
-      if ( strncmp( w->name, "out_name", MAX_NAME_LENGTH ) == 0 )
-        a_OutputWidgetSetText( w, g_classes[last_class_idx].name );
-
-      if ( strncmp( w->name, "out_stats", MAX_NAME_LENGTH ) == 0 )
+      for ( int i = 0; i < panel->num_components; i++ )
       {
-        snprintf( stat_buf, sizeof( stat_buf ), "HP: %d  DMG: %d  DEF: %d",
-                  g_classes[last_class_idx].hp, g_classes[last_class_idx].base_damage, g_classes[last_class_idx].defense );
-        a_OutputWidgetSetText( w, stat_buf );
-      }
+        aWidget_t* w = &panel->components[i];
 
-      if ( strncmp( w->name, "out_uses", MAX_NAME_LENGTH ) == 0 )
-      {
-        snprintf( stat_buf, sizeof( stat_buf ), "%s", g_classes[last_class_idx].consumable_type );
-        a_OutputWidgetSetText( w, stat_buf );
-      }
+        if ( strncmp( w->name, "out_name", MAX_NAME_LENGTH ) == 0 )
+          a_OutputWidgetSetText( w, g_classes[last_class_idx].name );
 
-      if ( strncmp( w->name, "out_desc", MAX_NAME_LENGTH ) == 0 )
-        a_OutputWidgetSetText( w, g_classes[last_class_idx].description );
+        if ( strncmp( w->name, "out_stats", MAX_NAME_LENGTH ) == 0 )
+        {
+          snprintf( stat_buf, sizeof( stat_buf ), "HP: %d  DMG: %d  DEF: %d",
+                    g_classes[last_class_idx].hp, g_classes[last_class_idx].base_damage, g_classes[last_class_idx].defense );
+          a_OutputWidgetSetText( w, stat_buf );
+        }
+
+        if ( strncmp( w->name, "out_uses", MAX_NAME_LENGTH ) == 0 )
+        {
+          snprintf( stat_buf, sizeof( stat_buf ), "%s", g_classes[last_class_idx].consumable_type );
+          a_OutputWidgetSetText( w, stat_buf );
+        }
+
+        if ( strncmp( w->name, "out_desc", MAX_NAME_LENGTH ) == 0 )
+          a_OutputWidgetSetText( w, g_classes[last_class_idx].description );
+      }
     }
 
-    /* Draw character image or glyph centered inside image_panel */
+    /* Draw character image or glyph — stays visible during outro */
     {
       aContainerWidget_t* img_panel = a_GetContainerFromWidget( "image_panel" );
       aRectf_t ir = img_panel->rect;
       float portrait_size = ir.h * 1.2f;
       float gx = ir.x + ( ir.w - portrait_size ) / 2.0f;
       float gy = ir.y + ( ir.h - portrait_size ) / 2.0f;
-      DrawImageOrGlyph( g_classes[last_class_idx].image,
-                        g_classes[last_class_idx].glyph,
-                        g_classes[last_class_idx].color,
-                        gx, gy, portrait_size );
+
+      if ( in_outro )
+      {
+        /* Interpolate position + size during drop phase */
+        aContainerWidget_t* csc = a_GetContainerFromWidget( "class_select" );
+        float target_x = csc->rect.x + csc->rect.w * DROP_X_PCT - DROP_SIZE / 2.0f;
+        float target_y = csc->rect.y + csc->rect.h * DROP_Y_PCT - DROP_SIZE / 2.0f;
+
+        float drop_t = TransitionGetOutroDropT();
+        float cur_size = portrait_size + ( DROP_SIZE - portrait_size ) * drop_t;
+        float cur_x = gx + ( target_x - gx ) * drop_t;
+        float cur_y = gy + ( target_y - gy ) * drop_t
+                      + TransitionGetOutroCharOY() * ( 1.0f - drop_t );
+
+        /* DEBUG: red dot at drop target — remove after tuning */
+        a_DrawFilledRect( (aRectf_t){ target_x, target_y, DROP_SIZE, DROP_SIZE },
+                          (aColor_t){ 255, 0, 0, 255 } );
+
+        DrawImageOrGlyph( g_classes[last_class_idx].image,
+                          g_classes[last_class_idx].glyph,
+                          g_classes[last_class_idx].color,
+                          cur_x, cur_y, cur_size );
+      }
+      else
+      {
+        DrawImageOrGlyph( g_classes[last_class_idx].image,
+                          g_classes[last_class_idx].glyph,
+                          g_classes[last_class_idx].color,
+                          gx, gy, portrait_size );
+      }
     }
 
-    /* Draw consumables for the hovered class (left panel) */
+    /* Item lists + modal + buttons — skip during outro */
+    if ( !in_outro )
     {
-      aContainerWidget_t* cpanel = a_GetContainerFromWidget( "consumables_panel" );
-      float title_h = 0;
-      if ( cpanel->num_components > 0 )
-        title_h = cpanel->components[0].rect.h + LIST_TITLE_GAP;
-
-      aRectf_t cr = cpanel->rect;
-      float cx = cr.x + LIST_PAD_X;
-      float cy = cr.y + title_h + LIST_PAD_Y;
-
-      for ( int fi = 0; fi < num_filtered; fi++ )
+      /* Draw consumables for the hovered class (left panel) */
       {
-        if ( filtered[fi].type != FILTERED_CONSUMABLE ) continue;
-        int ci = filtered[fi].index;
-        float row_h = LIST_ITEM_SIZE + LIST_HIT_MARGIN * 2;
+        aContainerWidget_t* cpanel = a_GetContainerFromWidget( "consumables_panel" );
+        float title_h = 0;
+        if ( cpanel->num_components > 0 )
+          title_h = cpanel->components[0].rect.h + LIST_TITLE_GAP;
 
-        /* Highlight selected row — full width */
-        if ( fi == selected_item && browsing_items )
+        aRectf_t cr = cpanel->rect;
+        float cx = cr.x + LIST_PAD_X;
+        float cy = cr.y + title_h + LIST_PAD_Y;
+
+        for ( int fi = 0; fi < num_filtered; fi++ )
         {
-          a_DrawFilledRect( (aRectf_t){ cr.x + LIST_HIT_MARGIN, cy - LIST_HIT_MARGIN, cr.w - LIST_HIT_MARGIN * 2, row_h },
-                            (aColor_t){ 255, 255, 255, 40 } );
-          a_DrawRect( (aRectf_t){ cr.x + LIST_HIT_MARGIN, cy - LIST_HIT_MARGIN, cr.w - LIST_HIT_MARGIN * 2, row_h },
-                      g_consumables[ci].color );
+          if ( filtered[fi].type != FILTERED_CONSUMABLE ) continue;
+          int ci = filtered[fi].index;
+          float row_h = LIST_ITEM_SIZE + LIST_HIT_MARGIN * 2;
+
+          /* Highlight selected row — full width */
+          if ( fi == selected_item && browsing_items )
+          {
+            a_DrawFilledRect( (aRectf_t){ cr.x + LIST_HIT_MARGIN, cy - LIST_HIT_MARGIN, cr.w - LIST_HIT_MARGIN * 2, row_h },
+                              (aColor_t){ 255, 255, 255, 40 } );
+            a_DrawRect( (aRectf_t){ cr.x + LIST_HIT_MARGIN, cy - LIST_HIT_MARGIN, cr.w - LIST_HIT_MARGIN * 2, row_h },
+                        g_consumables[ci].color );
+          }
+
+          DrawImageOrGlyph( g_consumables[ci].image, g_consumables[ci].glyph, g_consumables[ci].color,
+                               cx, cy, LIST_ITEM_SIZE );
+
+          aTextStyle_t ns = a_default_text_style;
+          ns.fg = ( fi == selected_item && browsing_items ) ? g_consumables[ci].color : white;
+          ns.bg = (aColor_t){ 0, 0, 0, 0 };
+          ns.scale = 1.0f;
+          a_DrawText( g_consumables[ci].name, (int)( cx + LIST_ITEM_SIZE + LIST_TEXT_GAP ), (int)( cy + LIST_ITEM_SIZE * 0.25f ), ns );
+
+          cy += LIST_ITEM_SIZE + LIST_ROW_SPACING;
         }
-
-        DrawImageOrGlyph( g_consumables[ci].image, g_consumables[ci].glyph, g_consumables[ci].color,
-                             cx, cy, LIST_ITEM_SIZE );
-
-        aTextStyle_t ns = a_default_text_style;
-        ns.fg = ( fi == selected_item && browsing_items ) ? g_consumables[ci].color : white;
-        ns.bg = (aColor_t){ 0, 0, 0, 0 };
-        ns.scale = 1.0f;
-        a_DrawText( g_consumables[ci].name, (int)( cx + LIST_ITEM_SIZE + LIST_TEXT_GAP ), (int)( cy + LIST_ITEM_SIZE * 0.25f ), ns );
-
-        cy += LIST_ITEM_SIZE + LIST_ROW_SPACING;
       }
-    }
 
-    /* Draw openables for the hovered class (right panel) */
-    {
-      aContainerWidget_t* dpanel = a_GetContainerFromWidget( "doors_panel" );
-      float title_h = 0;
-      if ( dpanel->num_components > 0 )
-        title_h = dpanel->components[0].rect.h + LIST_TITLE_GAP;
-
-      aRectf_t dr = dpanel->rect;
-      float dx = dr.x + LIST_PAD_X;
-      float dy = dr.y + title_h + LIST_PAD_Y;
-
-      for ( int fi = 0; fi < num_filtered; fi++ )
+      /* Draw openables for the hovered class (right panel) */
       {
-        if ( filtered[fi].type != FILTERED_OPENABLE ) continue;
-        int oi = filtered[fi].index;
-        float row_h = LIST_ITEM_SIZE + LIST_HIT_MARGIN * 2;
+        aContainerWidget_t* dpanel = a_GetContainerFromWidget( "doors_panel" );
+        float title_h = 0;
+        if ( dpanel->num_components > 0 )
+          title_h = dpanel->components[0].rect.h + LIST_TITLE_GAP;
 
-        /* Highlight selected row */
-        if ( fi == selected_item && browsing_items )
+        aRectf_t dr = dpanel->rect;
+        float dx = dr.x + LIST_PAD_X;
+        float dy = dr.y + title_h + LIST_PAD_Y;
+
+        for ( int fi = 0; fi < num_filtered; fi++ )
         {
-          a_DrawFilledRect( (aRectf_t){ dr.x + LIST_HIT_MARGIN, dy - LIST_HIT_MARGIN, dr.w - LIST_HIT_MARGIN * 2, row_h },
-                            (aColor_t){ 255, 255, 255, 40 } );
-          a_DrawRect( (aRectf_t){ dr.x + LIST_HIT_MARGIN, dy - LIST_HIT_MARGIN, dr.w - LIST_HIT_MARGIN * 2, row_h },
-                      g_openables[oi].color );
+          if ( filtered[fi].type != FILTERED_OPENABLE ) continue;
+          int oi = filtered[fi].index;
+          float row_h = LIST_ITEM_SIZE + LIST_HIT_MARGIN * 2;
+
+          /* Highlight selected row */
+          if ( fi == selected_item && browsing_items )
+          {
+            a_DrawFilledRect( (aRectf_t){ dr.x + LIST_HIT_MARGIN, dy - LIST_HIT_MARGIN, dr.w - LIST_HIT_MARGIN * 2, row_h },
+                              (aColor_t){ 255, 255, 255, 40 } );
+            a_DrawRect( (aRectf_t){ dr.x + LIST_HIT_MARGIN, dy - LIST_HIT_MARGIN, dr.w - LIST_HIT_MARGIN * 2, row_h },
+                        g_openables[oi].color );
+          }
+
+          DrawImageOrGlyph( g_openables[oi].image, g_openables[oi].glyph, g_openables[oi].color,
+                               dx, dy, LIST_ITEM_SIZE );
+
+          aTextStyle_t ns = a_default_text_style;
+          ns.fg = ( fi == selected_item && browsing_items ) ? g_openables[oi].color : white;
+          ns.bg = (aColor_t){ 0, 0, 0, 0 };
+          ns.scale = 1.0f;
+          a_DrawText( g_openables[oi].name, (int)( dx + LIST_ITEM_SIZE + LIST_TEXT_GAP ), (int)( dy + LIST_ITEM_SIZE * 0.25f ), ns );
+
+          dy += LIST_ITEM_SIZE + LIST_ROW_SPACING;
         }
-
-        DrawImageOrGlyph( g_openables[oi].image, g_openables[oi].glyph, g_openables[oi].color,
-                             dx, dy, LIST_ITEM_SIZE );
-
-        aTextStyle_t ns = a_default_text_style;
-        ns.fg = ( fi == selected_item && browsing_items ) ? g_openables[oi].color : white;
-        ns.bg = (aColor_t){ 0, 0, 0, 0 };
-        ns.scale = 1.0f;
-        a_DrawText( g_openables[oi].name, (int)( dx + LIST_ITEM_SIZE + LIST_TEXT_GAP ), (int)( dy + LIST_ITEM_SIZE * 0.25f ), ns );
-
-        dy += LIST_ITEM_SIZE + LIST_ROW_SPACING;
       }
-    }
 
-    /* Detail modal — centered between panels, shows consumable or openable info */
-    if ( browsing_items && num_filtered > 0 && selected_item < num_filtered )
-    {
-      aContainerWidget_t* cpanel = a_GetContainerFromWidget( "consumables_panel" );
-      aContainerWidget_t* dpanel = a_GetContainerFromWidget( "doors_panel" );
-      aRectf_t cr = cpanel->rect;
-      aRectf_t dr = dpanel->rect;
-
-      float gap_left = cr.x + cr.w;
-      float gap_right = dr.x;
-      float mx = gap_left + ( gap_right - gap_left - MODAL_W ) / 2.0f;
-      float my = cr.y;
-
-      FilteredItem_t* sel = &filtered[selected_item];
-
-      if ( sel->type == FILTERED_CONSUMABLE )
+      /* Detail modal — centered between panels, shows consumable or openable info */
+      if ( browsing_items && num_filtered > 0 && selected_item < num_filtered )
       {
-        ConsumableInfo_t* c = &g_consumables[sel->index];
+        aContainerWidget_t* cpanel = a_GetContainerFromWidget( "consumables_panel" );
+        aContainerWidget_t* dpanel = a_GetContainerFromWidget( "doors_panel" );
+        aRectf_t cr = cpanel->rect;
+        aRectf_t dr = dpanel->rect;
 
-        a_DrawFilledRect( (aRectf_t){ mx, my, MODAL_W, MODAL_H }, (aColor_t){ 0, 0, 0, 255 } );
-        a_DrawRect( (aRectf_t){ mx, my, MODAL_W, MODAL_H }, c->color );
+        float gap_left = cr.x + cr.w;
+        float gap_right = dr.x;
+        float mx = gap_left + ( gap_right - gap_left - MODAL_W ) / 2.0f;
+        float my = cr.y;
 
-        float ty = my + MODAL_PAD_Y;
-        float tx = mx + MODAL_PAD_X;
+        FilteredItem_t* sel = &filtered[selected_item];
 
-        aTextStyle_t ts = a_default_text_style;
-        ts.bg = (aColor_t){ 0, 0, 0, 0 };
+        if ( sel->type == FILTERED_CONSUMABLE )
+        {
+          ConsumableInfo_t* c = &g_consumables[sel->index];
 
-        /* Name */
-        ts.fg = c->color;
-        ts.scale = MODAL_NAME_SCALE;
-        a_DrawText( c->name, (int)tx, (int)ty, ts );
-        ty += MODAL_LINE_LG;
+          a_DrawFilledRect( (aRectf_t){ mx, my, MODAL_W, MODAL_H }, (aColor_t){ 0, 0, 0, 255 } );
+          a_DrawRect( (aRectf_t){ mx, my, MODAL_W, MODAL_H }, c->color );
 
-        /* Effect */
-        char buf[128];
-        ts.fg = white;
-        ts.scale = MODAL_TEXT_SCALE;
-        snprintf( buf, sizeof( buf ), "Effect: %s", c->effect );
-        a_DrawText( buf, (int)tx, (int)ty, ts );
-        ty += MODAL_LINE_SM;
+          float ty = my + MODAL_PAD_Y;
+          float tx = mx + MODAL_PAD_X;
 
-        /* Bonus damage */
-        snprintf( buf, sizeof( buf ), "+%d Bonus Damage", c->bonus_damage );
-        ts.fg = yellow;
-        a_DrawText( buf, (int)tx, (int)ty, ts );
-        ty += MODAL_LINE_MD;
+          aTextStyle_t ts = a_default_text_style;
+          ts.bg = (aColor_t){ 0, 0, 0, 0 };
 
-        /* Description */
-        ts.fg = (aColor_t){ 180, 180, 180, 255 };
-        ts.scale = MODAL_DESC_SCALE;
-        ts.wrap_width = (int)( MODAL_W - MODAL_PAD_X * 2 );
-        a_DrawText( c->description, (int)tx, (int)ty, ts );
+          /* Name */
+          ts.fg = c->color;
+          ts.scale = MODAL_NAME_SCALE;
+          a_DrawText( c->name, (int)tx, (int)ty, ts );
+          ty += MODAL_LINE_LG;
+
+          /* Effect */
+          char buf[128];
+          ts.fg = white;
+          ts.scale = MODAL_TEXT_SCALE;
+          snprintf( buf, sizeof( buf ), "Effect: %s", c->effect );
+          a_DrawText( buf, (int)tx, (int)ty, ts );
+          ty += MODAL_LINE_SM;
+
+          /* Bonus damage */
+          snprintf( buf, sizeof( buf ), "+%d Bonus Damage", c->bonus_damage );
+          ts.fg = yellow;
+          a_DrawText( buf, (int)tx, (int)ty, ts );
+          ty += MODAL_LINE_MD;
+
+          /* Description */
+          ts.fg = (aColor_t){ 180, 180, 180, 255 };
+          ts.scale = MODAL_DESC_SCALE;
+          ts.wrap_width = (int)( MODAL_W - MODAL_PAD_X * 2 );
+          a_DrawText( c->description, (int)tx, (int)ty, ts );
+        }
+        else /* FILTERED_OPENABLE */
+        {
+          OpenableInfo_t* o = &g_openables[sel->index];
+
+          a_DrawFilledRect( (aRectf_t){ mx, my, MODAL_W, MODAL_H }, (aColor_t){ 0, 0, 0, 255 } );
+          a_DrawRect( (aRectf_t){ mx, my, MODAL_W, MODAL_H }, o->color );
+
+          float ty = my + MODAL_PAD_Y;
+          float tx = mx + MODAL_PAD_X;
+
+          aTextStyle_t ts = a_default_text_style;
+          ts.bg = (aColor_t){ 0, 0, 0, 0 };
+
+          /* Name */
+          ts.fg = o->color;
+          ts.scale = MODAL_NAME_SCALE;
+          a_DrawText( o->name, (int)tx, (int)ty, ts );
+          ty += MODAL_LINE_LG;
+
+          /* Kind */
+          char buf[128];
+          ts.fg = white;
+          ts.scale = MODAL_TEXT_SCALE;
+          snprintf( buf, sizeof( buf ), "Type: %s", o->kind );
+          a_DrawText( buf, (int)tx, (int)ty, ts );
+          ty += MODAL_LINE_MD;
+
+          /* Description */
+          ts.fg = (aColor_t){ 180, 180, 180, 255 };
+          ts.scale = MODAL_DESC_SCALE;
+          ts.wrap_width = (int)( MODAL_W - MODAL_PAD_X * 2 );
+          a_DrawText( o->description, (int)tx, (int)ty, ts );
+        }
       }
-      else /* FILTERED_OPENABLE */
+
+      /* Compute shared button anchor */
+      float btn_panel_bot;
       {
-        OpenableInfo_t* o = &g_openables[sel->index];
-
-        a_DrawFilledRect( (aRectf_t){ mx, my, MODAL_W, MODAL_H }, (aColor_t){ 0, 0, 0, 255 } );
-        a_DrawRect( (aRectf_t){ mx, my, MODAL_W, MODAL_H }, o->color );
-
-        float ty = my + MODAL_PAD_Y;
-        float tx = mx + MODAL_PAD_X;
-
-        aTextStyle_t ts = a_default_text_style;
-        ts.bg = (aColor_t){ 0, 0, 0, 0 };
-
-        /* Name */
-        ts.fg = o->color;
-        ts.scale = MODAL_NAME_SCALE;
-        a_DrawText( o->name, (int)tx, (int)ty, ts );
-        ty += MODAL_LINE_LG;
-
-        /* Kind */
-        char buf[128];
-        ts.fg = white;
-        ts.scale = MODAL_TEXT_SCALE;
-        snprintf( buf, sizeof( buf ), "Type: %s", o->kind );
-        a_DrawText( buf, (int)tx, (int)ty, ts );
-        ty += MODAL_LINE_MD;
-
-        /* Description */
-        ts.fg = (aColor_t){ 180, 180, 180, 255 };
-        ts.scale = MODAL_DESC_SCALE;
-        ts.wrap_width = (int)( MODAL_W - MODAL_PAD_X * 2 );
-        a_DrawText( o->description, (int)tx, (int)ty, ts );
+        aContainerWidget_t* cp = a_GetContainerFromWidget( "consumables_panel" );
+        aContainerWidget_t* dp = a_GetContainerFromWidget( "doors_panel" );
+        float cp_bot = cp->rect.y + cp->rect.h;
+        float dp_bot = dp->rect.y + dp->rect.h;
+        btn_panel_bot = cp_bot > dp_bot ? cp_bot : dp_bot;
       }
-    }
-  }
 
-  /* Compute shared button anchor */
-  float btn_panel_bot;
-  {
-    aContainerWidget_t* cp = a_GetContainerFromWidget( "consumables_panel" );
-    aContainerWidget_t* dp = a_GetContainerFromWidget( "doors_panel" );
-    float cp_bot = cp->rect.y + cp->rect.h;
-    float dp_bot = dp->rect.y + dp->rect.h;
-    btn_panel_bot = cp_bot > dp_bot ? cp_bot : dp_bot;
-  }
+      /* Draw embark button — only when a class is hovered */
+      {
+        aContainerWidget_t* cs = a_GetContainerFromWidget( "class_select" );
+        float ex = cs->rect.x + ( cs->rect.w - EMBARK_W ) / 2.0f;
+        float ey = btn_panel_bot + 30.0f;
 
-  /* Draw embark button — only when a class is hovered */
-  if ( last_class_idx >= 0 )
-  {
-    aContainerWidget_t* cs = a_GetContainerFromWidget( "class_select" );
-    float ex = cs->rect.x + ( cs->rect.w - EMBARK_W ) / 2.0f;
-    float ey = btn_panel_bot + 30.0f;
+        DrawButton( ex, ey, EMBARK_W, EMBARK_H, "Embark [Enter]", 2.0f, embark_hovered,
+                    (aColor_t){ 0, 0, 0, 255 }, (aColor_t){ 60, 60, 60, 255 },
+                    (aColor_t){ 222, 222, 222, 255 }, (aColor_t){ 255, 255, 255, 255 } );
+      }
 
-    DrawButton( ex, ey, EMBARK_W, EMBARK_H, "Embark [Enter]", 2.0f, embark_hovered,
-                (aColor_t){ 0, 0, 0, 255 }, (aColor_t){ 60, 60, 60, 255 },
-                (aColor_t){ 222, 222, 222, 255 }, (aColor_t){ 255, 255, 255, 255 } );
-  }
+      /* Draw back button — below embark */
+      {
+        aContainerWidget_t* cs = a_GetContainerFromWidget( "class_select" );
+        float bx = cs->rect.x + ( cs->rect.w - BACK_W ) / 2.0f;
+        float by = btn_panel_bot + 30.0f + EMBARK_H + 30.0f;
 
-  /* Draw back button — below embark */
-  {
-    aContainerWidget_t* cs = a_GetContainerFromWidget( "class_select" );
-    float bx = cs->rect.x + ( cs->rect.w - BACK_W ) / 2.0f;
-    float by = btn_panel_bot + 30.0f + EMBARK_H + 30.0f;
-
-    DrawButton( bx, by, BACK_W, BACK_H, "Back [ESC]", 1.0f, back_hovered,
-                (aColor_t){ 0, 0, 0, 255 }, (aColor_t){ 60, 60, 60, 255 },
-                (aColor_t){ 150, 150, 150, 255 }, white );
+        DrawButton( bx, by, BACK_W, BACK_H, "Back [ESC]", 1.0f, back_hovered,
+                    (aColor_t){ 0, 0, 0, 255 }, (aColor_t){ 60, 60, 60, 255 },
+                    (aColor_t){ 150, 150, 150, 255 }, white );
+      }
+    } /* end !in_outro */
   }
 }
 
 static void mercenary_button( void )
 {
-  cs_SelectClass( 0 );
+  pending_class = 0;
+  SoundManagerCrossfadeToGame();
+  TransitionOutroStart();
 }
 
 static void rogue_button( void )
 {
-  cs_SelectClass( 1 );
+  pending_class = 1;
+  SoundManagerCrossfadeToGame();
+  TransitionOutroStart();
 }
 
 static void mage_button( void )
 {
-  cs_SelectClass( 2 );
+  pending_class = 2;
+  SoundManagerCrossfadeToGame();
+  TransitionOutroStart();
 }
 
 

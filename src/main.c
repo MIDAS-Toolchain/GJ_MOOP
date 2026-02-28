@@ -5,7 +5,9 @@
 #endif
 
 #include <Archimedes.h>
+#include <Daedalus.h>
 #include "defines.h"
+#include "sound_manager.h"
 #include "main_menu.h"
 
 Player_t player;
@@ -38,6 +40,15 @@ int main( void )
 {
   a_Init( SCREEN_WIDTH, SCREEN_HEIGHT, "Archimedes" );
 
+  dLogConfig_t log_cfg = {
+    .default_level    = D_LOG_LEVEL_DEBUG,
+    .colorize_output  = true,
+    .include_timestamp = true
+  };
+  dLogger_t* logger = d_CreateLogger( log_cfg );
+  d_SetGlobalLogger( logger );
+
+  SoundManagerInit();
   MainMenuInit();
 
   #ifdef __EMSCRIPTEN__

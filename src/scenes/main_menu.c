@@ -4,6 +4,7 @@
 #include "defines.h"
 #include "class_select.h"
 #include "settings.h"
+#include "sound_manager.h"
 
 static void mm_Logic( float );
 static void mm_Draw( float );
@@ -51,6 +52,8 @@ void MainMenuInit( void )
   a_WidgetsInit( "resources/widgets/main_menu.auf" );
   app.active_widget = a_GetWidget( "main_menu" );
   mm_BindActions();
+
+  SoundManagerPlayMenu();
 }
 
 static void mm_Logic( float dt )
