@@ -2,6 +2,7 @@
 #include <Archimedes.h>
 
 #include "defines.h"
+#include "draw_utils.h"
 #include "class_select.h"
 #include "settings.h"
 #include "sound_manager.h"
@@ -9,38 +10,19 @@
 static void mm_Logic( float );
 static void mm_Draw( float );
 
-static void play_button( void );
-static void load_button( void );
-static void settings_button( void );
-static void quit_button( void );
+#define NUM_BUTTONS   3
+#define BTN_H         42.0f
+#define BTN_SPACING   14.0f
 
-static void mm_BindActions( void )
-{
-  aContainerWidget_t* container = a_GetContainerFromWidget( "main_menu" );
-  for ( int i = 0; i < container->num_components; i++ )
-  {
-    aWidget_t* current = &container->components[i];
-    if ( strncmp( current->name, "play", MAX_NAME_LENGTH ) == 0 )
-    {
-      current->action = play_button;
-    }
+enum { BTN_PLAY, BTN_SETTINGS, BTN_QUIT };
 
-    if ( strncmp( current->name, "load", MAX_NAME_LENGTH ) == 0 )
-    {
-      current->action = load_button;
-    }
+static const char* btn_labels[NUM_BUTTONS] = { "Play", "Settings", "Quit" };
 
-    if ( strncmp( current->name, "settings", MAX_NAME_LENGTH ) == 0 )
-    {
-      current->action = settings_button;
-    }
+static int cursor = 0;
+static int hovered[NUM_BUTTONS] = { 0 };
 
-    if ( strncmp( current->name, "quit", MAX_NAME_LENGTH ) == 0 )
-    {
-      current->action = quit_button;
-    }
-  }
-}
+static aSoundEffect_t sfx_hover;
+static aSoundEffect_t sfx_click;
 
 void MainMenuInit( void )
 {
@@ -49,59 +31,167 @@ void MainMenuInit( void )
 
   app.options.scale_factor = 1;
 
+  cursor = 0;
+  for ( int i = 0; i < NUM_BUTTONS; i++ )
+    hovered[i] = 0;
+
+  a_AudioLoadSound( "resources/soundeffects/menu_move.wav", &sfx_hover );
+  a_AudioLoadSound( "resources/soundeffects/menu_click.wav", &sfx_click );
+
   a_WidgetsInit( "resources/widgets/main_menu.auf" );
-  app.active_widget = a_GetWidget( "main_menu" );
-  mm_BindActions();
+  app.active_widget = a_GetWidget( "mm_buttons" );
 
   SoundManagerPlayMenu();
+}
+
+static void mm_Execute( int index )
+{
+  a_AudioPlaySound( &sfx_click, NULL );
+
+  switch ( index )
+  {
+    case BTN_PLAY:
+      a_WidgetCacheFree();
+      ClassSelectInit();
+      break;
+    case BTN_SETTINGS:
+      a_WidgetCacheFree();
+      SettingsInit();
+      break;
+    case BTN_QUIT:
+      app.running = 0;
+      break;
+  }
 }
 
 static void mm_Logic( float dt )
 {
   a_DoInput();
 
-  if ( app.keyboard[ SDL_SCANCODE_ESCAPE ] == 1 )
+  /* ESC — quit */
+  if ( app.keyboard[SDL_SCANCODE_ESCAPE] == 1 )
   {
     app.keyboard[SDL_SCANCODE_ESCAPE] = 0;
     app.running = 0;
+    return;
   }
 
+  /* Hot reload AUF */
   if ( app.keyboard[A_R] == 1 )
   {
     app.keyboard[A_R] = 0;
     a_WidgetsInit( "resources/widgets/main_menu.auf" );
-    mm_BindActions();
   }
 
-  a_DoWidget();
+  /* Keyboard nav */
+  if ( app.keyboard[A_W] == 1 || app.keyboard[A_UP] == 1 )
+  {
+    app.keyboard[A_W] = 0;
+    app.keyboard[A_UP] = 0;
+    cursor = ( cursor - 1 + NUM_BUTTONS ) % NUM_BUTTONS;
+    a_AudioPlaySound( &sfx_hover, NULL );
+  }
+
+  if ( app.keyboard[A_S] == 1 || app.keyboard[A_DOWN] == 1 )
+  {
+    app.keyboard[A_S] = 0;
+    app.keyboard[A_DOWN] = 0;
+    cursor = ( cursor + 1 ) % NUM_BUTTONS;
+    a_AudioPlaySound( &sfx_hover, NULL );
+  }
+
+  if ( app.keyboard[SDL_SCANCODE_RETURN] == 1 || app.keyboard[SDL_SCANCODE_SPACE] == 1 )
+  {
+    app.keyboard[SDL_SCANCODE_RETURN] = 0;
+    app.keyboard[SDL_SCANCODE_SPACE] = 0;
+    mm_Execute( cursor );
+    return;
+  }
+
+  /* Mouse — hit test each button rect */
+  aContainerWidget_t* bc = a_GetContainerFromWidget( "mm_buttons" );
+  aRectf_t r = bc->rect;
+  float btn_w = r.w;
+  float total_h = NUM_BUTTONS * BTN_H + ( NUM_BUTTONS - 1 ) * BTN_SPACING;
+  float by = r.y + ( r.h - total_h ) / 2.0f;
+
+  for ( int i = 0; i < NUM_BUTTONS; i++ )
+  {
+    float bx = r.x;
+    float byi = by + i * ( BTN_H + BTN_SPACING );
+
+    int hit = PointInRect( app.mouse.x, app.mouse.y, bx, byi, btn_w, BTN_H );
+
+    if ( hit && !hovered[i] )
+    {
+      cursor = i;
+      a_AudioPlaySound( &sfx_hover, NULL );
+    }
+    hovered[i] = hit;
+
+    if ( hit && app.mouse.pressed && app.mouse.button == SDL_BUTTON_LEFT )
+    {
+      mm_Execute( i );
+      return;
+    }
+  }
 }
 
 static void mm_Draw( float dt )
 {
-  aColor_t color_something = { .r = 0, .g = 0, .b = 255, .a = 255 };
-  aRectf_t rect_something = { .x = 100, .y = 100, .w = 32, .h = 32 };
-  a_DrawFilledRect( rect_something, color_something );
+  /* Dark background fill */
+  a_DrawFilledRect( (aRectf_t){ 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT },
+                    (aColor_t){ 0x09, 0x0a, 0x14, 255 } );
 
-  a_DrawWidgets();
-}
+  /* Title */
+  {
+    aContainerWidget_t* tc = a_GetContainerFromWidget( "mm_title" );
+    aRectf_t tr = tc->rect;
 
-static void play_button( void )
-{
-  a_WidgetCacheFree();
-  ClassSelectInit();
-}
+    aTextStyle_t ts = a_default_text_style;
+    ts.fg = (aColor_t){ 0xde, 0x9e, 0x41, 255 };
+    ts.bg = (aColor_t){ 0, 0, 0, 0 };
+    ts.scale = 2.5f;
+    ts.align = TEXT_ALIGN_CENTER;
+    a_DrawText( "Open Doors Dungeon", (int)( tr.x + tr.w / 2.0f ),
+                (int)( tr.y + tr.h / 2.0f ), ts );
+  }
 
-static void load_button( void )
-{
-}
+  /* Buttons */
+  {
+    aContainerWidget_t* bc = a_GetContainerFromWidget( "mm_buttons" );
+    aRectf_t r = bc->rect;
+    float btn_w = r.w;
+    float total_h = NUM_BUTTONS * BTN_H + ( NUM_BUTTONS - 1 ) * BTN_SPACING;
+    float by = r.y + ( r.h - total_h ) / 2.0f;
 
-static void settings_button( void )
-{
-  a_WidgetCacheFree();
-  SettingsInit();
-}
+    aColor_t bg_norm  = { 0x09, 0x0a, 0x14, 255 };
+    aColor_t bg_hover = { 0x20, 0x2e, 0x37, 255 };
+    aColor_t fg_norm  = { 0x81, 0x97, 0x96, 255 };
+    aColor_t fg_hover = { 0xc7, 0xcf, 0xcc, 255 };
 
-static void quit_button( void )
-{
-  app.running = 0;
+    for ( int i = 0; i < NUM_BUTTONS; i++ )
+    {
+      float bx = r.x;
+      float byi = by + i * ( BTN_H + BTN_SPACING );
+      int sel = ( cursor == i );
+
+      DrawButton( bx, byi, btn_w, BTN_H, btn_labels[i], 1.5f, sel,
+                  bg_norm, bg_hover, fg_norm, fg_hover );
+    }
+  }
+
+  /* Version hint */
+  {
+    aContainerWidget_t* vc = a_GetContainerFromWidget( "mm_version" );
+    aRectf_t vr = vc->rect;
+
+    aTextStyle_t ts = a_default_text_style;
+    ts.fg = (aColor_t){ 0x81, 0x97, 0x96, 120 };
+    ts.bg = (aColor_t){ 0, 0, 0, 0 };
+    ts.scale = 1.0f;
+    ts.align = TEXT_ALIGN_CENTER;
+    a_DrawText( "v0.1", (int)( vr.x + vr.w / 2.0f ),
+                (int)( vr.y + vr.h / 2.0f ), ts );
+  }
 }

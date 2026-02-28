@@ -1,10 +1,10 @@
 #include <Archimedes.h>
 #include "context_menu.h"
 
-#define CTX_BG      (aColor_t){ 20, 20, 20, 255 }
-#define CTX_BORDER  (aColor_t){ 80, 80, 80, 255 }
-#define CTX_SEL_BG  (aColor_t){ 40, 40, 40, 255 }
-#define CTX_SEL_FG  (aColor_t){ 218, 175, 32, 255 }
+#define CTX_BG      (aColor_t){ 0x09, 0x0a, 0x14, 255 }
+#define CTX_BORDER  (aColor_t){ 0x39, 0x4a, 0x50, 255 }
+#define CTX_SEL_BG  (aColor_t){ 0x15, 0x1d, 0x28, 255 }
+#define CTX_SEL_FG  (aColor_t){ 0xde, 0x9e, 0x41, 255 }
 
 
 float DrawContextMenu( float x, float y,
@@ -34,7 +34,7 @@ float DrawContextMenu( float x, float y,
     }
     else
     {
-      ts.fg = white;
+      ts.fg = (aColor_t){ 0xc7, 0xcf, 0xcc, 255 };
     }
 
     a_DrawText( labels[i], (int)( row.x + 8 ), (int)( ry + 5 ), ts );

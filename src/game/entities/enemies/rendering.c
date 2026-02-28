@@ -2,6 +2,7 @@
 
 #include "defines.h"
 #include "enemies.h"
+#include "combat_vfx.h"
 #include "game_viewport.h"
 #include "world.h"
 
@@ -21,9 +22,16 @@ void EnemiesDrawAll( aRectf_t vp_rect, GameCamera_t* cam,
                        (aColor_t){ 0, 0, 0, 80 } );
 
     if ( et->image && gfx_mode == GFX_IMAGE )
-      GV_DrawSprite( vp_rect, cam, et->image,
-                     list[i].world_x, list[i].world_y,
-                     (float)world->tile_w, (float)world->tile_h );
+    {
+      if ( list[i].facing_left )
+        GV_DrawSpriteFlipped( vp_rect, cam, et->image,
+                              list[i].world_x, list[i].world_y,
+                              (float)world->tile_w, (float)world->tile_h, 'x' );
+      else
+        GV_DrawSprite( vp_rect, cam, et->image,
+                       list[i].world_x, list[i].world_y,
+                       (float)world->tile_w, (float)world->tile_h );
+    }
     else
       GV_DrawFilledRect( vp_rect, cam,
                          list[i].world_x, list[i].world_y,

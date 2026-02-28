@@ -20,12 +20,12 @@ static void evt_LookEquipment( int index )
 
   ConsolePushF( con, e->color, "%s looked at %s", player.name, e->name );
   if ( e->damage > 0 )
-    ConsolePushF( con, white, "  DMG: +%d", e->damage );
+    ConsolePushF( con, (aColor_t){ 0xeb, 0xed, 0xe9, 255 }, "  DMG: +%d", e->damage );
   if ( e->defense > 0 )
-    ConsolePushF( con, white, "  DEF: +%d", e->defense );
+    ConsolePushF( con, (aColor_t){ 0xeb, 0xed, 0xe9, 255 }, "  DEF: +%d", e->defense );
   if ( strcmp( e->effect, "none" ) != 0 )
-    ConsolePushF( con, yellow, "  %s (%d)", e->effect, e->effect_value );
-  ConsolePushF( con, (aColor_t){ 160, 160, 160, 255 }, "  %s", e->description );
+    ConsolePushF( con, (aColor_t){ 0xde, 0x9e, 0x41, 255 }, "  %s (%d)", e->effect, e->effect_value );
+  ConsolePushF( con, (aColor_t){ 0x81, 0x97, 0x96, 255 }, "  %s", e->description );
 }
 
 static void evt_LookConsumable( int index )
@@ -34,10 +34,10 @@ static void evt_LookConsumable( int index )
 
   ConsolePushF( con, c->color, "%s looked at %s", player.name, c->name );
   if ( c->bonus_damage > 0 )
-    ConsolePushF( con, white, "  DMG: +%d", c->bonus_damage );
+    ConsolePushF( con, (aColor_t){ 0xeb, 0xed, 0xe9, 255 }, "  DMG: +%d", c->bonus_damage );
   if ( strcmp( c->effect, "none" ) != 0 && strlen( c->effect ) > 0 )
-    ConsolePushF( con, yellow, "  %s", c->effect );
-  ConsolePushF( con, (aColor_t){ 160, 160, 160, 255 }, "  %s", c->description );
+    ConsolePushF( con, (aColor_t){ 0xde, 0x9e, 0x41, 255 }, "  %s", c->effect );
+  ConsolePushF( con, (aColor_t){ 0x81, 0x97, 0x96, 255 }, "  %s", c->description );
 }
 
 static void evt_Equip( int index )
@@ -50,7 +50,7 @@ static void evt_Equip( int index )
 static void evt_Unequip( int index )
 {
   EquipmentInfo_t* e = &g_equipment[index];
-  ConsolePushF( con, (aColor_t){ 160, 160, 160, 255 }, "%s unequipped %s",
+  ConsolePushF( con, (aColor_t){ 0x81, 0x97, 0x96, 255 }, "%s unequipped %s",
                 player.name, e->name );
   PlayerRecalcStats();
 }

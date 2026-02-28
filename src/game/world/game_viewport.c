@@ -1,7 +1,10 @@
+#include <stdlib.h>
 #include <Archimedes.h>
+#include <Daedalus.h>
 
 #include "world.h"
 #include "game_viewport.h"
+#include "visibility.h"
 
 #define GV_ZOOM_STEP 0.9f  /* multiplier per scroll tick (< 1 = zoom in) */
 
@@ -43,6 +46,14 @@ void GV_DrawWorld( aRectf_t rect, GameCamera_t* cam,
     Tile_t bg = world->background[i];
     Tile_t mg = world->midground[i];
     Tile_t fg = world->foreground[i];
+
+    if ( bg.tile == TILE_EMPTY )
+    {
+      d_LogFatalF( "[GV_DrawWorld] background tile %d has TILE_EMPTY — "
+                   "background must always have a valid tile index", i );
+      exit( 1 );
+    }
+
     int has_mg = ( mg.tile != TILE_EMPTY );
     int has_fg = ( fg.tile != TILE_EMPTY );
 
@@ -92,6 +103,45 @@ void GV_DrawWorld( aRectf_t rect, GameCamera_t* cam,
       if ( has_fg )
         a_BlitRect( tileset[fg.tile].img, NULL, &dst, 1.0f );
     }
+  }
+}
+
+void GV_DrawDarkness( aRectf_t rect, GameCamera_t* cam, World_t* world,
+                      float fade )
+{
+  /* fade: 0 = everything black (intro start), 1 = normal darkness only */
+  int floor_a = (int)( ( 1.0f - fade ) * 255 );
+
+  float sx, sy, cl, ct;
+  gv_transform( rect, cam, &sx, &sy, &cl, &ct );
+
+  for ( int i = 0; i < world->tile_count; i++ )
+  {
+    int x = i % world->width;
+    int y = i / world->width;
+
+    float v = VisibilityGet( x, y );
+    int vis_a = (int)( ( 1.0f - v ) * 255 );
+    int alpha = vis_a > floor_a ? vis_a : floor_a;
+    if ( alpha < 1 ) continue;
+    if ( alpha > 255 ) alpha = 255;
+
+    float wx = x * world->tile_w;
+    float wy = y * world->tile_h;
+
+    float dx = ( wx - cl ) * sx + rect.x;
+    float dy = ( wy - ct ) * sy + rect.y;
+    float dw = world->tile_w * sx;
+    float dh = world->tile_h * sy;
+
+    /* Snap to pixel grid like GV_DrawWorld */
+    float nx = (int)dx;
+    float ny = (int)dy;
+    float nw = (int)( dx + dw + 0.5f ) - (int)dx;
+    float nh = (int)( dy + dh + 0.5f ) - (int)dy;
+
+    a_DrawFilledRect( (aRectf_t){ nx, ny, nw, nh },
+                      (aColor_t){ 0, 0, 0, alpha } );
   }
 }
 

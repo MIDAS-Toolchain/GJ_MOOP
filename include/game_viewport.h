@@ -15,6 +15,11 @@ void GV_DrawWorld( aRectf_t rect, GameCamera_t* cam,
                    World_t* world, aTileset_t* tileset,
                    uint8_t draw_ascii );
 
+/* Draw per-tile darkness overlay based on visibility.
+   fade = overall opacity multiplier (0 = no darkness, 1 = full). */
+void GV_DrawDarkness( aRectf_t rect, GameCamera_t* cam, World_t* world,
+                      float fade );
+
 /* Draw a sprite centered at (wx, wy) with given world size */
 void GV_DrawSprite( aRectf_t rect, GameCamera_t* cam,
                     aImage_t* img,

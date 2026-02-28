@@ -5,8 +5,9 @@
 #include "movement.h"
 #include "tile_actions.h"
 #include "look_mode.h"
+#include "visibility.h"
 
-#define GOLD (aColor_t){ 218, 175, 32, 255 }
+#define GOLD (aColor_t){ 0xde, 0x9e, 0x41, 255 }
 
 extern Player_t player;
 
@@ -72,25 +73,29 @@ int LookModeLogic( int mouse_moved )
   {
     app.keyboard[SDL_SCANCODE_UP] = 0;
     app.keyboard[SDL_SCANCODE_W] = 0;
-    if ( look_col > 0 ) { look_col--; a_AudioPlaySound( sfx_move, NULL ); }
+    if ( look_col > 0 && VisibilityGet( look_row, look_col - 1 ) > 0.01f )
+    { look_col--; a_AudioPlaySound( sfx_move, NULL ); }
   }
   if ( app.keyboard[SDL_SCANCODE_DOWN] == 1 || app.keyboard[SDL_SCANCODE_S] == 1 )
   {
     app.keyboard[SDL_SCANCODE_DOWN] = 0;
     app.keyboard[SDL_SCANCODE_S] = 0;
-    if ( look_col < world->height - 1 ) { look_col++; a_AudioPlaySound( sfx_move, NULL ); }
+    if ( look_col < world->height - 1 && VisibilityGet( look_row, look_col + 1 ) > 0.01f )
+    { look_col++; a_AudioPlaySound( sfx_move, NULL ); }
   }
   if ( app.keyboard[SDL_SCANCODE_LEFT] == 1 || app.keyboard[SDL_SCANCODE_A] == 1 )
   {
     app.keyboard[SDL_SCANCODE_LEFT] = 0;
     app.keyboard[SDL_SCANCODE_A] = 0;
-    if ( look_row > 0 ) { look_row--; a_AudioPlaySound( sfx_move, NULL ); }
+    if ( look_row > 0 && VisibilityGet( look_row - 1, look_col ) > 0.01f )
+    { look_row--; a_AudioPlaySound( sfx_move, NULL ); }
   }
   if ( app.keyboard[SDL_SCANCODE_RIGHT] == 1 || app.keyboard[SDL_SCANCODE_D] == 1 )
   {
     app.keyboard[SDL_SCANCODE_RIGHT] = 0;
     app.keyboard[SDL_SCANCODE_D] = 0;
-    if ( look_row < world->width - 1 ) { look_row++; a_AudioPlaySound( sfx_move, NULL ); }
+    if ( look_row < world->width - 1 && VisibilityGet( look_row + 1, look_col ) > 0.01f )
+    { look_row++; a_AudioPlaySound( sfx_move, NULL ); }
   }
 
   /* Space/Enter opens tile action menu at cursor */

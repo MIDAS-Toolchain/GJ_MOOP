@@ -18,8 +18,8 @@ extern Player_t player;
 #define TB_SECTION_GAP  32.0f   /* gap between name and stats */
 #define TB_ESC_SCALE     1.0f
 
-#define PANEL_BG  (aColor_t){ 0, 0, 0, 200 }
-#define PANEL_FG  (aColor_t){ 255, 255, 255, 255 }
+#define PANEL_BG  (aColor_t){ 0x09, 0x0a, 0x14, 200 }
+#define PANEL_FG  (aColor_t){ 0xc7, 0xcf, 0xcc, 255 }
 
 void HUDDrawTopBar( void )
 {
@@ -43,7 +43,7 @@ void HUDDrawTopBar( void )
   float ty = r.y + TB_PAD_Y;
 
   /* Player name — left side, larger */
-  ts.fg = white;
+  ts.fg = (aColor_t){ 0xeb, 0xed, 0xe9, 255 };
   ts.scale = TB_NAME_SCALE;
   ts.align = TEXT_ALIGN_LEFT;
   a_DrawText( player.name, (int)tx, (int)ty, ts );
@@ -57,15 +57,15 @@ void HUDDrawTopBar( void )
   ts.align = TEXT_ALIGN_LEFT;
   char buf[48];
 
-  /* HP — label white, numbers colored by percentage */
-  ts.fg = white;
+  /* HP — label near-white, numbers colored by percentage */
+  ts.fg = (aColor_t){ 0xeb, 0xed, 0xe9, 255 };
   a_DrawText( "HP: ", (int)sx, (int)( ty + 4 ), ts );
   float hp_label_w = 4 * 8.0f * TB_STAT_SCALE;
 
   float hp_pct = ( player.max_hp > 0 ) ? (float)player.hp / player.max_hp : 0;
-  if ( hp_pct > 0.5f )       ts.fg = (aColor_t){ 255, 60, 60, 255 };
-  else if ( hp_pct > 0.25f ) ts.fg = yellow;
-  else                        ts.fg = (aColor_t){ 200, 0, 0, 255 };
+  if ( hp_pct > 0.5f )       ts.fg = (aColor_t){ 0x75, 0xa7, 0x43, 255 };
+  else if ( hp_pct > 0.25f ) ts.fg = (aColor_t){ 0xde, 0x9e, 0x41, 255 };
+  else                        ts.fg = (aColor_t){ 0xa5, 0x30, 0x30, 255 };
 
   snprintf( buf, sizeof( buf ), "%d/%d", player.hp, player.max_hp );
   a_DrawText( buf, (int)( sx + hp_label_w ), (int)( ty + 4 ), ts );
@@ -73,18 +73,18 @@ void HUDDrawTopBar( void )
 
   /* DMG */
   snprintf( buf, sizeof( buf ), "DMG: %d", PlayerStat( "damage" ) );
-  ts.fg = white;
+  ts.fg = (aColor_t){ 0xeb, 0xed, 0xe9, 255 };
   a_DrawText( buf, (int)sx, (int)( ty + 4 ), ts );
   sx += strlen( buf ) * 8.0f * TB_STAT_SCALE + TB_STAT_GAP;
 
   /* DEF */
   snprintf( buf, sizeof( buf ), "DEF: %d", PlayerStat( "defense" ) );
-  ts.fg = white;
+  ts.fg = (aColor_t){ 0xeb, 0xed, 0xe9, 255 };
   a_DrawText( buf, (int)sx, (int)( ty + 4 ), ts );
   sx += strlen( buf ) * 8.0f * TB_STAT_SCALE + TB_STAT_GAP;
 
-  /* Equipment effects — yellow */
-  ts.fg = yellow;
+  /* Equipment effects — gold */
+  ts.fg = (aColor_t){ 0xde, 0x9e, 0x41, 255 };
   for ( int i = 0; i < EQUIP_SLOTS; i++ )
   {
     if ( player.equipment[i] < 0 ) continue;
@@ -97,7 +97,7 @@ void HUDDrawTopBar( void )
 
   /* Settings[ESC] — far right */
   ts.scale = TB_ESC_SCALE;
-  ts.fg = (aColor_t){ 160, 160, 160, 255 };
+  ts.fg = (aColor_t){ 0x57, 0x72, 0x77, 255 };
   ts.align = TEXT_ALIGN_RIGHT;
   a_DrawText( "Settings[ESC]", (int)( r.x + r.w - TB_PAD_X ), (int)( ty + 6 ), ts );
 }

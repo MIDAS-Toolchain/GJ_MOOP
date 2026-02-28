@@ -105,8 +105,9 @@ Enemy_t* EnemySpawn( Enemy_t* list, int* count,
   e->col      = col;
   e->world_x  = row * tile_w + tile_w / 2.0f;
   e->world_y  = col * tile_h + tile_h / 2.0f;
-  e->hp       = g_enemy_types[type_idx].hp;
-  e->alive    = 1;
+  e->hp             = g_enemy_types[type_idx].hp;
+  e->alive          = 1;
+  e->turns_since_hit = 99;
   ( *count )++;
   return e;
 }

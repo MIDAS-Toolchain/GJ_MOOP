@@ -27,6 +27,8 @@ typedef struct
   float world_x, world_y;
   int   hp;
   int   alive;
+  int   facing_left;
+  int   turns_since_hit;
 } Enemy_t;
 
 extern EnemyType_t g_enemy_types[MAX_ENEMY_TYPES];

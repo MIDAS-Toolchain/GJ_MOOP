@@ -70,10 +70,12 @@ SYS_SRCS = tween.c \
 					 game_events.c \
 					 transitions.c \
 					 sound_manager.c \
-					 combat.c
+					 combat.c \
+					 combat_vfx.c
 
 WORLD_SRCS = world.c \
-						 game_viewport.c\
+						 game_viewport.c \
+						 visibility.c
 
 ENEMIES_SRCS = enemies.c \
 							 enemy_utils.c \

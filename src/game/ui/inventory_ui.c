@@ -11,11 +11,11 @@
 #include "inventory_ui.h"
 
 /* Panel colors */
-#define PANEL_FG  (aColor_t){ 255, 255, 255, 255 }
-#define GOLD      (aColor_t){ 218, 175, 32, 255 }
-#define CELL_BG   (aColor_t){ 40, 40, 40, 255 }
-#define CELL_FG   (aColor_t){ 80, 80, 80, 255 }
-#define GREY      (aColor_t){ 160, 160, 160, 255 }
+#define PANEL_FG  (aColor_t){ 0xc7, 0xcf, 0xcc, 255 }
+#define GOLD      (aColor_t){ 0xde, 0x9e, 0x41, 255 }
+#define CELL_BG   (aColor_t){ 0x15, 0x1d, 0x28, 255 }
+#define CELL_FG   (aColor_t){ 0x39, 0x4a, 0x50, 255 }
+#define GREY      (aColor_t){ 0x57, 0x72, 0x77, 255 }
 
 /* Inventory grid layout */
 #define INV_TITLE_H   30.0f
@@ -714,7 +714,7 @@ static void DrawInventoryGrid( void )
 
       /* Cursor highlight */
       if ( ui_focus == 1 && show_item_hover && player.inv_focused && idx == player.inv_cursor )
-        a_DrawRect( cr, inv_action_open ? GOLD : white );
+        a_DrawRect( cr, inv_action_open ? GOLD : (aColor_t){ 0xeb, 0xed, 0xe9, 255 } );
     }
   }
 }
@@ -751,18 +751,18 @@ static void DrawEquipmentRows( void )
       float iy = row_y + ( EQ_ROW_H - EQ_ICON_SIZE ) / 2.0f;
       DrawImageOrGlyph( NULL, e->glyph, e->color, ix, iy, EQ_ICON_SIZE );
 
-      ts.fg = white;
+      ts.fg = (aColor_t){ 0xeb, 0xed, 0xe9, 255 };
       a_DrawText( e->name, (int)( ix + EQ_ICON_SIZE + 6 ), (int)( row_y + 8 ), ts );
     }
     else
     {
-      ts.fg = (aColor_t){ 80, 80, 80, 255 };
+      ts.fg = (aColor_t){ 0x39, 0x4a, 0x50, 255 };
       a_DrawText( "---", (int)( row_rect.x + 44 ), (int)( row_y + 8 ), ts );
     }
 
     /* Cursor highlight */
     if ( ui_focus == 1 && show_item_hover && !player.inv_focused && i == player.equip_cursor )
-      a_DrawRect( row_rect, eq_action_open ? GOLD : white );
+      a_DrawRect( row_rect, eq_action_open ? GOLD : (aColor_t){ 0xeb, 0xed, 0xe9, 255 } );
   }
 }
 
@@ -778,7 +778,7 @@ void InventoryUIDraw( void )
     aColor_t ic = PANEL_FG;
     ic.a = (int)( ic.a * ui_alpha );
     if ( ui_focus == 1 && player.inv_focused )
-      ic = inv_action_open ? GOLD : white;
+      ic = inv_action_open ? GOLD : (aColor_t){ 0xeb, 0xed, 0xe9, 255 };
     a_DrawRect( ir, ic );
   }
 
@@ -790,7 +790,7 @@ void InventoryUIDraw( void )
     aColor_t kc = PANEL_FG;
     kc.a = (int)( kc.a * ui_alpha );
     if ( ui_focus == 1 && !player.inv_focused )
-      kc = eq_action_open ? GOLD : white;
+      kc = eq_action_open ? GOLD : (aColor_t){ 0xeb, 0xed, 0xe9, 255 };
     a_DrawRect( kr, kc );
   }
 
@@ -798,8 +798,8 @@ void InventoryUIDraw( void )
   {
     aWidget_t* inv_t = a_GetWidget( "inv_title" );
     aWidget_t* key_t = a_GetWidget( "key_title" );
-    if ( inv_t ) inv_t->fg = ( ui_focus == 1 && player.inv_focused && inv_action_open ) ? GOLD : white;
-    if ( key_t ) key_t->fg = ( ui_focus == 1 && !player.inv_focused && eq_action_open ) ? GOLD : white;
+    if ( inv_t ) inv_t->fg = ( ui_focus == 1 && player.inv_focused && inv_action_open ) ? GOLD : (aColor_t){ 0xeb, 0xed, 0xe9, 255 };
+    if ( key_t ) key_t->fg = ( ui_focus == 1 && !player.inv_focused && eq_action_open ) ? GOLD : (aColor_t){ 0xeb, 0xed, 0xe9, 255 };
   }
 
   /* [Tab] hint */
@@ -807,7 +807,7 @@ void InventoryUIDraw( void )
     aContainerWidget_t* ip = a_GetContainerFromWidget( "inv_panel" );
     aTextStyle_t ht = a_default_text_style;
     ht.bg = (aColor_t){ 0, 0, 0, 0 };
-    ht.fg = ui_focus == 1 ? GOLD : (aColor_t){ 160, 160, 160, 255 };
+    ht.fg = ui_focus == 1 ? GOLD : (aColor_t){ 0x57, 0x72, 0x77, 255 };
     ht.fg.a = (int)( ht.fg.a * ui_alpha );
     ht.scale = 1.0f;
     ht.align = TEXT_ALIGN_CENTER;
@@ -830,7 +830,7 @@ void InventoryUIDraw( void )
     float my = kp->rect.y + EQ_TITLE_H + player.equip_cursor * ( EQ_ROW_H + EQ_PAD );
     if ( my + EQ_MODAL_H > kp->rect.y + kp->rect.h ) my = kp->rect.y + kp->rect.h - EQ_MODAL_H;
 
-    a_DrawFilledRect( (aRectf_t){ mx, my, EQ_MODAL_W, EQ_MODAL_H }, (aColor_t){ 0, 0, 0, 255 } );
+    a_DrawFilledRect( (aRectf_t){ mx, my, EQ_MODAL_W, EQ_MODAL_H }, (aColor_t){ 0x09, 0x0a, 0x14, 255 } );
     a_DrawRect( (aRectf_t){ mx, my, EQ_MODAL_W, EQ_MODAL_H }, e->color );
 
     float ty = my + EQ_MODAL_PAD_Y;
@@ -845,7 +845,7 @@ void InventoryUIDraw( void )
     ty += EQ_MODAL_LINE_LG;
 
     char buf[128];
-    ts.fg = white;
+    ts.fg = (aColor_t){ 0xeb, 0xed, 0xe9, 255 };
     ts.scale = EQ_MODAL_TEXT_S;
     if ( e->damage > 0 )
     {
@@ -861,7 +861,7 @@ void InventoryUIDraw( void )
     }
     if ( strcmp( e->effect, "none" ) != 0 )
     {
-      ts.fg = yellow;
+      ts.fg = (aColor_t){ 0xde, 0x9e, 0x41, 255 };
       snprintf( buf, sizeof( buf ), "%s (%d)", e->effect, e->effect_value );
       a_DrawText( buf, (int)tx, (int)ty, ts );
       ty += EQ_MODAL_LINE_MD;
@@ -871,7 +871,7 @@ void InventoryUIDraw( void )
       ty += EQ_MODAL_LINE_SM;
     }
 
-    ts.fg = (aColor_t){ 180, 180, 180, 255 };
+    ts.fg = (aColor_t){ 0xa8, 0xb5, 0xb2, 255 };
     ts.scale = EQ_MODAL_DESC_S;
     ts.wrap_width = (int)( EQ_MODAL_W - EQ_MODAL_PAD_X * 2 );
     a_DrawText( e->description, (int)tx, (int)ty, ts );
@@ -923,7 +923,7 @@ void InventoryUIDraw( void )
       EquipmentInfo_t* e = &g_equipment[slot->index];
       item_name = e->name;
 
-      a_DrawFilledRect( (aRectf_t){ mx, my, EQ_MODAL_W, EQ_MODAL_H }, (aColor_t){ 0, 0, 0, 255 } );
+      a_DrawFilledRect( (aRectf_t){ mx, my, EQ_MODAL_W, EQ_MODAL_H }, (aColor_t){ 0x09, 0x0a, 0x14, 255 } );
       a_DrawRect( (aRectf_t){ mx, my, EQ_MODAL_W, EQ_MODAL_H }, e->color );
 
       float ty = my + EQ_MODAL_PAD_Y;
@@ -937,7 +937,7 @@ void InventoryUIDraw( void )
       ty += EQ_MODAL_LINE_LG;
 
       char buf[128];
-      ts.fg = white;
+      ts.fg = (aColor_t){ 0xeb, 0xed, 0xe9, 255 };
       ts.scale = EQ_MODAL_TEXT_S;
       if ( e->damage > 0 )
       {
@@ -953,7 +953,7 @@ void InventoryUIDraw( void )
       }
       if ( strcmp( e->effect, "none" ) != 0 )
       {
-        ts.fg = yellow;
+        ts.fg = (aColor_t){ 0xde, 0x9e, 0x41, 255 };
         snprintf( buf, sizeof( buf ), "%s (%d)", e->effect, e->effect_value );
         a_DrawText( buf, (int)tx, (int)ty, ts );
         ty += EQ_MODAL_LINE_MD;
@@ -963,7 +963,7 @@ void InventoryUIDraw( void )
         ty += EQ_MODAL_LINE_SM;
       }
 
-      ts.fg = (aColor_t){ 180, 180, 180, 255 };
+      ts.fg = (aColor_t){ 0xa8, 0xb5, 0xb2, 255 };
       ts.scale = EQ_MODAL_DESC_S;
       ts.wrap_width = (int)( EQ_MODAL_W - EQ_MODAL_PAD_X * 2 );
       a_DrawText( e->description, (int)tx, (int)ty, ts );
@@ -973,7 +973,7 @@ void InventoryUIDraw( void )
       ConsumableInfo_t* c = &g_consumables[slot->index];
       item_name = c->name;
 
-      a_DrawFilledRect( (aRectf_t){ mx, my, EQ_MODAL_W, EQ_MODAL_H }, (aColor_t){ 0, 0, 0, 255 } );
+      a_DrawFilledRect( (aRectf_t){ mx, my, EQ_MODAL_W, EQ_MODAL_H }, (aColor_t){ 0x09, 0x0a, 0x14, 255 } );
       a_DrawRect( (aRectf_t){ mx, my, EQ_MODAL_W, EQ_MODAL_H }, c->color );
 
       float ty = my + EQ_MODAL_PAD_Y;
@@ -987,7 +987,7 @@ void InventoryUIDraw( void )
       ty += EQ_MODAL_LINE_LG;
 
       char buf[128];
-      ts.fg = white;
+      ts.fg = (aColor_t){ 0xeb, 0xed, 0xe9, 255 };
       ts.scale = EQ_MODAL_TEXT_S;
       if ( c->bonus_damage > 0 )
       {
@@ -997,7 +997,7 @@ void InventoryUIDraw( void )
       }
       if ( strcmp( c->effect, "none" ) != 0 && strlen( c->effect ) > 0 )
       {
-        ts.fg = yellow;
+        ts.fg = (aColor_t){ 0xde, 0x9e, 0x41, 255 };
         a_DrawText( c->effect, (int)tx, (int)ty, ts );
         ty += EQ_MODAL_LINE_MD;
       }
@@ -1006,7 +1006,7 @@ void InventoryUIDraw( void )
         ty += EQ_MODAL_LINE_SM;
       }
 
-      ts.fg = (aColor_t){ 180, 180, 180, 255 };
+      ts.fg = (aColor_t){ 0xa8, 0xb5, 0xb2, 255 };
       ts.scale = EQ_MODAL_DESC_S;
       ts.wrap_width = (int)( EQ_MODAL_W - EQ_MODAL_PAD_X * 2 );
       a_DrawText( c->description, (int)tx, (int)ty, ts );

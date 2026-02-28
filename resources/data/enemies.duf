@@ -4,7 +4,7 @@
 @rat {
     name: "Dungeon Rat"
     glyph: "r"
-    hp: 2
+    hp: 6
     damage: 1
     defense: 0
     ai: "basic"

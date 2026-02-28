@@ -19,6 +19,12 @@ static Console_t*     console;
 static aSoundEffect_t* sfx_move;
 static aSoundEffect_t* sfx_click;
 
+static aSoundEffect_t sfx_door_white;
+static aSoundEffect_t sfx_door_red;
+static aSoundEffect_t sfx_door_green;
+static aSoundEffect_t sfx_door_blue;
+static aSoundEffect_t sfx_door_fail;
+
 static int tile_action_open    = 0;
 static int tile_action_cursor  = 0;
 static int tile_action_row, tile_action_col;
@@ -29,6 +35,94 @@ static int tile_has_door( int r, int c )
 {
   int idx = c * world->width + r;
   return world->midground[idx].tile != TILE_EMPTY;
+}
+
+/* Can the current player class open this door?
+   Tile indices: 2=blue(mage), 3=green(rogue), 4=red(mercenary), 5=white(any) */
+static int door_can_open( uint32_t tile )
+{
+  const char* cls = player.name;
+  switch ( tile )
+  {
+    case 5: return 1;                                    /* white — anyone */
+    case 4: return ( strcmp( cls, "Mercenary" ) == 0 );  /* red */
+    case 3: return ( strcmp( cls, "Rogue" ) == 0 );      /* green */
+    case 2: return ( strcmp( cls, "Mage" ) == 0 );       /* blue */
+    default: return 0;
+  }
+}
+
+/* Print door description to console */
+static void door_describe( int r, int c )
+{
+  int idx = c * world->width + r;
+  Tile_t* door = &world->midground[idx];
+
+  switch ( door->tile )
+  {
+    case 5: /* white */
+      ConsolePush( console, "An unlocked door.", door->glyph_fg );
+      ConsolePush( console, "  Anybody can open this.", door->glyph_fg );
+      break;
+    case 4: /* red — mercenary */
+      ConsolePush( console, "A locked door.", door->glyph_fg );
+      if ( door_can_open( door->tile ) )
+        ConsolePush( console, "  You can bust it down.", door->glyph_fg );
+      else
+        ConsolePush( console, "  Someone stronger could bust it down.", door->glyph_fg );
+      break;
+    case 3: /* green — rogue */
+      ConsolePush( console, "A locked door.", door->glyph_fg );
+      if ( door_can_open( door->tile ) )
+        ConsolePush( console, "  You can pick this lock.", door->glyph_fg );
+      else
+        ConsolePush( console, "  Someone more agile could pick this lock.", door->glyph_fg );
+      break;
+    case 2: /* blue — mage */
+      ConsolePush( console, "A locked door.", door->glyph_fg );
+      if ( door_can_open( door->tile ) )
+        ConsolePush( console, "  You can dispel this barrier.", door->glyph_fg );
+      else
+        ConsolePush( console, "  Someone smarter could dispel this barrier.", door->glyph_fg );
+      break;
+    default:
+      ConsolePush( console, "A door.", door->glyph_fg );
+      break;
+  }
+}
+
+/* Try to open a door at (r,c). Returns 1 if it opened, 0 if locked. */
+int TileActionsTryOpen( int r, int c )
+{
+  int idx = c * world->width + r;
+  Tile_t* door = &world->midground[idx];
+
+  if ( door_can_open( door->tile ) )
+  {
+    /* Play the matching open sound */
+    switch ( door->tile )
+    {
+      case 5: a_AudioPlaySound( &sfx_door_white, NULL ); break;
+      case 4: a_AudioPlaySound( &sfx_door_red,   NULL ); break;
+      case 3: a_AudioPlaySound( &sfx_door_green, NULL ); break;
+      case 2: a_AudioPlaySound( &sfx_door_blue,  NULL ); break;
+    }
+    switch ( door->tile )
+    {
+      case 4:  ConsolePushF( console, door->glyph_fg, "You break down the door." ); break;
+      case 3:  ConsolePushF( console, door->glyph_fg, "You pick the lock." );       break;
+      case 2:  ConsolePushF( console, door->glyph_fg, "You dispel the barrier." );  break;
+      default: ConsolePushF( console, door->glyph_fg, "You open the door." );       break;
+    }
+    door->tile  = TILE_EMPTY;
+    door->solid = 0;
+    door->glyph = "";
+    return 1;
+  }
+
+  a_AudioPlaySound( &sfx_door_fail, NULL );
+  ConsolePush( console, "The door is locked.", door->glyph_fg );
+  return 0;
 }
 
 /* Build the label list for the current tile action target */
@@ -74,6 +168,12 @@ void TileActionsInit( World_t* w, GameCamera_t* cam, Console_t* con,
   sfx_move  = move;
   sfx_click = click;
   tile_action_open = 0;
+
+  a_AudioLoadSound( "resources/soundeffects/door_white_open.wav", &sfx_door_white );
+  a_AudioLoadSound( "resources/soundeffects/door_red_open.ogg",   &sfx_door_red );
+  a_AudioLoadSound( "resources/soundeffects/door_green_open.ogg", &sfx_door_green );
+  a_AudioLoadSound( "resources/soundeffects/door_blue_open.ogg",  &sfx_door_blue );
+  a_AudioLoadSound( "resources/soundeffects/door_fail.ogg",       &sfx_door_fail );
 }
 
 void TileActionsOpen( int row, int col, int on_self )
@@ -226,10 +326,16 @@ int TileActionsLogic( int mouse_moved, Enemy_t* enemies, int num_enemies )
     }
     else if ( strcmp( action, "Open" ) == 0 )
     {
-      int idx = tile_action_col * world->width + tile_action_row;
-      Tile_t* door = &world->midground[idx];
-      ConsolePushF( console, door->glyph_fg,
-                    "The door is locked." );
+      if ( TileActionsTryOpen( tile_action_row, tile_action_col ) )
+      {
+        PlayerStartMove( tile_action_row, tile_action_col );
+      }
+      else
+      {
+        int pr, pc;
+        PlayerGetTile( &pr, &pc );
+        PlayerShake( tile_action_row - pr, tile_action_col - pc );
+      }
     }
     else if ( strcmp( action, "Attack" ) == 0 )
     {
@@ -241,7 +347,6 @@ int TileActionsLogic( int mouse_moved, Enemy_t* enemies, int num_enemies )
         PlayerGetTile( &pr, &pc );
         PlayerLunge( tile_action_row - pr, tile_action_col - pc );
         CombatAttack( ae );
-        EnemiesStartTurn( enemies, num_enemies, pr, pc, TileWalkable );
       }
     }
     else /* Look */
@@ -249,7 +354,7 @@ int TileActionsLogic( int mouse_moved, Enemy_t* enemies, int num_enemies )
       if ( tile_action_on_self )
       {
         ConsolePush( console, "You see yourself.",
-                     (aColor_t){ 160, 160, 160, 255 } );
+                     (aColor_t){ 0x81, 0x97, 0x96, 255 } );
       }
       else
       {
@@ -263,21 +368,19 @@ int TileActionsLogic( int mouse_moved, Enemy_t* enemies, int num_enemies )
         }
         else
         {
-          int idx = tile_action_col * world->width + tile_action_row;
-          Tile_t* mg = &world->midground[idx];
-          if ( mg->tile != TILE_EMPTY )
+          if ( tile_has_door( tile_action_row, tile_action_col ) )
           {
-            ConsolePushF( console, mg->glyph_fg,
-                          "A locked door." );
+            door_describe( tile_action_row, tile_action_col );
           }
           else
           {
+            int idx = tile_action_col * world->width + tile_action_row;
             Tile_t* t = &world->background[idx];
             if ( t->solid )
-              ConsolePushF( console, (aColor_t){ 160, 160, 160, 255 },
+              ConsolePushF( console, (aColor_t){ 0x81, 0x97, 0x96, 255 },
                             "You see a stone wall." );
             else
-              ConsolePushF( console, (aColor_t){ 160, 160, 160, 255 },
+              ConsolePushF( console, (aColor_t){ 0x81, 0x97, 0x96, 255 },
                             "You see stone floor." );
           }
         }

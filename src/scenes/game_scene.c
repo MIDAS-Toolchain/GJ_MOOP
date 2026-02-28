@@ -14,10 +14,12 @@
 #include "main_menu.h"
 #include "enemies.h"
 #include "combat.h"
+#include "combat_vfx.h"
 #include "movement.h"
 #include "tile_actions.h"
 #include "look_mode.h"
 #include "hud.h"
+#include "visibility.h"
 
 static void gs_Logic( float );
 static void gs_Draw( float );
@@ -26,10 +28,10 @@ static void gs_Draw( float );
 #define ZOOM_MIN_H       20.0f
 #define ZOOM_MAX_H      100.0f
 
-/* Panel colors */
-#define PANEL_BG  (aColor_t){ 0, 0, 0, 200 }
-#define PANEL_FG  (aColor_t){ 255, 255, 255, 255 }
-#define GOLD      (aColor_t){ 218, 175, 32, 255 }
+/* Panel colors — palette */
+#define PANEL_BG  (aColor_t){ 0x09, 0x0a, 0x14, 200 }
+#define PANEL_FG  (aColor_t){ 0xc7, 0xcf, 0xcc, 255 }
+#define GOLD      (aColor_t){ 0xde, 0x9e, 0x41, 255 }
 
 static aTileset_t*  tileset = NULL;
 static World_t*     world   = NULL;
@@ -49,7 +51,8 @@ static int hover_row = -1, hover_col = -1;
 /* Enemies */
 static Enemy_t  enemies[MAX_ENEMIES];
 static int      num_enemies = 0;
-static int      was_moving = 0;  /* tracks previous frame's moving state */
+static int      was_moving = 0;    /* tracks previous frame's moving state */
+static float    enemy_turn_delay = 0;  /* brief pause before enemies act */
 
 void GameSceneInit( void )
 {
@@ -61,60 +64,94 @@ void GameSceneInit( void )
   a_WidgetsInit( "resources/widgets/game_scene.auf" );
   app.active_widget = a_GetWidget( "inv_panel" );
 
-  /* Load tileset and create 8x8 world */
-  tileset = a_TilesetCreate( "resources/assets/tiles/level01tilemap.png", 16, 16 );
-  world   = WorldCreate( 8, 8, 16, 16 );
+  /* ---- Build dungeon from character map ----
+     '#' = wall   '.' = floor   '+' = door
+     Edit this to reshape the dungeon. */
+  #define MAP_W 29
+  #define MAP_H 25
+  static const char* dungeon[MAP_H] = {
+    /*         1111111111222222222 */
+    /* 0123456789012345678901234567 8 */
+    "#############################",  /*  0 */
+    "#############################",  /*  1  north room top wall      */
+    "###########.......###########",  /*  2  north room interior      */
+    "###########.......###########",  /*  3                           */
+    "###########.......###########",  /*  4                           */
+    "##############.##############",  /*  5  opening + corridor       */
+    "##############.##############",  /*  6                           */
+    "##############.##############",  /*  7                           */
+    "##############+##############",  /*  8  central room, north door */
+    "###########.......###########",  /*  9  central room interior    */
+    "##.....####.......####.....##",  /* 10  west room + east room    */
+    "##.....####.......####.....##",  /* 11                           */
+    "##........+.......+........##",  /* 12  west door + east door    */
+    "##.....####.......####.....##",  /* 13                           */
+    "##.....####.......####.....##",  /* 14                           */
+    "###########.......###########",  /* 15  central room interior    */
+    "##############+##############",  /* 16  central room, south door */
+    "##############.##############",  /* 17  corridor                 */
+    "##############.##############",  /* 18                           */
+    "##############.##############",  /* 19  opening                  */
+    "###########.......###########",  /* 20  south room interior      */
+    "###########.......###########",  /* 21                           */
+    "###########.......###########",  /* 22                           */
+    "#############################",  /* 23  south room bottom wall   */
+    "#############################",  /* 24                           */
+  };
 
-  /* Walls on edges, floor (default) inside */
-  for ( int r = 0; r < world->height; r++ )
+  tileset = a_TilesetCreate( "resources/assets/tiles/level01tilemap.png", 16, 16 );
+  world   = WorldCreate( MAP_W, MAP_H, 16, 16 );
+
+  /* Parse the character map into tiles */
+  for ( int y = 0; y < MAP_H; y++ )
   {
-    for ( int c = 0; c < world->width; c++ )
+    for ( int x = 0; x < MAP_W; x++ )
     {
-      if ( r == 0 || r == world->height - 1 || c == 0 || c == world->width - 1 )
+      int  idx = y * MAP_W + x;
+      char c   = dungeon[y][x];
+
+      if ( c == '#' )
       {
-        int idx = r * world->width + c;
         world->background[idx].tile     = 1;
         world->background[idx].glyph    = "#";
-        world->background[idx].glyph_fg = (aColor_t){ 160, 160, 160, 255 };
+        world->background[idx].glyph_fg = (aColor_t){ 0x81, 0x97, 0x96, 255 };
         world->background[idx].solid    = 1;
       }
+      else if ( c == '+' )
+      {
+        /* Floor underneath the door */
+        world->background[idx].tile     = 0;
+        world->background[idx].glyph    = ".";
+        world->background[idx].glyph_fg = (aColor_t){ 0x39, 0x4a, 0x50, 255 };
+        /* Door on midground (solid until opened) */
+        world->midground[idx].tile     = 2;
+        world->midground[idx].glyph    = "+";
+        world->midground[idx].glyph_fg = (aColor_t){ 0xc0, 0x94, 0x73, 255 };
+        world->midground[idx].solid    = 1;
+      }
+      /* '.' tiles keep the WorldCreate default (floor, tile 0) */
     }
   }
 
-  /* Doors on midground — one per wall, centered.
-     Clear the background wall so floor shows through. */
+  /* Give each central-room door its own color + tile */
   {
-    int w = world->width;
-    int mid = w / 2;
-
-    struct { int idx; uint32_t tile; aColor_t color; } doors[] = {
-      { 0 * w + mid,                2, { 100, 180, 255, 255 } }, /* top: blue   */
-      { (world->height - 1) * w + mid, 3, {  60, 255,  60, 255 } }, /* bot: green  */
-      { mid * w + 0,                4, { 255,  60,  60, 255 } }, /* left: red   */
-      { mid * w + (w - 1),          5, { 240, 240, 240, 255 } }, /* right: white */
+    struct { int x, y; uint32_t tile; aColor_t color; } doors[] = {
+      { 14,  8, 2, { 0x4f, 0x8f, 0xba, 255 } },  /* north: blue  */
+      { 14, 16, 3, { 0x75, 0xa7, 0x43, 255 } },  /* south: green */
+      { 10, 12, 4, { 0xa5, 0x30, 0x30, 255 } },  /* west:  red   */
+      { 18, 12, 5, { 0xc7, 0xcf, 0xcc, 255 } },  /* east:  white */
     };
-
     for ( int i = 0; i < 4; i++ )
     {
-      int idx = doors[i].idx;
-
-      /* Clear wall from background */
-      world->background[idx].tile     = TILE_EMPTY;
-      world->background[idx].glyph    = ".";
-      world->background[idx].glyph_fg = (aColor_t){ 80, 80, 80, 255 };
-      world->background[idx].solid    = 0;
-
-      /* Place door on midground */
+      int idx = doors[i].y * MAP_W + doors[i].x;
       world->midground[idx].tile     = doors[i].tile;
-      world->midground[idx].glyph    = "+";
       world->midground[idx].glyph_fg = doors[i].color;
-      world->midground[idx].solid    = 1;
     }
   }
 
-  /* Spawn player at tile (3,3) center */
-  player.world_x = 56.0f;
-  player.world_y = 56.0f;
+  /* Player starts in center of central room (tile 14,12) */
+  player.world_x = 14 * 16 + 8.0f;
+  player.world_y = 12 * 16 + 8.0f;
 
   /* Initialize game camera centered on player */
   camera = (GameCamera_t){ player.world_x, player.world_y, 64.0f };
@@ -131,6 +168,8 @@ void GameSceneInit( void )
   LookModeInit( world, &console, &sfx_move, &sfx_click );
   InventoryUIInit( &sfx_move, &sfx_click );
 
+  VisibilityInit( world );
+
   ConsoleInit( &console );
   GameEventsInit( &console );
   ConsolePush( &console, "Welcome, adventurer.", white );
@@ -139,9 +178,18 @@ void GameSceneInit( void )
   EnemiesLoadTypes();
   EnemiesInit( enemies, &num_enemies );
   CombatInit( &console );
+  CombatVFXInit();
   EnemiesSetWorld( world );
   EnemySpawn( enemies, &num_enemies, EnemyTypeByKey( "rat" ),
-              5, 5, world->tile_w, world->tile_h );
+              13, 10, world->tile_w, world->tile_h );  /* central */
+  EnemySpawn( enemies, &num_enemies, EnemyTypeByKey( "rat" ),
+              14, 3, world->tile_w, world->tile_h );   /* north */
+  EnemySpawn( enemies, &num_enemies, EnemyTypeByKey( "rat" ),
+              14, 21, world->tile_w, world->tile_h );  /* south */
+  EnemySpawn( enemies, &num_enemies, EnemyTypeByKey( "rat" ),
+              4, 12, world->tile_w, world->tile_h );   /* west */
+  EnemySpawn( enemies, &num_enemies, EnemyTypeByKey( "rat" ),
+              24, 12, world->tile_w, world->tile_h );  /* east */
   was_moving = 0;
 
   SoundManagerPlayGame();
@@ -222,15 +270,37 @@ static void gs_Logic( float dt )
   /* ---- Movement update (always runs, even in look mode) ---- */
   MovementUpdate( dt );
   EnemiesUpdate( dt );
+  CombatUpdate( dt );
+  CombatVFXUpdate( dt );
 
-  /* Enemy turn: fires once when player finishes a move */
+  /* Update visibility around the player */
+  {
+    int vr, vc;
+    PlayerGetTile( &vr, &vc );
+    VisibilityUpdate( vr, vc );
+  }
+
+  /* Enemy turn: brief pause after player finishes, then enemies act */
   if ( was_moving && !PlayerIsMoving() && !EnemiesTurning() )
   {
-    int pr, pc;
-    PlayerGetTile( &pr, &pc );
-    EnemiesStartTurn( enemies, num_enemies, pr, pc, TileWalkable );
+    enemy_turn_delay = 0.2f;
+    player.turns_since_hit++;
+    for ( int i = 0; i < num_enemies; i++ )
+      if ( enemies[i].alive ) enemies[i].turns_since_hit++;
   }
   was_moving = PlayerIsMoving();
+
+  if ( enemy_turn_delay > 0 )
+  {
+    enemy_turn_delay -= dt;
+    if ( enemy_turn_delay <= 0 )
+    {
+      enemy_turn_delay = 0;
+      int pr, pc;
+      PlayerGetTile( &pr, &pc );
+      EnemiesStartTurn( enemies, num_enemies, pr, pc, TileWalkable );
+    }
+  }
 
   /* ---- Look mode ---- */
   if ( LookModeLogic( mouse_moved ) )
@@ -250,7 +320,8 @@ static void gs_Logic( float dt )
   }
 
   /* ---- Arrow key / WASD movement (when not moving, not inventory focused) ---- */
-  if ( !PlayerIsMoving() && !EnemiesTurning() && !InventoryUIFocused() )
+  if ( !PlayerIsMoving() && !EnemiesTurning() && !InventoryUIFocused()
+       && enemy_turn_delay <= 0 )
   {
     int dr = 0, dc = 0;
     if ( app.keyboard[SDL_SCANCODE_UP] == 1 || app.keyboard[SDL_SCANCODE_W] == 1 )
@@ -275,10 +346,16 @@ static void gs_Logic( float dt )
       {
         PlayerLunge( dr, dc );
         CombatAttack( bump );
-        EnemiesStartTurn( enemies, num_enemies, pr, pc, TileWalkable );
       }
       else if ( TileWalkable( tr, tc ) )
         PlayerStartMove( tr, tc );
+      else if ( TileHasDoor( tr, tc ) )
+      {
+        if ( TileActionsTryOpen( tr, tc ) )
+          PlayerStartMove( tr, tc );
+        else
+          PlayerShake( dr, dc );
+      }
       else
         PlayerWallBump( dr, dc );
     }
@@ -298,7 +375,8 @@ static void gs_Logic( float dt )
       GV_ScreenToWorld( vp->rect, &camera, mx, my, &wx, &wy );
       int r = (int)( wx / world->tile_w );
       int c = (int)( wy / world->tile_h );
-      if ( r >= 0 && r < world->width && c >= 0 && c < world->height )
+      if ( r >= 0 && r < world->width && c >= 0 && c < world->height
+           && VisibilityGet( r, c ) > 0.01f )
       {
         hover_row = r;
         hover_col = c;
@@ -308,9 +386,10 @@ static void gs_Logic( float dt )
       if ( mouse_moved && hover_row >= 0 )
         InventoryUIUnfocus();
 
-      /* Click on tile (blocked while moving / enemies turning) */
+      /* Click on tile (blocked while moving / enemies turning / delay) */
       if ( app.mouse.pressed && hover_row >= 0
-           && !PlayerIsMoving() && !EnemiesTurning() )
+           && !PlayerIsMoving() && !EnemiesTurning()
+           && enemy_turn_delay <= 0 )
       {
         /* Rapid-move: click adjacent walkable tile within window */
         if ( RapidMoveActive()
@@ -370,8 +449,9 @@ static void gs_Draw( float dt )
   {
     aContainerWidget_t* vp = a_GetContainerFromWidget( "game_viewport" );
     aRectf_t vr = { vp->rect.x, vp->rect.y, vp->rect.w - 1, vp->rect.h };
-    a_DrawFilledRect( vr, (aColor_t){ 0, 0, 0, 255 } );
-    a_DrawRect( vr, (aColor_t){ 255, 255, 255, 255 } );
+    float va = TransitionGetViewportAlpha();
+    a_DrawFilledRect( vr, (aColor_t){ 0x09, 0x0a, 0x14, (int)( 255 * va ) } );
+    a_DrawRect( vr, (aColor_t){ 0x39, 0x4a, 0x50, (int)( 255 * va ) } );
   }
 
   /* Inventory panel background */
@@ -412,35 +492,66 @@ static void gs_Draw( float dt )
 
     aRectf_t vp_rect = vp->rect;
 
-    if ( world && tileset )
-      GV_DrawWorld( vp_rect, &camera, world, tileset, settings.gfx_mode == GFX_ASCII );
+    /* Apply combat hit shake to camera */
+    GameCamera_t draw_cam = camera;
+    draw_cam.x += CombatShakeOX();
+    draw_cam.y += CombatShakeOY();
 
-    /* Fade overlay on map only — drawn BEFORE player so player stays visible */
-    float fade = 1.0f - TransitionGetViewportAlpha();
-    if ( fade > 0.01f )
-      a_DrawFilledRect( clip, (aColor_t){ 0, 0, 0, (int)( 255 * fade ) } );
+    if ( world && tileset )
+      GV_DrawWorld( vp_rect, &draw_cam, world, tileset, settings.gfx_mode == GFX_ASCII );
+
+    /* Draw enemies BEFORE darkness so they get dimmed too */
+    EnemiesDrawAll( vp_rect, &draw_cam, enemies, num_enemies,
+                    world, settings.gfx_mode );
+
+    /* Darkness overlay — covers world + enemies, player drawn on top.
+       fade param: 0 = all black (intro start), 1 = normal visibility. */
+    GV_DrawDarkness( vp_rect, &draw_cam, world,
+                     TransitionGetViewportAlpha() );
 
     /* Hover highlight */
     if ( hover_row >= 0 && hover_col >= 0 )
-      GV_DrawTileOutline( vp_rect, &camera, hover_row, hover_col,
+      GV_DrawTileOutline( vp_rect, &draw_cam, hover_row, hover_col,
                           world->tile_w, world->tile_h,
-                          (aColor_t){ 255, 255, 255, 80 } );
+                          (aColor_t){ 0xeb, 0xed, 0xe9, 80 } );
 
     /* Look mode cursor */
-    LookModeDraw( vp_rect, &camera );
+    LookModeDraw( vp_rect, &draw_cam );
 
     /* Tile action menu target highlight */
     if ( TileActionsIsOpen() )
-      GV_DrawTileOutline( vp_rect, &camera,
+      GV_DrawTileOutline( vp_rect, &draw_cam,
                           TileActionsGetRow(), TileActionsGetCol(),
                           world->tile_w, world->tile_h, GOLD );
 
-    /* Draw enemies */
-    EnemiesDrawAll( vp_rect, &camera, enemies, num_enemies,
-                    world, settings.gfx_mode );
+    /* Player sprite (drawn after darkness — always visible) */
+    PlayerDraw( vp_rect, &draw_cam, settings.gfx_mode );
 
-    /* Player sprite */
-    PlayerDraw( vp_rect, &camera, settings.gfx_mode );
+    /* Health bars — hide after 2 turns without taking damage */
+    for ( int i = 0; i < num_enemies; i++ )
+    {
+      if ( !enemies[i].alive ) continue;
+      if ( enemies[i].turns_since_hit >= 2 ) continue;
+      int ex = (int)( enemies[i].world_x / world->tile_w );
+      int ey = (int)( enemies[i].world_y / world->tile_h );
+      if ( VisibilityGet( ex, ey ) < 0.01f ) continue;
+      EnemyType_t* et = &g_enemy_types[enemies[i].type_idx];
+      CombatVFXDrawHealthBar( vp_rect, &draw_cam,
+                              enemies[i].world_x, enemies[i].world_y,
+                              enemies[i].hp, et->hp );
+    }
+    if ( player.turns_since_hit < 2 )
+      CombatVFXDrawHealthBar( vp_rect, &draw_cam,
+                              player.world_x, player.world_y,
+                              player.hp, player.max_hp );
+
+    /* Floating damage numbers */
+    CombatVFXDraw( vp_rect, &draw_cam );
+
+    /* Red flash overlay on hit (fires once, won't restart while active) */
+    float flash = CombatFlashAlpha();
+    if ( flash > 0.5f )
+      a_DrawFilledRect( clip, (aColor_t){ 0xa5, 0x30, 0x30, (int)flash } );
 
     a_DisableClipRect();
   }

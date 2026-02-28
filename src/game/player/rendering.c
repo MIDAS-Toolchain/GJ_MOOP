@@ -3,6 +3,7 @@
 #include "defines.h"
 #include "player.h"
 #include "movement.h"
+#include "combat_vfx.h"
 #include "game_viewport.h"
 
 extern Player_t player;

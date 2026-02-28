@@ -59,19 +59,19 @@ World_t* WorldCreate( int width, int height, int tile_w, int tile_h )
     new_world->background[i].solid    = 0;
     new_world->background[i].tile     = 0;
     new_world->background[i].glyph    = ".";
-    new_world->background[i].glyph_fg = (aColor_t){ 80, 80, 80, 255 };
-    new_world->background[i].glyph_bg = (aColor_t){ 0, 0, 0, 255 };
+    new_world->background[i].glyph_fg = (aColor_t){ 0x39, 0x4a, 0x50, 255 };
+    new_world->background[i].glyph_bg = (aColor_t){ 0x09, 0x0a, 0x14, 255 };
 
     new_world->midground[i].solid    = 0;
     new_world->midground[i].tile     = TILE_EMPTY;
     new_world->midground[i].glyph    = "";
-    new_world->midground[i].glyph_fg = (aColor_t){ 255, 255, 255, 255 };
+    new_world->midground[i].glyph_fg = (aColor_t){ 0xc7, 0xcf, 0xcc, 255 };
     new_world->midground[i].glyph_bg = (aColor_t){ 0, 0, 0, 0 };
 
     new_world->foreground[i].solid    = 0;
     new_world->foreground[i].tile     = TILE_EMPTY;
     new_world->foreground[i].glyph    = "";
-    new_world->foreground[i].glyph_fg = (aColor_t){ 255, 255, 255, 255 };
+    new_world->foreground[i].glyph_fg = (aColor_t){ 0xc7, 0xcf, 0xcc, 255 };
     new_world->foreground[i].glyph_bg = (aColor_t){ 0, 0, 0, 0 };
   }
 

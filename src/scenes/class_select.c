@@ -80,6 +80,7 @@ static void cs_SelectClass( int index )
   strncpy( player.name, g_classes[index].name, MAX_NAME_LENGTH - 1 );
   player.hp = g_classes[index].hp;
   player.max_hp = g_classes[index].hp;
+  player.turns_since_hit = 99;
   player.class_damage = g_classes[index].base_damage;
   player.class_defense = g_classes[index].defense;
   strncpy( player.consumable_type, g_classes[index].consumable_type, MAX_NAME_LENGTH - 1 );
@@ -382,8 +383,8 @@ static void cs_Draw( float dt )
     for ( int i = 0; i < num_filtered; i++ )
       if ( filtered[i].type == FILTERED_CONSUMABLE ) nc++; else no++;
 
-    aColor_t panel_bg = (aColor_t){ 0, 0, 0, (int)( 200 * panel_a ) };
-    aColor_t panel_fg = (aColor_t){ 255, 255, 255, (int)( 255 * panel_a ) };
+    aColor_t panel_bg = (aColor_t){ 0x09, 0x0a, 0x14, (int)( 200 * panel_a ) };
+    aColor_t panel_fg = (aColor_t){ 0xc7, 0xcf, 0xcc, (int)( 255 * panel_a ) };
 
     aContainerWidget_t* cp = a_GetContainerFromWidget( "consumables_panel" );
     float cp_th = 0;
@@ -413,7 +414,7 @@ static void cs_Draw( float dt )
       a_DrawFilledRect( (aRectf_t){ vp_x, vp_y, vp_w, vp_h },
                         (aColor_t){ 0, 0, 0, (int)( 255 * vp_a ) } );
       a_DrawRect( (aRectf_t){ vp_x, vp_y, vp_w, vp_h },
-                  (aColor_t){ 255, 255, 255, (int)( 255 * vp_a ) } );
+                  (aColor_t){ 0x39, 0x4a, 0x50, (int)( 255 * vp_a ) } );
     }
   }
 
@@ -504,7 +505,7 @@ static void cs_Draw( float dt )
     /* Item lists + modal + buttons — fade with panels during outro */
     if ( panel_a > 0.01f )
     {
-      aColor_t fade_white = { 255, 255, 255, (int)( 255 * panel_a ) };
+      aColor_t fade_white = { 0xc7, 0xcf, 0xcc, (int)( 255 * panel_a ) };
 
       /* Draw consumables for the hovered class (left panel) */
       {
@@ -529,7 +530,7 @@ static void cs_Draw( float dt )
           if ( fi == selected_item && browsing_items )
           {
             a_DrawFilledRect( (aRectf_t){ cr.x + LIST_HIT_MARGIN, cy - LIST_HIT_MARGIN, cr.w - LIST_HIT_MARGIN * 2, row_h },
-                              (aColor_t){ 255, 255, 255, (int)( 40 * panel_a ) } );
+                              (aColor_t){ 0xc7, 0xcf, 0xcc, (int)( 40 * panel_a ) } );
             a_DrawRect( (aRectf_t){ cr.x + LIST_HIT_MARGIN, cy - LIST_HIT_MARGIN, cr.w - LIST_HIT_MARGIN * 2, row_h },
                         ic_a );
           }
@@ -570,7 +571,7 @@ static void cs_Draw( float dt )
           if ( fi == selected_item && browsing_items )
           {
             a_DrawFilledRect( (aRectf_t){ dr.x + LIST_HIT_MARGIN, dy - LIST_HIT_MARGIN, dr.w - LIST_HIT_MARGIN * 2, row_h },
-                              (aColor_t){ 255, 255, 255, (int)( 40 * panel_a ) } );
+                              (aColor_t){ 0xc7, 0xcf, 0xcc, (int)( 40 * panel_a ) } );
             a_DrawRect( (aRectf_t){ dr.x + LIST_HIT_MARGIN, dy - LIST_HIT_MARGIN, dr.w - LIST_HIT_MARGIN * 2, row_h },
                         oc_a );
           }
@@ -608,7 +609,7 @@ static void cs_Draw( float dt )
           ConsumableInfo_t* c = &g_consumables[sel->index];
           aColor_t cc_a = { c->color.r, c->color.g, c->color.b, (int)( c->color.a * panel_a ) };
 
-          a_DrawFilledRect( (aRectf_t){ mx, my, MODAL_W, MODAL_H }, (aColor_t){ 0, 0, 0, (int)( 255 * panel_a ) } );
+          a_DrawFilledRect( (aRectf_t){ mx, my, MODAL_W, MODAL_H }, (aColor_t){ 0x09, 0x0a, 0x14, (int)( 255 * panel_a ) } );
           a_DrawRect( (aRectf_t){ mx, my, MODAL_W, MODAL_H }, cc_a );
 
           float ty = my + MODAL_PAD_Y;
@@ -633,12 +634,12 @@ static void cs_Draw( float dt )
 
           /* Bonus damage */
           snprintf( buf, sizeof( buf ), "+%d Bonus Damage", c->bonus_damage );
-          ts.fg = (aColor_t){ yellow.r, yellow.g, yellow.b, (int)( yellow.a * panel_a ) };
+          ts.fg = (aColor_t){ 0xde, 0x9e, 0x41, (int)( 255 * panel_a ) };
           a_DrawText( buf, (int)tx, (int)ty, ts );
           ty += MODAL_LINE_MD;
 
           /* Description */
-          ts.fg = (aColor_t){ 180, 180, 180, (int)( 255 * panel_a ) };
+          ts.fg = (aColor_t){ 0xa8, 0xb5, 0xb2, (int)( 255 * panel_a ) };
           ts.scale = MODAL_DESC_SCALE;
           ts.wrap_width = (int)( MODAL_W - MODAL_PAD_X * 2 );
           a_DrawText( c->description, (int)tx, (int)ty, ts );
@@ -648,7 +649,7 @@ static void cs_Draw( float dt )
           OpenableInfo_t* o = &g_openables[sel->index];
           aColor_t oc_a = { o->color.r, o->color.g, o->color.b, (int)( o->color.a * panel_a ) };
 
-          a_DrawFilledRect( (aRectf_t){ mx, my, MODAL_W, MODAL_H }, (aColor_t){ 0, 0, 0, (int)( 255 * panel_a ) } );
+          a_DrawFilledRect( (aRectf_t){ mx, my, MODAL_W, MODAL_H }, (aColor_t){ 0x09, 0x0a, 0x14, (int)( 255 * panel_a ) } );
           a_DrawRect( (aRectf_t){ mx, my, MODAL_W, MODAL_H }, oc_a );
 
           float ty = my + MODAL_PAD_Y;
@@ -672,7 +673,7 @@ static void cs_Draw( float dt )
           ty += MODAL_LINE_MD;
 
           /* Description */
-          ts.fg = (aColor_t){ 180, 180, 180, (int)( 255 * panel_a ) };
+          ts.fg = (aColor_t){ 0xa8, 0xb5, 0xb2, (int)( 255 * panel_a ) };
           ts.scale = MODAL_DESC_SCALE;
           ts.wrap_width = (int)( MODAL_W - MODAL_PAD_X * 2 );
           a_DrawText( o->description, (int)tx, (int)ty, ts );
@@ -696,8 +697,8 @@ static void cs_Draw( float dt )
         float ey = btn_panel_bot + 30.0f;
 
         DrawButton( ex, ey, EMBARK_W, EMBARK_H, "Embark [Enter]", 2.0f, embark_hovered,
-                    (aColor_t){ 0, 0, 0, (int)( 255 * panel_a ) }, (aColor_t){ 60, 60, 60, (int)( 255 * panel_a ) },
-                    (aColor_t){ 222, 222, 222, (int)( 255 * panel_a ) }, (aColor_t){ 255, 255, 255, (int)( 255 * panel_a ) } );
+                    (aColor_t){ 0x09, 0x0a, 0x14, (int)( 255 * panel_a ) }, (aColor_t){ 0x20, 0x2e, 0x37, (int)( 255 * panel_a ) },
+                    (aColor_t){ 0xc7, 0xcf, 0xcc, (int)( 255 * panel_a ) }, (aColor_t){ 0xeb, 0xed, 0xe9, (int)( 255 * panel_a ) } );
       }
 
       /* Draw back button — below embark */
@@ -707,8 +708,8 @@ static void cs_Draw( float dt )
         float by = btn_panel_bot + 30.0f + EMBARK_H + 30.0f;
 
         DrawButton( bx, by, BACK_W, BACK_H, "Back [ESC]", 1.0f, back_hovered,
-                    (aColor_t){ 0, 0, 0, (int)( 255 * panel_a ) }, (aColor_t){ 60, 60, 60, (int)( 255 * panel_a ) },
-                    (aColor_t){ 150, 150, 150, (int)( 255 * panel_a ) }, fade_white );
+                    (aColor_t){ 0x09, 0x0a, 0x14, (int)( 255 * panel_a ) }, (aColor_t){ 0x20, 0x2e, 0x37, (int)( 255 * panel_a ) },
+                    (aColor_t){ 0x81, 0x97, 0x96, (int)( 255 * panel_a ) }, fade_white );
       }
     } /* end panel fade */
   }
@@ -717,7 +718,7 @@ static void cs_Draw( float dt )
   if ( in_outro )
   {
     aTextStyle_t ts = a_default_text_style;
-    ts.fg = (aColor_t){ 180, 180, 180, 180 };
+    ts.fg = (aColor_t){ 0xa8, 0xb5, 0xb2, 180 };
     ts.bg = (aColor_t){ 0, 0, 0, 0 };
     ts.scale = 1.0f;
     const char* hint = "Press ESC to skip";

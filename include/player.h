@@ -42,6 +42,7 @@ typedef struct
   int equipment[EQUIP_SLOTS];           /* index into g_equipment[], -1 = empty */
   int equip_cursor;
   int inv_focused;                      /* 1 = inventory panel, 0 = equipment panel */
+  int turns_since_hit;
 } Player_t;
 
 void PlayerInitStats( void );

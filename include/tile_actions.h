@@ -23,4 +23,7 @@ void TileActionsClose( void );
 int  TileActionsGetRow( void );
 int  TileActionsGetCol( void );
 
+/* Try to open a door at (r,c). Returns 1 if opened, 0 if locked (prints why). */
+int  TileActionsTryOpen( int r, int c );
+
 #endif

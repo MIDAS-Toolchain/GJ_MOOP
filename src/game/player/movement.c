@@ -93,7 +93,16 @@ int TileWalkable( int r, int c )
 {
   if ( r < 0 || r >= world->width || c < 0 || c >= world->height ) return 0;
   int idx = c * world->width + r;
-  return !world->background[idx].solid;
+  if ( world->background[idx].solid ) return 0;
+  if ( world->midground[idx].solid ) return 0;
+  return 1;
+}
+
+int TileHasDoor( int r, int c )
+{
+  if ( r < 0 || r >= world->width || c < 0 || c >= world->height ) return 0;
+  int idx = c * world->width + r;
+  return world->midground[idx].tile != TILE_EMPTY;
 }
 
 void PlayerStartMove( int r, int c )
@@ -146,17 +155,23 @@ void PlayerLunge( int dr, int dc )
   TweenFloatWithCallback( &tweens, &player.world_y,
                           player.world_y + dc * dist, 0.06f,
                           TWEEN_EASE_OUT_QUAD, lunge_back_y, NULL );
+  moving = 1;
 }
 
-void PlayerWallBump( int dr, int dc )
+void PlayerShake( int dr, int dc )
 {
-  a_AudioPlaySound( &sfx_wall, NULL );
   shake_ox = 0;
   shake_oy = 0;
   TweenFloatWithCallback( &tweens, &shake_ox, dr * 3.0f, 0.04f,
                           TWEEN_EASE_OUT_QUAD, shake_back, NULL );
   TweenFloatWithCallback( &tweens, &shake_oy, dc * 3.0f, 0.04f,
                           TWEEN_EASE_OUT_QUAD, NULL, NULL );
+}
+
+void PlayerWallBump( int dr, int dc )
+{
+  a_AudioPlaySound( &sfx_wall, NULL );
+  PlayerShake( dr, dc );
 }
 
 int   PlayerIsMoving( void )   { return moving; }

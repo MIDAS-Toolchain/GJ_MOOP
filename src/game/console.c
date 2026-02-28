@@ -116,7 +116,7 @@ void ConsoleDraw( Console_t* c, aRectf_t rect )
     float y = base_y - ( i * CON_LINE_H );
 
     /* Prefix */
-    ts.fg = (aColor_t){ 120, 120, 120, 255 };
+    ts.fg = (aColor_t){ 0x57, 0x72, 0x77, 255 };
     a_DrawText( "> ", (int)x, (int)y, ts );
 
     /* Message */
@@ -135,7 +135,7 @@ void ConsoleDraw( Console_t* c, aRectf_t rect )
 
     /* Track */
     a_DrawFilledRect( (aRectf_t){ track_x, track_y, CON_SB_W, track_h },
-                      (aColor_t){ 20, 20, 20, 200 } );
+                      (aColor_t){ 0x10, 0x14, 0x1f, 200 } );
 
     /* Thumb — size proportional to visible/total, position from scroll */
     float thumb_h = ( (float)CONSOLE_VISIBLE / total ) * track_h;
@@ -148,9 +148,9 @@ void ConsoleDraw( Console_t* c, aRectf_t rect )
     float thumb_y = track_y + ( 1.0f - scroll_pct ) * ( track_h - thumb_h );
 
     a_DrawFilledRect( (aRectf_t){ track_x, thumb_y, CON_SB_W, thumb_h },
-                      (aColor_t){ 80, 80, 80, 255 } );
+                      (aColor_t){ 0x39, 0x4a, 0x50, 255 } );
     a_DrawRect( (aRectf_t){ track_x, thumb_y, CON_SB_W, thumb_h },
-                (aColor_t){ 140, 140, 140, 255 } );
+                (aColor_t){ 0x57, 0x72, 0x77, 255 } );
   }
 }
 

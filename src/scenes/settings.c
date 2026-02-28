@@ -95,7 +95,7 @@ static void st_Logic( float dt )
     st_ApplySettings();
 }
 
-#define HIGHLIGHT_COLOR  (aColor_t){ 218, 175, 32, 255 }
+#define HIGHLIGHT_COLOR  (aColor_t){ 0xde, 0x9e, 0x41, 255 }
 
 static void st_Draw( float dt )
 {
