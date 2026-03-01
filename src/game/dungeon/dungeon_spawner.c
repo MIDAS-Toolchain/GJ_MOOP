@@ -32,6 +32,15 @@ static void spawn_random_consumable( GroundItem_t* items, int* num_items,
     GroundItemSpawn( items, num_items, cons[rand() % nc], row, col, tw, th );
 }
 
+/* Spawn a random floor-1 enemy (rat, skeleton, or slime) at (x, y) */
+static void spawn_random_enemy( Enemy_t* enemies, int* num_enemies,
+                                int x, int y, int tw, int th )
+{
+  static const char* types[] = { "rat", "skeleton", "slime" };
+  EnemySpawn( enemies, num_enemies,
+              EnemyTypeByKey( types[rand() % 3] ), x, y, tw, th );
+}
+
 void DungeonSpawn( NPC_t* npcs, int* num_npcs,
                    Enemy_t* enemies, int* num_enemies,
                    GroundItem_t* items, int* num_items,
@@ -223,6 +232,30 @@ void DungeonSpawn( NPC_t* npcs, int* num_npcs,
   EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "slime" ),
               30, 8, world->tile_w, world->tile_h );
   spawn_random_consumable( items, num_items, 31, 7,
+                           world->tile_w, world->tile_h );
+
+  /* Class-favored potions (reachable by all, shortcut for one) */
+  spawn_random_consumable( items, num_items, 26, 5,
+                           world->tile_w, world->tile_h );  /* merc barracks corridor */
+  spawn_random_consumable( items, num_items, 22, 11,
+                           world->tile_w, world->tile_h );  /* gallery (rogue shortcut) */
+  spawn_random_consumable( items, num_items, 30, 24,
+                           world->tile_w, world->tile_h );  /* east corridor (mage shortcut) */
+
+  /* Hallway encounters */
+  spawn_random_enemy( enemies, num_enemies,
+                      1, 12, world->tile_w, world->tile_h );   /* left corridor */
+  spawn_random_consumable( items, num_items, 1, 8,
+                           world->tile_w, world->tile_h );
+
+  spawn_random_enemy( enemies, num_enemies,
+                      6, 23, world->tile_w, world->tile_h );   /* junction corridor */
+  spawn_random_consumable( items, num_items, 9, 23,
+                           world->tile_w, world->tile_h );
+
+  spawn_random_enemy( enemies, num_enemies,
+                      31, 22, world->tile_w, world->tile_h );  /* east corridor */
+  spawn_random_consumable( items, num_items, 29, 26,
                            world->tile_w, world->tile_h );
 
   /* Shop in Room 9 (SE room) */

@@ -33,6 +33,7 @@ static int has_clear_shot( Enemy_t* e, int pr, int pc, int range,
     {
       cc += dc;
       if ( !walkable( e->row, cc ) ) return 0;
+      if ( EnemyBlockedByNPC( e->row, cc ) ) return 0;
     }
     *out_dr = 0;
     *out_dc = dc;
@@ -49,6 +50,7 @@ static int has_clear_shot( Enemy_t* e, int pr, int pc, int range,
     {
       cr += dr;
       if ( !walkable( cr, e->col ) ) return 0;
+      if ( EnemyBlockedByNPC( cr, e->col ) ) return 0;
     }
     *out_dr = dr;
     *out_dc = 0;
@@ -255,6 +257,7 @@ void EnemySkeletonTick( Enemy_t* e, int player_row, int player_col,
         cr += e->ai_dir_row;
         cc += e->ai_dir_col;
         if ( !walkable( cr, cc ) ) break;
+        if ( EnemyBlockedByNPC( cr, cc ) ) break;
 
         if ( cr == player_row && cc == player_col )
         {
