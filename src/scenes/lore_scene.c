@@ -100,11 +100,9 @@ static void ls_Logic( float dt )
     a_WidgetsInit( "resources/widgets/lore.auf" );
   }
 
-  /* Tab / left-right — switch panels */
-  if ( app.keyboard[SDL_SCANCODE_TAB] == 1 ||
-       app.keyboard[A_LEFT] == 1 || app.keyboard[A_RIGHT] == 1 )
+  /* Left/Right — switch panels */
+  if ( app.keyboard[A_LEFT] == 1 || app.keyboard[A_RIGHT] == 1 )
   {
-    app.keyboard[SDL_SCANCODE_TAB] = 0;
     app.keyboard[A_LEFT] = 0;
     app.keyboard[A_RIGHT] = 0;
     focus_panel = !focus_panel;
@@ -415,7 +413,7 @@ static void ls_Draw( float dt )
     ts.bg    = (aColor_t){ 0, 0, 0, 0 };
     ts.scale = 1.0f;
     ts.align = TEXT_ALIGN_CENTER;
-    a_DrawText( "[TAB] Switch Panel",
+    a_DrawText( "[LEFT/RIGHT] Switch Panel  [ESC] Back",
                 (int)( hr.x + hr.w / 2.0f ),
                 (int)( hr.y + hr.h / 2.0f ), ts );
   }

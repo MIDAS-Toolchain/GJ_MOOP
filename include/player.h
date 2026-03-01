@@ -11,6 +11,7 @@
 #define INV_EMPTY        0
 #define INV_CONSUMABLE   1
 #define INV_EQUIPMENT    2
+#define INV_MAP          3
 
 #define EQUIP_WEAPON    0
 #define EQUIP_ARMOR     1
@@ -53,6 +54,7 @@ typedef struct
   int equip_cursor;
   int inv_focused;                      /* 1 = inventory panel, 0 = equipment panel */
   int turns_since_hit;
+  int gold;
   ConsumableBuff_t buff;
 } Player_t;
 

@@ -17,6 +17,11 @@ typedef struct
   char     ai[MAX_NAME_LENGTH];
   char     description[256];
   int      range;
+  char     drop_item[MAX_NAME_LENGTH];  /* DUF key of consumable to drop on death */
+  int      gold_drop;                  /* gold dropped on death (0 = none) */
+  char     on_death[MAX_NAME_LENGTH];  /* death hazard, e.g. "poison_pool" */
+  int      pool_duration;
+  int      pool_damage;
   aColor_t color;
   aImage_t* image;
 } EnemyType_t;
@@ -36,6 +41,10 @@ typedef struct
   int   ai_state;
   int   ai_dir_row;
   int   ai_dir_col;
+  /* Status effects */
+  int   poison_ticks;
+  int   poison_dmg;
+  int   stun_turns;
 } Enemy_t;
 
 extern EnemyType_t g_enemy_types[MAX_ENEMY_TYPES];
@@ -50,7 +59,7 @@ Enemy_t* EnemySpawn( Enemy_t* list, int* count,
 Enemy_t* EnemyAt( Enemy_t* list, int count, int row, int col );
 int      EnemiesInCombat( Enemy_t* list, int count );
 
-void EnemyRatTick( Enemy_t* e, int player_row, int player_col,
+void EnemyBasicAITick( Enemy_t* e, int player_row, int player_col,
                    int (*walkable)(int,int),
                    Enemy_t* all, int count );
 
@@ -89,5 +98,6 @@ void EnemyProjectileUpdate( float dt );
 void EnemyProjectileSpawn( float sx, float sy, float ex, float ey,
                            int dir_row, int dir_col );
 void EnemyProjectileDraw( aRectf_t vp_rect, GameCamera_t* cam );
+int  EnemyProjectileInFlight( void );
 
 #endif

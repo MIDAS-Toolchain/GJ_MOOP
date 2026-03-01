@@ -66,10 +66,16 @@ GJ_MOOP_SRCS = console.c\
 UI_SRCS     = inventory_ui.c \
 						tile_actions.c \
 						look_mode.c \
-						hud.c
+						hud.c \
+						quest_tracker.c \
+						shop.c \
+						shop_ui.c \
+						target_mode.c \
+						pause_menu.c
 UTILS_SRCS  = draw_utils.c \
 							context_menu.c
 PLAYER_SRCS = items.c \
+						maps.c \
 						movement.c \
 						rendering.c
 
@@ -79,8 +85,11 @@ SYS_SRCS = tween.c \
 					 sound_manager.c \
 					 combat.c \
 					 combat_vfx.c \
+					 spell_vfx.c \
 					 lore.c \
-					 persist.c
+					 persist.c \
+					 poison_pool.c \
+					 placed_traps.c
 
 WORLD_SRCS = world.c \
 						 game_viewport.c \
@@ -100,7 +109,10 @@ GROUND_SRCS = ground_items.c
 
 DUNGEON_SRCS = dungeon_builder.c \
 							 dungeon_spawner.c \
-							 dungeon_handler.c
+							 dungeon_handler.c \
+							 doors.c \
+							 objects.c \
+							 room_enumerator.c
 
 NATIVE_LIB_OBJS = $(patsubst %.c, $(OBJ_DIR_NATIVE)/%.o, $(GJ_MOOP_SRCS))
 SCENES_LIB_OBJS = $(patsubst %.c, $(OBJ_DIR_SCENES)/%.o, $(SCENES_SRCS))

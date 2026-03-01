@@ -6,7 +6,7 @@
 #define RAT_SIGHT_RANGE  6
 #define RAT_CHASE_TURNS  4
 
-void EnemyRatTick( Enemy_t* e, int player_row, int player_col,
+void EnemyBasicAITick( Enemy_t* e, int player_row, int player_col,
                    int (*walkable)(int,int),
                    Enemy_t* all, int count )
 {

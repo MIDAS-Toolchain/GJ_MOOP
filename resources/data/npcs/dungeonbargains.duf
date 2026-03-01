@@ -1,0 +1,338 @@
+@npc {
+    name: "Definitely A Human"
+    glyph: "H"
+    color: [180, 150, 120, 255]
+    image_path: "resources/assets/npcs/three_rats.png"
+    description: "A suspiciously lumpy figure in a trench coat. Something is moving near the ankles."
+}
+
+# ==============================
+# GREETINGS
+# ==============================
+@greeting {
+    start: true
+    priority: 0
+    text: "Hello yes! Welcome to our... MY shop! I am a man who sells things! With my hands!"
+    options: ["opt_who_are_you", "opt_how_shop", "opt_rat_quest", "opt_rat_quest_done", "opt_browse", "opt_leave"]
+}
+@greeting_merc {
+    start: true
+    priority: 1
+    require_class: "Mercenary"
+    require_not_flag: "visited_shop"
+    text: "A warrior! Very good! You look like someone who buys things! I also buy things! Like coats! And... food that is not cheese!"
+    options: ["opt_who_are_you", "opt_how_shop", "opt_rat_quest", "opt_rat_quest_done", "opt_browse", "opt_leave"]
+}
+@greeting_rogue {
+    start: true
+    priority: 1
+    require_class: "Rogue"
+    require_not_flag: "visited_shop"
+    text: "A customer! Please do not look behind the counter! There is nothing there! Especially not a tail! I mean a... filing cabinet!"
+    options: ["opt_who_are_you", "opt_how_shop", "opt_rat_quest", "opt_rat_quest_done", "opt_browse", "opt_leave"]
+}
+@greeting_mage {
+    start: true
+    priority: 1
+    require_class: "Mage"
+    require_not_flag: "visited_shop"
+    text: "A mage! Wonderful! We get... I get so few visitors! Please buy something! *whispered squeaking* ...please buy ANYTHING!"
+    options: ["opt_who_are_you", "opt_how_shop", "opt_rat_quest", "opt_rat_quest_done", "opt_browse", "opt_leave"]
+}
+@greeting_return {
+    start: true
+    priority: 2
+    require_flag: "visited_shop"
+    require_not_flag: "knows_shop_rats"
+    text: "You are back! We are... I am pleased! Business is good! I stood on my legs all day waiting!"
+    options: ["opt_who_are_you", "opt_how_shop", "opt_rat_quest", "opt_rat_quest_done", "opt_browse", "opt_leave"]
+}
+@greeting_knows_rats {
+    start: true
+    priority: 3
+    require_flag: "knows_shop_rats"
+    require_not_flag: "rat_king_defeated"
+    text: "Oh! Our favourite customer! *muffled squeaking* Pip says you are our ONLY customer! That is basically the same thing!"
+    options: ["opt_three_of_you", "opt_which_rat", "opt_know_jonathon", "opt_know_graf", "opt_how_shop", "opt_browse", "opt_leave"]
+}
+@greeting_post_king {
+    start: true
+    priority: 4
+    require_flag: "rat_king_defeated"
+    require_flag: "knows_shop_rats"
+    text: "The Rat King slayer! *nervous squeaking* We are VERY glad you are our friend! Please continue to be our friend!"
+    options: ["opt_rat_king", "opt_three_of_you", "opt_browse", "opt_how_shop", "opt_leave"]
+}
+@greeting_thief {
+    start: true
+    priority: 10
+    require_flag: "shop_thief"
+    text: "THIEF! Gerald remembers! Pip remembers! Trevor is asleep but he will ALSO remember when he wakes up!"
+    options: ["opt_leave"]
+}
+
+# ==============================
+# WHO ARE YOU (before discovery)
+# ==============================
+@opt_who_are_you {
+    label: "What... are you, exactly?"
+    require_not_flag: "knows_shop_rats"
+    goto: "who_reply"
+}
+@who_reply {
+    text: "I am... *frantic squeaking from inside the coat* ...Steve! Steve Humanton! That is my name! I have always had it! Since birth! My birth! Which was normal!"
+    set_flag: "visited_shop"
+    options: ["opt_steve_suspicious", "opt_play_along", "opt_how_shop", "opt_browse", "opt_leave"]
+}
+@opt_steve_suspicious {
+    label: "Something is moving near your ankles."
+    goto: "suspicious_reply"
+}
+@suspicious_reply {
+    text: "That is my feet! Feet do that! They move! For standing purposes! *violent shuffling at floor level* TREVOR STOP FIDGETING!"
+    options: ["opt_who_is_trevor", "opt_play_along", "opt_browse", "opt_leave"]
+}
+@opt_who_is_trevor {
+    label: "Who is Trevor?"
+    goto: "who_trevor_reply"
+}
+@who_trevor_reply {
+    text: "Trevor is my... foot! My left foot! Everyone names their feet! That is a normal thing to do! *more squeaking* Pip says I am 'blowing it.' I don't know what that means!"
+    options: ["opt_play_along", "opt_browse", "opt_leave"]
+}
+@opt_play_along {
+    label: "Of course. Nice to meet you, Steve."
+    goto: "play_along_reply"
+}
+@play_along_reply {
+    text: "See?? This one gets it! *muffled squeaking* Quiet, legs! I am having a conversation!"
+    set_flag: "visited_shop"
+    options: ["opt_how_shop", "opt_browse", "opt_leave"]
+}
+
+# ==============================
+# RAT QUEST — THE REVEAL
+# ==============================
+@opt_rat_quest {
+    label: "The guard upstairs wants me to kill rats."
+    require_flag: "quest_rats"
+    require_not_flag: "knows_shop_rats"
+    color: "lore"
+    goto: "rat_quest_reply"
+}
+@rat_quest_reply {
+    text: "...kill... rats? *the entire trench coat goes rigid* Ha ha! Rats! Yes! Terrible creatures! Nothing to do with me! I am a paying member of society!"
+    options: ["opt_rat_quest_push", "opt_rat_quest_drop", "opt_leave"]
+}
+@opt_rat_quest_push {
+    label: "You're shaking."
+    color: "lore"
+    goto: "rat_quest_push_reply"
+}
+@rat_quest_push_reply {
+    text: "I am cold! It is cold down here! Everyone shakes when they are cold! *a tiny paw briefly pokes out of the collar* ...I have unusual fingers!"
+    options: ["opt_rat_quest_gotcha", "opt_rat_quest_drop", "opt_leave"]
+}
+@opt_rat_quest_gotcha {
+    label: "That was a paw, Steve."
+    color: "lore"
+    goto: "rat_quest_gotcha_reply"
+}
+@rat_quest_gotcha_reply {
+    text: "*long pause* ...okay FINE! We are rats! Three rats! In a coat! But we are BUSINESS rats! We are DIFFERENT! Please do not kill us! We have INVENTORY!"
+    set_flag: "knows_shop_rats"
+    set_lore: "shop_rats"
+    set_flag: "visited_shop"
+    options: ["opt_three_of_you", "opt_wont_hurt", "opt_browse", "opt_leave"]
+}
+@opt_rat_quest_drop {
+    label: "Forget I mentioned it."
+    goto: "rat_quest_drop_reply"
+}
+@rat_quest_drop_reply {
+    text: "Yes! Forget! Good idea! Let us talk about COMMERCE instead! Much better topic! *the trench coat slowly stops shaking*"
+    set_flag: "visited_shop"
+    options: ["opt_how_shop", "opt_browse", "opt_leave"]
+}
+@opt_wont_hurt {
+    label: "Relax. I'm not going to hurt you."
+    goto: "wont_hurt_reply"
+}
+@wont_hurt_reply {
+    text: "*sniffling from inside the coat* You promise? Gerald is very brave but Pip is crying and Trevor can't stop his legs from shaking. Well, more than usual."
+    options: ["opt_three_of_you", "opt_browse", "opt_leave"]
+}
+
+# ==============================
+# RAT QUEST DONE — ALTERNATE REVEAL
+# ==============================
+@opt_rat_quest_done {
+    label: "I cleared out a rat problem for the guard upstairs."
+    require_flag: "rats_cleared"
+    require_not_flag: "knows_shop_rats"
+    color: "lore"
+    goto: "rat_quest_done_reply"
+}
+@rat_quest_done_reply {
+    text: "You... CLEARED... rats? *the trench coat begins swaying* How nice! For the guard! Very good news! Completely unrelated to me! A human!"
+    options: ["opt_rat_quest_done_push", "opt_rat_quest_drop", "opt_leave"]
+}
+@opt_rat_quest_done_push {
+    label: "You seem pretty nervous about rats, Steve."
+    color: "lore"
+    goto: "rat_quest_push_reply"
+}
+
+# ==============================
+# POST-DISCOVERY — THE RATS
+# ==============================
+@opt_three_of_you {
+    label: "Tell me about the three of you."
+    require_flag: "knows_shop_rats"
+    goto: "three_reply"
+}
+@three_reply {
+    text: "I am Gerald! I am the top! The most important! Below me is Pip, who counts the gold. And Trevor is the legs. Trevor is very tired. Trevor is always tired. It is a SYSTEM!"
+    options: ["opt_which_rat", "opt_trevor_ok", "opt_gerald_leader", "opt_browse", "opt_leave"]
+}
+@opt_which_rat {
+    label: "Which one am I talking to?"
+    require_flag: "knows_shop_rats"
+    goto: "which_rat_reply"
+}
+@which_rat_reply {
+    text: "Gerald! Always Gerald! I am the face! The VOICE! Pip tried talking to customers once. Pip just squeaks numbers at people. No charm! No salesmanship!"
+    options: ["opt_trevor_ok", "opt_pip_talk", "opt_browse", "opt_leave"]
+}
+@opt_gerald_leader {
+    label: "So you're the leader?"
+    goto: "gerald_leader_reply"
+}
+@gerald_leader_reply {
+    text: "OBVIOUSLY! Someone has to make the decisions! Pip wanted to sell everything for exactly one gold. Everything! 'One gold is a good number,' Pip said. Pip does NOT understand market value!"
+    options: ["opt_pip_talk", "opt_trevor_ok", "opt_browse", "opt_leave"]
+}
+@opt_pip_talk {
+    label: "Can I talk to Pip?"
+    require_flag: "knows_shop_rats"
+    goto: "pip_talk_reply"
+}
+@pip_talk_reply {
+    text: "*the middle of the trench coat bulges outward* *rapid squeaking* Pip says 'gold is gold' and 'numbers don't lie' and 'Gerald spends too much on coat maintenance.' This is SLANDER!"
+    options: ["opt_trevor_ok", "opt_browse", "opt_leave"]
+}
+@opt_trevor_ok {
+    label: "Is Trevor okay?"
+    require_flag: "knows_shop_rats"
+    goto: "trevor_reply"
+}
+@trevor_reply {
+    text: "*squeaking from ankle level* Trevor says he wants a raise. Trevor has been saying this for weeks. We split the cheese equally. That is the arrangement. Trevor does not appreciate the arrangement."
+    options: ["opt_trevor_strike", "opt_browse", "opt_leave"]
+}
+@opt_trevor_strike {
+    label: "What if Trevor goes on strike?"
+    goto: "trevor_strike_reply"
+}
+@trevor_strike_reply {
+    text: "Then we FALL OVER! Trevor knows this! It is leverage! Pip calls it 'labour dynamics!' Gerald calls it TREASON! ...but yes we would fall over."
+    options: ["opt_browse", "opt_leave"]
+}
+
+# ==============================
+# RAT KING (post-boss)
+# ==============================
+@opt_rat_king {
+    label: "I defeated the Rat King."
+    require_flag: "rat_king_defeated"
+    require_flag: "knows_shop_rats"
+    goto: "rat_king_reply"
+}
+@rat_king_reply {
+    text: "The King?! *the whole coat goes still* ...we did not like him. He tried to unionize us. We are INDEPENDENT CONTRACTORS. Gerald makes the rules."
+    options: ["opt_rat_queen_rumor", "opt_browse", "opt_leave"]
+}
+@opt_rat_queen_rumor {
+    label: "Is there a Rat Queen?"
+    color: "lore"
+    goto: "rat_queen_rumor_reply"
+}
+@rat_queen_rumor_reply {
+    text: "*all three rats go completely silent* ...we do not speak of the Queen. *Trevor starts shaking violently* Pip says to change the subject. Pip is right."
+    set_lore: "rat_royalty"
+    options: ["opt_browse", "opt_leave"]
+}
+
+# ==============================
+# KNOWS JONATHON
+# ==============================
+@opt_know_jonathon {
+    label: "You know Jonathon the painter?"
+    require_flag: "lore_jonathon"
+    require_flag: "knows_shop_rats"
+    goto: "know_jonathon_reply"
+}
+@know_jonathon_reply {
+    text: "The bone man! He tried to trade us a painting once! What are we gonna do with a painting? We do not have walls! We have a COAT!"
+    options: ["opt_jonathon_nice", "opt_browse", "opt_leave"]
+}
+@opt_jonathon_nice {
+    label: "He's a good guy."
+    goto: "jonathon_nice_reply"
+}
+@jonathon_nice_reply {
+    text: "He does not try to eat us! That is the highest compliment a skeleton can give! Pip wanted to offer him a loyalty discount. Gerald said no. Margins are margins."
+    options: ["opt_browse", "opt_leave"]
+}
+
+# ==============================
+# KNOWS GRAF
+# ==============================
+@opt_know_graf {
+    label: "There's a guard named Graf nearby."
+    require_flag: "lore_graf"
+    require_flag: "knows_shop_rats"
+    goto: "know_graf_reply"
+}
+@know_graf_reply {
+    text: "The sleeping man with the spear! We tried to sell him a pillow! He said he only had a sandwich! We do not accept sandwich!"
+    options: ["opt_browse", "opt_leave"]
+}
+
+# ==============================
+# HOW DOES THIS WORK
+# ==============================
+@opt_how_shop {
+    label: "How does your shop work?"
+    goto: "how_shop_reply"
+}
+@how_shop_reply {
+    text: "Walk over item on the rug! Look at item! Buy item with gold! Very simple! Pip handles the math! Gerald handles the charm! Trevor handles the standing!"
+    set_flag: "visited_shop"
+    options: ["opt_where_stock", "opt_browse", "opt_leave"]
+}
+@opt_where_stock {
+    label: "Where do you get your stock?"
+    goto: "where_stock_reply"
+}
+@where_stock_reply {
+    text: "We find things! In the dungeon! Sometimes adventurers drop things when they... stop moving! We do NOT cause the stopping! We just... collect afterwards! Economically!"
+    options: ["opt_browse", "opt_leave"]
+}
+
+# ==============================
+# BROWSE
+# ==============================
+@opt_browse {
+    label: "Let me look around."
+    set_flag: "visited_shop"
+    goto: "end"
+}
+
+# ==============================
+# LEAVE
+# ==============================
+@opt_leave {
+    label: "[Leave]"
+    goto: "end"
+}

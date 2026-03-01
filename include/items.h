@@ -3,7 +3,7 @@
 
 #include <Archimedes.h>
 
-#define MAX_CONSUMABLES   16
+#define MAX_CONSUMABLES   32
 #define MAX_DOORS         8
 
 #define FILTERED_CONSUMABLE 0
@@ -24,6 +24,7 @@ typedef struct
 
 typedef struct
 {
+  char key[MAX_NAME_LENGTH];
   char name[MAX_NAME_LENGTH];
   char type[MAX_NAME_LENGTH];
   char glyph[8];
@@ -58,6 +59,7 @@ typedef struct
 
 typedef struct
 {
+  char key[MAX_NAME_LENGTH];
   char name[MAX_NAME_LENGTH];
   char kind[MAX_NAME_LENGTH];       /* "weapon" / "armor" / "trinket" */
   char slot[MAX_NAME_LENGTH];
@@ -83,11 +85,14 @@ extern EquipmentInfo_t  g_equipment[MAX_EQUIPMENT];
 extern int              g_num_equipment;
 
 void ItemsLoadAll( void );
-int  ItemsBuildFiltered( int class_idx, FilteredItem_t* out, int max_out );
+int  ItemsBuildFiltered( int class_idx, FilteredItem_t* out, int max_out, int include_universal );
 
 int  EquipSlotForKind( const char* kind );
 void EquipStarterGear( const char* class_key );
 int  InventoryAdd( int item_type, int index );
 void InventoryRemove( int slot );
+
+int  ConsumableByKey( const char* key );
+int  EquipmentByKey( const char* key );
 
 #endif

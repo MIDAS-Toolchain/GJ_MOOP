@@ -1,0 +1,41 @@
+# Treasure Maps — dropped by undead miners
+# Different internal IDs, same display name
+# One per class (Mat=Mercenary, Jake=Rogue, Chris=Mage)
+# target_x/target_y = secret wall location the map reveals
+
+@treasure_map_mat {
+    name: "Treasure Map"
+    type: "map"
+    glyph: "="
+    bonus_damage: 0
+    effect: "reveal"
+    target_x: 10
+    target_y: 10
+    image_path: ""
+    description: "A crude map scratched onto parchment by Miner Mat. X marks something deep in the dungeon."
+    color: [210, 190, 120, 255]
+}
+@treasure_map_jake {
+    name: "Treasure Map"
+    type: "map"
+    glyph: "="
+    bonus_damage: 0
+    effect: "reveal"
+    target_x: 10
+    target_y: 10
+    image_path: ""
+    description: "A crude map scratched onto parchment by Miner Jake. X marks something deep in the dungeon."
+    color: [210, 190, 120, 255]
+}
+@treasure_map_chris {
+    name: "Treasure Map"
+    type: "map"
+    glyph: "="
+    bonus_damage: 0
+    effect: "reveal"
+    target_x: 10
+    target_y: 10
+    image_path: ""
+    description: "A crude map scratched onto parchment by Miner Chris. X marks something deep in the dungeon."
+    color: [210, 190, 120, 255]
+}

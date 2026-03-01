@@ -1,0 +1,120 @@
+@shop {
+    name: "Dungeon Supplies"
+    floor: 1
+    spawn_min: 4
+    spawn_max: 6
+}
+
+# ==============================
+# FOOD (Mercenary)
+# ==============================
+@stale_bread {
+    item_key: "bread"
+    type: "consumable"
+    cost: 2
+    weight: 3
+    class: "Mercenary"
+}
+@hearty_stew {
+    item_key: "stew"
+    type: "consumable"
+    cost: 3
+    weight: 2
+    class: "Mercenary"
+}
+@chicken_leg {
+    item_key: "chicken_leg"
+    type: "consumable"
+    cost: 2
+    weight: 3
+    class: "Mercenary"
+}
+@dragon_pepper {
+    item_key: "dragon_pepper"
+    type: "consumable"
+    cost: 5
+    weight: 1
+    class: "Mercenary"
+}
+
+# ==============================
+# GADGETS (Rogue)
+# ==============================
+@flint_arrow {
+    item_key: "flint_arrow"
+    type: "consumable"
+    cost: 3
+    weight: 2
+    class: "Rogue"
+}
+@poison_arrow {
+    item_key: "poison_arrow"
+    type: "consumable"
+    cost: 4
+    weight: 2
+    class: "Rogue"
+}
+@bear_trap {
+    item_key: "bear_trap"
+    type: "consumable"
+    cost: 4
+    weight: 2
+    class: "Rogue"
+}
+@smoke_bomb {
+    item_key: "smoke_bomb"
+    type: "consumable"
+    cost: 5
+    weight: 1
+    class: "Rogue"
+}
+
+# ==============================
+# SCROLLS (Mage)
+# ==============================
+@scroll_spark {
+    item_key: "scroll_spark"
+    type: "consumable"
+    cost: 3
+    weight: 2
+    class: "Mage"
+}
+@scroll_frost {
+    item_key: "scroll_frost"
+    type: "consumable"
+    cost: 4
+    weight: 2
+    class: "Mage"
+}
+@scroll_fireball {
+    item_key: "scroll_fireball"
+    type: "consumable"
+    cost: 5
+    weight: 1
+    class: "Mage"
+}
+@scroll_teleport {
+    item_key: "scroll_teleport"
+    type: "consumable"
+    cost: 4
+    weight: 2
+    class: "Mage"
+}
+
+# ==============================
+# UNIVERSAL
+# ==============================
+@small_health_potion {
+    item_key: "small_health_potion"
+    type: "consumable"
+    cost: 4
+    weight: 2
+    class: ""
+}
+@iron_shield {
+    item_key: "iron_shield"
+    type: "equipment"
+    cost: 8
+    weight: 1
+    class: ""
+}

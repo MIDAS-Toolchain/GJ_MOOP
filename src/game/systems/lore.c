@@ -118,6 +118,12 @@ int LoreIsDiscovered( const char* key )
   return 0;
 }
 
+void LoreResetAll( void )
+{
+  for ( int i = 0; i < g_num_lore; i++ )
+    g_lore[i].discovered = 0;
+}
+
 int LoreGetCount( void ) { return g_num_lore; }
 
 LoreEntry_t* LoreGetEntry( int index )

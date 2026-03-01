@@ -5,10 +5,12 @@
 #include "defines.h"
 #include "player.h"
 #include "items.h"
+#include "maps.h"
 #include "draw_utils.h"
 #include "context_menu.h"
 #include "game_events.h"
 #include "inventory_ui.h"
+#include "target_mode.h"
 
 /* Panel colors */
 #define PANEL_FG  (aColor_t){ 0xc7, 0xcf, 0xcc, 255 }
@@ -29,7 +31,7 @@
 #define EQ_TEXT_SCALE  1.0f
 
 /* Equipment tooltip modal */
-#define EQ_MODAL_W       220.0f
+#define EQ_MODAL_MIN_W   200.0f
 #define EQ_MODAL_H       130.0f
 #define EQ_MODAL_PAD_X   10.0f
 #define EQ_MODAL_PAD_Y    8.0f
@@ -101,6 +103,24 @@ void InventoryUISetIntroOffset( float x_offset, float alpha )
   ui_alpha    = alpha;
 }
 
+/* Measure item name to compute modal width (name at 1.4x is the widest element) */
+static float CalcModalW( int item_type, int item_index )
+{
+  const char* name = NULL;
+  if ( item_type == INV_EQUIPMENT && item_index >= 0 && item_index < g_num_equipment )
+    name = g_equipment[item_index].name;
+  else if ( item_type == INV_CONSUMABLE && item_index >= 0 && item_index < g_num_consumables )
+    name = g_consumables[item_index].name;
+  else if ( item_type == INV_MAP && item_index >= 0 && item_index < g_num_maps )
+    name = g_maps[item_index].name;
+  if ( !name ) return EQ_MODAL_MIN_W;
+
+  float tw, th;
+  a_CalcTextDimensions( name, a_default_text_style.type, &tw, &th );
+  float needed = tw * EQ_MODAL_NAME_S + EQ_MODAL_PAD_X * 2;
+  return needed > EQ_MODAL_MIN_W ? needed : EQ_MODAL_MIN_W;
+}
+
 /* ------------------------------------------------------------------ */
 
 int InventoryUILogic( int mouse_moved )
@@ -145,7 +165,8 @@ int InventoryUILogic( int mouse_moved )
       int mx = app.mouse.x;
       int my = app.mouse.y;
       aContainerWidget_t* kp = a_GetContainerFromWidget( "key_panel" );
-      float modal_x = kp->rect.x - EQ_MODAL_W - 8;
+      float mw = CalcModalW( INV_EQUIPMENT, eq_idx );
+      float modal_x = kp->rect.x - mw - 8;
       float modal_y = kp->rect.y + EQ_TITLE_H + player.equip_cursor * ( EQ_ROW_H + EQ_PAD );
       if ( modal_y + EQ_MODAL_H > kp->rect.y + kp->rect.h ) modal_y = kp->rect.y + kp->rect.h - EQ_MODAL_H;
       float ax = modal_x - CTX_MENU_W - 4;
@@ -180,7 +201,8 @@ int InventoryUILogic( int mouse_moved )
       int my = app.mouse.y;
       aContainerWidget_t* kp = a_GetContainerFromWidget( "key_panel" );
 
-      float modal_x = kp->rect.x - EQ_MODAL_W - 8;
+      float mw = CalcModalW( INV_EQUIPMENT, eq_idx );
+      float modal_x = kp->rect.x - mw - 8;
       float modal_y = kp->rect.y + EQ_TITLE_H + player.equip_cursor * ( EQ_ROW_H + EQ_PAD );
       if ( modal_y + EQ_MODAL_H > kp->rect.y + kp->rect.h ) modal_y = kp->rect.y + kp->rect.h - EQ_MODAL_H;
       float action_h = EQ_ACTION_COUNT * ( CTX_MENU_ROW_H + CTX_MENU_PAD );
@@ -194,15 +216,19 @@ int InventoryUILogic( int mouse_moved )
       }
       else
       {
+        /* Double-click shortcut: click same equipment row = Unequip */
         float ey = kp->rect.y + EQ_TITLE_H;
         float row_y = ey + player.equip_cursor * ( EQ_ROW_H + EQ_PAD );
-        if ( PointInRect( mx, my, kp->rect.x + EQ_PAD, row_y, kp->rect.w - EQ_PAD * 2, EQ_ROW_H ) )
+        if ( PointInRect( mx, my, kp->rect.x + EQ_PAD, row_y,
+                          kp->rect.w - EQ_PAD * 2, EQ_ROW_H ) )
         {
           eq_action_cursor = 0;
           exec = 1;
         }
         else
+        {
           eq_action_open = 0;
+        }
       }
     }
 
@@ -291,11 +317,12 @@ int InventoryUILogic( int mouse_moved )
       int row = player.inv_cursor / INV_COLS;
       float cell_y = grid_y + oy + row * ( cell + 2 );
 
+      float mw = CalcModalW( slot->type, slot->index );
       float modal_y = cell_y;
       if ( modal_y + EQ_MODAL_H > ip->rect.y + ip->rect.h )
         modal_y = ip->rect.y + ip->rect.h - EQ_MODAL_H;
 
-      float modal_x = ip->rect.x - EQ_MODAL_W - 8;
+      float modal_x = ip->rect.x - mw - 8;
       float amx = modal_x - CTX_MENU_W - 4;
       if ( amx < 0 ) amx = ip->rect.x + ip->rect.w + 4;
       float amy = modal_y;
@@ -340,11 +367,12 @@ int InventoryUILogic( int mouse_moved )
       int row = player.inv_cursor / INV_COLS;
       float cell_y = grid_y + oy + row * ( cell + 2 );
 
+      float mw = CalcModalW( slot->type, slot->index );
       float modal_y = cell_y;
       if ( modal_y + EQ_MODAL_H > ip->rect.y + ip->rect.h )
         modal_y = ip->rect.y + ip->rect.h - EQ_MODAL_H;
 
-      float modal_x = ip->rect.x - EQ_MODAL_W - 8;
+      float modal_x = ip->rect.x - mw - 8;
       float amx = modal_x - CTX_MENU_W - 4;
       if ( amx < 0 ) amx = ip->rect.x + ip->rect.w + 4;
       float amy = modal_y;
@@ -356,18 +384,29 @@ int InventoryUILogic( int mouse_moved )
       }
       else
       {
+        /* Double-click shortcut: click same cell again = execute first action */
         float total_gw = cell * INV_COLS + 4 * ( INV_COLS - 1 );
         float ox = ( grid_w - total_gw ) / 2.0f;
-        int cur_col = player.inv_cursor % INV_COLS;
-        float cx = r.x + INV_PAD + ox + cur_col * ( cell + 4 );
-        float cy = grid_y + oy + row * ( cell + 2 );
-        if ( PointInRect( mx, my, cx, cy, cell - 1, cell - 1 ) )
+        int clicked_cell = -1;
+        for ( int cr = 0; cr < INV_ROWS && clicked_cell < 0; cr++ )
+        {
+          for ( int cc = 0; cc < INV_COLS && clicked_cell < 0; cc++ )
+          {
+            float cx = ip->rect.x + INV_PAD + ox + cc * ( cell + 4 );
+            float cy = grid_y + oy + cr * ( cell + 2 );
+            if ( PointInRect( mx, my, cx, cy, cell - 1, cell - 1 ) )
+              clicked_cell = cr * INV_COLS + cc;
+          }
+        }
+        if ( clicked_cell == player.inv_cursor )
         {
           inv_action_cursor = 0;
           exec = 1;
         }
         else
+        {
           inv_action_open = 0;
+        }
       }
     }
 
@@ -401,11 +440,31 @@ int InventoryUILogic( int mouse_moved )
         }
         else if ( slot->type == INV_CONSUMABLE )
         {
-          if ( GameEventUseConsumable( slot->index ) )
+          ConsumableInfo_t* ci = &g_consumables[slot->index];
+
+          /* Gadgets/scrolls need targeting */
+          if ( strcmp( ci->type, "gadget" ) == 0 || strcmp( ci->type, "scroll" ) == 0 )
+          {
+            if ( GameEventsConsumableUsed() )
+            {
+              GameEventUseConsumable( slot->index );
+            }
+            else
+            {
+              TargetModeEnter( slot->index, player.inv_cursor );
+              inv_action_open = 0;
+              ui_focus = 0;
+            }
+          }
+          else if ( GameEventUseConsumable( slot->index ) )
           {
             slot->type = INV_EMPTY;
             slot->index = 0;
           }
+        }
+        else if ( slot->type == INV_MAP )
+        {
+          GameEventUseMap( slot->index );
         }
       }
       else if ( inv_action_cursor == 1 ) /* Look */
@@ -414,6 +473,8 @@ int InventoryUILogic( int mouse_moved )
           GameEvent( EVT_LOOK_EQUIPMENT, slot->index );
         else if ( slot->type == INV_CONSUMABLE )
           GameEvent( EVT_LOOK_CONSUMABLE, slot->index );
+        else if ( slot->type == INV_MAP )
+          GameEvent( EVT_LOOK_MAP, slot->index );
       }
       inv_action_open = 0;
     }
@@ -655,7 +716,9 @@ int InventoryUILogic( int mouse_moved )
     int on_eq  = PointInRect( app.mouse.x, app.mouse.y, kp->rect.x, kp->rect.y, kp->rect.w, kp->rect.h );
     if ( !on_inv && !on_eq )
     {
+      app.mouse.pressed = 0;  /* consume click so it doesn't open tile actions */
       ui_focus = 0;
+      show_item_hover = 0;
       eq_action_open = 0;
       inv_action_open = 0;
     }
@@ -712,6 +775,14 @@ static void DrawInventoryGrid( void )
         float ix = cx + ( cell - 1 - isz ) / 2.0f;
         float iy = cy + ( cell - 1 - isz ) / 2.0f;
         DrawImageOrGlyph( NULL, e->glyph, e->color, ix, iy, isz );
+      }
+      else if ( slot->type == INV_MAP && slot->index < g_num_maps )
+      {
+        MapInfo_t* m = &g_maps[slot->index];
+        float isz = cell * 0.6f;
+        float ix = cx + ( cell - 1 - isz ) / 2.0f;
+        float iy = cy + ( cell - 1 - isz ) / 2.0f;
+        DrawImageOrGlyph( m->image, m->glyph, m->color, ix, iy, isz );
       }
 
       /* Cursor highlight */
@@ -825,15 +896,17 @@ void InventoryUIDraw( void )
        player.equipment[player.equip_cursor] >= 0 &&
        player.equipment[player.equip_cursor] < g_num_equipment )
   {
-    EquipmentInfo_t* e = &g_equipment[player.equipment[player.equip_cursor]];
+    int eq_draw_idx = player.equipment[player.equip_cursor];
+    EquipmentInfo_t* e = &g_equipment[eq_draw_idx];
     aContainerWidget_t* kp = a_GetContainerFromWidget( "key_panel" );
 
-    float mx = kp->rect.x - EQ_MODAL_W - 8;
+    float mw = CalcModalW( INV_EQUIPMENT, eq_draw_idx );
+    float mx = kp->rect.x - mw - 8;
     float my = kp->rect.y + EQ_TITLE_H + player.equip_cursor * ( EQ_ROW_H + EQ_PAD );
     if ( my + EQ_MODAL_H > kp->rect.y + kp->rect.h ) my = kp->rect.y + kp->rect.h - EQ_MODAL_H;
 
-    a_DrawFilledRect( (aRectf_t){ mx, my, EQ_MODAL_W, EQ_MODAL_H }, (aColor_t){ 0x09, 0x0a, 0x14, 255 } );
-    a_DrawRect( (aRectf_t){ mx, my, EQ_MODAL_W, EQ_MODAL_H }, e->color );
+    a_DrawFilledRect( (aRectf_t){ mx, my, mw, EQ_MODAL_H }, (aColor_t){ 0x09, 0x0a, 0x14, 255 } );
+    a_DrawRect( (aRectf_t){ mx, my, mw, EQ_MODAL_H }, e->color );
 
     float ty = my + EQ_MODAL_PAD_Y;
     float tx = mx + EQ_MODAL_PAD_X;
@@ -875,7 +948,7 @@ void InventoryUIDraw( void )
 
     ts.fg = (aColor_t){ 0xa8, 0xb5, 0xb2, 255 };
     ts.scale = EQ_MODAL_DESC_S;
-    ts.wrap_width = (int)( EQ_MODAL_W - EQ_MODAL_PAD_X * 2 );
+    ts.wrap_width = (int)( mw - EQ_MODAL_PAD_X * 2 );
     a_DrawText( e->description, (int)tx, (int)ty, ts );
 
     /* Equipment action menu */
@@ -913,7 +986,8 @@ void InventoryUIDraw( void )
     int cur_row = player.inv_cursor / INV_COLS;
     float cell_y = grid_y + oy + cur_row * ( cell + 2 );
 
-    float mx = ip->rect.x - EQ_MODAL_W - 8;
+    float mw = CalcModalW( slot->type, slot->index );
+    float mx = ip->rect.x - mw - 8;
     float my = cell_y;
     if ( my + EQ_MODAL_H > ip->rect.y + ip->rect.h )
       my = ip->rect.y + ip->rect.h - EQ_MODAL_H;
@@ -925,8 +999,8 @@ void InventoryUIDraw( void )
       EquipmentInfo_t* e = &g_equipment[slot->index];
       item_name = e->name;
 
-      a_DrawFilledRect( (aRectf_t){ mx, my, EQ_MODAL_W, EQ_MODAL_H }, (aColor_t){ 0x09, 0x0a, 0x14, 255 } );
-      a_DrawRect( (aRectf_t){ mx, my, EQ_MODAL_W, EQ_MODAL_H }, e->color );
+      a_DrawFilledRect( (aRectf_t){ mx, my, mw, EQ_MODAL_H }, (aColor_t){ 0x09, 0x0a, 0x14, 255 } );
+      a_DrawRect( (aRectf_t){ mx, my, mw, EQ_MODAL_H }, e->color );
 
       float ty = my + EQ_MODAL_PAD_Y;
       float tx = mx + EQ_MODAL_PAD_X;
@@ -967,7 +1041,7 @@ void InventoryUIDraw( void )
 
       ts.fg = (aColor_t){ 0xa8, 0xb5, 0xb2, 255 };
       ts.scale = EQ_MODAL_DESC_S;
-      ts.wrap_width = (int)( EQ_MODAL_W - EQ_MODAL_PAD_X * 2 );
+      ts.wrap_width = (int)( mw - EQ_MODAL_PAD_X * 2 );
       a_DrawText( e->description, (int)tx, (int)ty, ts );
     }
     else if ( slot->type == INV_CONSUMABLE && slot->index < g_num_consumables )
@@ -975,8 +1049,8 @@ void InventoryUIDraw( void )
       ConsumableInfo_t* c = &g_consumables[slot->index];
       item_name = c->name;
 
-      a_DrawFilledRect( (aRectf_t){ mx, my, EQ_MODAL_W, EQ_MODAL_H }, (aColor_t){ 0x09, 0x0a, 0x14, 255 } );
-      a_DrawRect( (aRectf_t){ mx, my, EQ_MODAL_W, EQ_MODAL_H }, c->color );
+      a_DrawFilledRect( (aRectf_t){ mx, my, mw, EQ_MODAL_H }, (aColor_t){ 0x09, 0x0a, 0x14, 255 } );
+      a_DrawRect( (aRectf_t){ mx, my, mw, EQ_MODAL_H }, c->color );
 
       float ty = my + EQ_MODAL_PAD_Y;
       float tx = mx + EQ_MODAL_PAD_X;
@@ -1010,8 +1084,36 @@ void InventoryUIDraw( void )
 
       ts.fg = (aColor_t){ 0xa8, 0xb5, 0xb2, 255 };
       ts.scale = EQ_MODAL_DESC_S;
-      ts.wrap_width = (int)( EQ_MODAL_W - EQ_MODAL_PAD_X * 2 );
+      ts.wrap_width = (int)( mw - EQ_MODAL_PAD_X * 2 );
       a_DrawText( c->description, (int)tx, (int)ty, ts );
+    }
+    else if ( slot->type == INV_MAP && slot->index < g_num_maps )
+    {
+      MapInfo_t* m = &g_maps[slot->index];
+      item_name = m->name;
+
+      a_DrawFilledRect( (aRectf_t){ mx, my, mw, EQ_MODAL_H }, (aColor_t){ 0x09, 0x0a, 0x14, 255 } );
+      a_DrawRect( (aRectf_t){ mx, my, mw, EQ_MODAL_H }, m->color );
+
+      float ty = my + EQ_MODAL_PAD_Y;
+      float tx = mx + EQ_MODAL_PAD_X;
+      aTextStyle_t ts = a_default_text_style;
+      ts.bg = (aColor_t){ 0, 0, 0, 0 };
+
+      ts.fg = m->color;
+      ts.scale = EQ_MODAL_NAME_S;
+      a_DrawText( m->name, (int)tx, (int)ty, ts );
+      ty += EQ_MODAL_LINE_LG;
+
+      ts.fg = (aColor_t){ 0xde, 0x9e, 0x41, 255 };
+      ts.scale = EQ_MODAL_TEXT_S;
+      a_DrawText( "Map", (int)tx, (int)ty, ts );
+      ty += EQ_MODAL_LINE_MD;
+
+      ts.fg = (aColor_t){ 0xa8, 0xb5, 0xb2, 255 };
+      ts.scale = EQ_MODAL_DESC_S;
+      ts.wrap_width = (int)( mw - EQ_MODAL_PAD_X * 2 );
+      a_DrawText( m->description, (int)tx, (int)ty, ts );
     }
 
     /* Inventory action menu */

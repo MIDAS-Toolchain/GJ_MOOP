@@ -15,6 +15,7 @@ typedef struct
   int   row, col;
   float world_x, world_y;
   int   alive;
+  int   idle_cd;            /* turns remaining before next idle bark */
 } NPC_t;
 
 void   NPCsInit( NPC_t* list, int* count );
@@ -26,5 +27,8 @@ NPC_t* NPCAt( NPC_t* list, int count, int row, int col );
 void NPCsDrawAll( aRectf_t vp_rect, GameCamera_t* cam,
                    NPC_t* list, int count,
                    World_t* world, int gfx_mode );
+
+/* Idle bark tick — call once per turn, spawns floating text near visible NPCs */
+void NPCsIdleTick( NPC_t* list, int count );
 
 #endif

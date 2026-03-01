@@ -39,6 +39,9 @@ typedef struct
   char require_lore[MAX_CONDITIONS][MAX_NAME_LENGTH];
   int  num_require_lore;
 
+  /* Conditions (gold) */
+  int  require_gold_min;
+
   /* Actions */
   char set_flag[MAX_NAME_LENGTH];
   char incr_flag[MAX_NAME_LENGTH];
@@ -46,6 +49,7 @@ typedef struct
   char give_item[MAX_NAME_LENGTH];
   char take_item[MAX_NAME_LENGTH];
   char set_lore[MAX_NAME_LENGTH];
+  int  give_gold;
 } DialogueEntry_t;
 
 /* NPC type — loaded from one DUF file */
@@ -57,6 +61,8 @@ typedef struct
   aColor_t color;
   char     description[256];
   char     combat_bark[128];
+  char     idle_bark[128];
+  int      idle_cooldown;           /* turns between idle barks (0 = disabled) */
   aImage_t* image;
   DialogueEntry_t entries[MAX_DIALOGUE_NODES];
   int      num_entries;

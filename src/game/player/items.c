@@ -4,6 +4,7 @@
 #include <Daedalus.h>
 
 #include "items.h"
+#include "maps.h"
 #include "player.h"
 
 ClassInfo_t      g_classes[3];
@@ -74,10 +75,54 @@ static void LoadCharacterData( void )
   d_DUFFree( root );
 }
 
-static void LoadConsumableData( void )
+static void ParseConsumableEntry( dDUFValue_t* entry )
+{
+  if ( g_num_consumables >= MAX_CONSUMABLES ) return;
+
+  ConsumableInfo_t* c = &g_consumables[g_num_consumables];
+  memset( c, 0, sizeof( ConsumableInfo_t ) );
+
+  if ( entry->key )
+    strncpy( c->key, entry->key, MAX_NAME_LENGTH - 1 );
+
+  dDUFValue_t* name     = d_DUFGetObjectItem( entry, "name" );
+  dDUFValue_t* type     = d_DUFGetObjectItem( entry, "type" );
+  dDUFValue_t* glyph    = d_DUFGetObjectItem( entry, "glyph" );
+  dDUFValue_t* color    = d_DUFGetObjectItem( entry, "color" );
+  dDUFValue_t* bdmg     = d_DUFGetObjectItem( entry, "bonus_damage" );
+  dDUFValue_t* effect   = d_DUFGetObjectItem( entry, "effect" );
+  dDUFValue_t* desc     = d_DUFGetObjectItem( entry, "description" );
+  dDUFValue_t* img_path = d_DUFGetObjectItem( entry, "image_path" );
+
+  if ( name )   strncpy( c->name, name->value_string, MAX_NAME_LENGTH - 1 );
+  if ( type )   strncpy( c->type, type->value_string, MAX_NAME_LENGTH - 1 );
+  if ( glyph )  strncpy( c->glyph, glyph->value_string, 7 );
+  if ( effect ) strncpy( c->effect, effect->value_string, MAX_NAME_LENGTH - 1 );
+  if ( desc )   strncpy( c->description, desc->value_string, 255 );
+  if ( bdmg )   c->bonus_damage = (int)bdmg->value_int;
+  c->color = ParseDUFColor( color );
+
+  dDUFValue_t* v;
+  if ( ( v = d_DUFGetObjectItem( entry, "range" ) ) )        c->range        = (int)v->value_int;
+  if ( ( v = d_DUFGetObjectItem( entry, "requires_los" ) ) ) c->requires_los = (int)v->value_int;
+  if ( ( v = d_DUFGetObjectItem( entry, "heal" ) ) )         c->heal         = (int)v->value_int;
+  if ( ( v = d_DUFGetObjectItem( entry, "ticks" ) ) )        c->ticks        = (int)v->value_int;
+  if ( ( v = d_DUFGetObjectItem( entry, "tick_damage" ) ) )  c->tick_damage  = (int)v->value_int;
+  if ( ( v = d_DUFGetObjectItem( entry, "place_range" ) ) )  c->place_range  = (int)v->value_int;
+  if ( ( v = d_DUFGetObjectItem( entry, "radius" ) ) )       c->radius       = (int)v->value_int;
+  if ( ( v = d_DUFGetObjectItem( entry, "duration" ) ) )     c->duration     = (int)v->value_int;
+  if ( ( v = d_DUFGetObjectItem( entry, "aoe_radius" ) ) )   c->aoe_radius   = (int)v->value_int;
+
+  if ( img_path && strlen( img_path->value_string ) > 0 )
+    c->image = a_ImageLoad( img_path->value_string );
+
+  g_num_consumables++;
+}
+
+static void LoadConsumableDUF( const char* path )
 {
   dDUFValue_t* root = NULL;
-  dDUFError_t* err = d_DUFParseFile( "resources/data/consumables.duf", &root );
+  dDUFError_t* err = d_DUFParseFile( path, &root );
 
   if ( err != NULL )
   {
@@ -87,47 +132,16 @@ static void LoadConsumableData( void )
     return;
   }
 
-  g_num_consumables = 0;
-  for ( dDUFValue_t* entry = root->child; entry != NULL && g_num_consumables < MAX_CONSUMABLES; entry = entry->next )
-  {
-    ConsumableInfo_t* c = &g_consumables[g_num_consumables];
-    memset( c, 0, sizeof( ConsumableInfo_t ) );
-
-    dDUFValue_t* name     = d_DUFGetObjectItem( entry, "name" );
-    dDUFValue_t* type     = d_DUFGetObjectItem( entry, "type" );
-    dDUFValue_t* glyph    = d_DUFGetObjectItem( entry, "glyph" );
-    dDUFValue_t* color    = d_DUFGetObjectItem( entry, "color" );
-    dDUFValue_t* bdmg     = d_DUFGetObjectItem( entry, "bonus_damage" );
-    dDUFValue_t* effect   = d_DUFGetObjectItem( entry, "effect" );
-    dDUFValue_t* desc     = d_DUFGetObjectItem( entry, "description" );
-    dDUFValue_t* img_path = d_DUFGetObjectItem( entry, "image_path" );
-
-    if ( name )   strncpy( c->name, name->value_string, MAX_NAME_LENGTH - 1 );
-    if ( type )   strncpy( c->type, type->value_string, MAX_NAME_LENGTH - 1 );
-    if ( glyph )  strncpy( c->glyph, glyph->value_string, 7 );
-    if ( effect ) strncpy( c->effect, effect->value_string, MAX_NAME_LENGTH - 1 );
-    if ( desc )   strncpy( c->description, desc->value_string, 255 );
-    if ( bdmg )   c->bonus_damage = (int)bdmg->value_int;
-    c->color = ParseDUFColor( color );
-
-    dDUFValue_t* v;
-    if ( ( v = d_DUFGetObjectItem( entry, "range" ) ) )        c->range        = (int)v->value_int;
-    if ( ( v = d_DUFGetObjectItem( entry, "requires_los" ) ) ) c->requires_los = (int)v->value_int;
-    if ( ( v = d_DUFGetObjectItem( entry, "heal" ) ) )         c->heal         = (int)v->value_int;
-    if ( ( v = d_DUFGetObjectItem( entry, "ticks" ) ) )        c->ticks        = (int)v->value_int;
-    if ( ( v = d_DUFGetObjectItem( entry, "tick_damage" ) ) )  c->tick_damage  = (int)v->value_int;
-    if ( ( v = d_DUFGetObjectItem( entry, "place_range" ) ) )  c->place_range  = (int)v->value_int;
-    if ( ( v = d_DUFGetObjectItem( entry, "radius" ) ) )       c->radius       = (int)v->value_int;
-    if ( ( v = d_DUFGetObjectItem( entry, "duration" ) ) )     c->duration     = (int)v->value_int;
-    if ( ( v = d_DUFGetObjectItem( entry, "aoe_radius" ) ) )   c->aoe_radius   = (int)v->value_int;
-
-    if ( img_path && strlen( img_path->value_string ) > 0 )
-      c->image = a_ImageLoad( img_path->value_string );
-
-    g_num_consumables++;
-  }
+  for ( dDUFValue_t* entry = root->child; entry != NULL; entry = entry->next )
+    ParseConsumableEntry( entry );
 
   d_DUFFree( root );
+}
+
+static void LoadConsumableData( void )
+{
+  g_num_consumables = 0;
+  LoadConsumableDUF( "resources/data/consumables.duf" );
 }
 
 static void LoadOpenableData( void )
@@ -173,10 +187,10 @@ static void LoadOpenableData( void )
   d_DUFFree( root );
 }
 
-static void LoadEquipmentData( void )
+static void LoadEquipmentDUF( const char* path )
 {
   dDUFValue_t* root = NULL;
-  dDUFError_t* err = d_DUFParseFile( "resources/data/equipment_starters.duf", &root );
+  dDUFError_t* err = d_DUFParseFile( path, &root );
 
   if ( err != NULL )
   {
@@ -186,11 +200,13 @@ static void LoadEquipmentData( void )
     return;
   }
 
-  g_num_equipment = 0;
   for ( dDUFValue_t* entry = root->child; entry != NULL && g_num_equipment < MAX_EQUIPMENT; entry = entry->next )
   {
     EquipmentInfo_t* e = &g_equipment[g_num_equipment];
     memset( e, 0, sizeof( EquipmentInfo_t ) );
+
+    if ( entry->key )
+      strncpy( e->key, entry->key, MAX_NAME_LENGTH - 1 );
 
     dDUFValue_t* name    = d_DUFGetObjectItem( entry, "name" );
     dDUFValue_t* kind    = d_DUFGetObjectItem( entry, "kind" );
@@ -222,6 +238,13 @@ static void LoadEquipmentData( void )
   d_DUFFree( root );
 }
 
+static void LoadEquipmentData( void )
+{
+  g_num_equipment = 0;
+  LoadEquipmentDUF( "resources/data/equipment_starters.duf" );
+  LoadEquipmentDUF( "resources/data/equipment_shop.duf" );
+}
+
 void ItemsLoadAll( void )
 {
   memset( g_classes, 0, sizeof( g_classes ) );
@@ -236,9 +259,10 @@ void ItemsLoadAll( void )
   LoadConsumableData();
   LoadOpenableData();
   LoadEquipmentData();
+  MapsLoadAll();
 }
 
-int ItemsBuildFiltered( int class_idx, FilteredItem_t* out, int max_out )
+int ItemsBuildFiltered( int class_idx, FilteredItem_t* out, int max_out, int include_universal )
 {
   int count = 0;
   if ( class_idx < 0 || class_idx > 2 ) return 0;
@@ -249,7 +273,11 @@ int ItemsBuildFiltered( int class_idx, FilteredItem_t* out, int max_out )
   /* Add matching consumables */
   for ( int i = 0; i < g_num_consumables && count < max_out; i++ )
   {
-    if ( strncmp( g_consumables[i].type, ctype, strlen( g_consumables[i].type ) ) == 0 )
+    int match = strncmp( g_consumables[i].type, ctype, strlen( g_consumables[i].type ) ) == 0;
+    if ( !match && include_universal )
+      match = strcmp( g_consumables[i].type, "potion" ) == 0 ||
+              strcmp( g_consumables[i].type, "quest" ) == 0;
+    if ( match )
     {
       out[count].type = FILTERED_CONSUMABLE;
       out[count].index = i;
@@ -356,4 +384,18 @@ void InventoryRemove( int slot )
   if ( slot < 0 || slot >= MAX_INVENTORY ) return;
   player.inventory[slot].type = INV_EMPTY;
   player.inventory[slot].index = 0;
+}
+
+int ConsumableByKey( const char* key )
+{
+  for ( int i = 0; i < g_num_consumables; i++ )
+    if ( strcmp( g_consumables[i].key, key ) == 0 ) return i;
+  return -1;
+}
+
+int EquipmentByKey( const char* key )
+{
+  for ( int i = 0; i < g_num_equipment; i++ )
+    if ( strcmp( g_equipment[i].key, key ) == 0 ) return i;
+  return -1;
 }

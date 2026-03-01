@@ -10,7 +10,7 @@
     glyph: "%"
     bonus_damage: 1
     effect: "cleave"
-    image_path: ""
+    image_path: "resources/assets/consumables/stale_bread.png"
     description: "Your next attack cleaves, hitting all adjacent enemies too."
     color: [200, 170, 80, 255]
 }
@@ -20,7 +20,7 @@
     glyph: "%"
     bonus_damage: 1
     effect: "reach"
-    image_path: ""
+    image_path: "resources/assets/consumables/chicken_leg.png"
     description: "Your next attack hits the target and the tile behind them."
     color: [210, 170, 100, 255]
 }
@@ -31,7 +31,7 @@
     bonus_damage: 1
     effect: "lifesteal"
     heal: 2
-    image_path: ""
+    image_path: "resources/assets/consumables/hearty_stew.png"
     description: "Your next attack restores 2 HP on hit."
     color: [210, 140, 50, 255]
 }
@@ -56,7 +56,7 @@
     effect: "shoot"
     range: 4
     requires_los: 1
-    image_path: ""
+    image_path: "resources/assets/consumables/flint_arrow.png"
     description: "Shoot in a straight line up to 4 tiles. Requires line of sight."
     color: [180, 180, 180, 255]
 }
@@ -70,7 +70,7 @@
     requires_los: 1
     ticks: 3
     tick_damage: 1
-    image_path: ""
+    image_path: "resources/assets/consumables/poison_arrow.png"
     description: "Poisons target for 1 damage per turn for 3 turns. Patient kills."
     color: [80, 200, 80, 255]
 }
@@ -81,7 +81,7 @@
     bonus_damage: 2
     effect: "trap_stun"
     place_range: 1
-    image_path: ""
+    image_path: "resources/assets/consumables/bear_trap.png"
     description: "Place on adjacent tile. Enemy that steps on it takes 2 damage and loses a turn."
     color: [160, 160, 160, 255]
 }
@@ -149,4 +149,42 @@
     image_path: ""
     description: "Swap positions with any enemy in the room. Instant repositioning."
     color: [180, 80, 255, 255]
+}
+# ==============================
+# POTIONS (Any class) — instant use, no attack required
+# ==============================
+@small_health_potion {
+    name: "Small Health Potion"
+    type: "potion"
+    glyph: "!"
+    bonus_damage: 0
+    effect: "heal"
+    heal: 4
+    image_path: ""
+    description: "Restores 4 HP. Works for anyone with a mouth. Or a skull."
+    color: [220, 60, 80, 255]
+}
+# ==============================
+# QUEST ITEMS — carried, not class-locked
+# ==============================
+@mayors_note {
+    name: "Mayor's Note"
+    type: "quest"
+    glyph: "="
+    bonus_damage: 0
+    effect: "none"
+    image_path: ""
+    description: "An official letter from Mayor Greta granting permission to leave the dungeon."
+    color: [240, 230, 180, 255]
+}
+@guards_sandwich {
+    name: "Graf's Sandwich"
+    type: "quest"
+    glyph: "%"
+    bonus_damage: 0
+    effect: "none"
+    heal: 1
+    image_path: ""
+    description: "A three-week-old ham and cheese sandwich. It smells... assertive."
+    color: [200, 180, 80, 255]
 }

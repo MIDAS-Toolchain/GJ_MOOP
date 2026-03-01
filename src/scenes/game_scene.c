@@ -26,6 +26,16 @@
 #include "ground_items.h"
 #include "items.h"
 #include "dungeon.h"
+#include "quest_tracker.h"
+#include "objects.h"
+#include "maps.h"
+#include "shop.h"
+#include "shop_ui.h"
+#include "poison_pool.h"
+#include "placed_traps.h"
+#include "spell_vfx.h"
+#include "target_mode.h"
+#include "pause_menu.h"
 
 static void gs_Logic( float );
 static void gs_Draw( float );
@@ -53,12 +63,15 @@ static aSoundEffect_t sfx_click;
 static Console_t console;
 
 static int hover_row = -1, hover_col = -1;
+static int hud_pause_clicked = 0;
 
 /* Enemies */
 static Enemy_t  enemies[MAX_ENEMIES];
 static int      num_enemies = 0;
-static int      was_moving = 0;    /* tracks previous frame's moving state */
-static float    enemy_turn_delay = 0;  /* brief pause before enemies act */
+static struct {
+  int   was_moving;    /* previous frame's moving state */
+  float enemy_delay;   /* brief pause before enemies act */
+} turn;
 
 /* NPCs */
 static NPC_t    npcs[MAX_NPCS];
@@ -67,9 +80,9 @@ static int      num_npcs = 0;
 /* Ground items */
 static GroundItem_t ground_items[MAX_GROUND_ITEMS];
 static int          num_ground_items = 0;
-static int          consumable_used = 0;
 
-void GameSceneUseConsumable( void ) { consumable_used = 1; }
+/* Frame-level player tile cache — set once in update_systems() */
+static int frame_pr, frame_pc;
 
 void GameSceneInit( void )
 {
@@ -84,6 +97,8 @@ void GameSceneInit( void )
   /* ---- Build dungeon ---- */
   tileset = a_TilesetCreate( "resources/assets/tiles/level01tilemap.png", 16, 16 );
   world   = WorldCreate( DUNGEON_W, DUNGEON_H, 16, 16 );
+  ConsoleInit( &console );
+  ObjectsInit( &console );
   DungeonBuild( world );
   DungeonPlayerStart( &player.world_x, &player.world_y );
 
@@ -100,11 +115,11 @@ void GameSceneInit( void )
   MovementInit( world );
   TileActionsInit( world, &camera, &console, &sfx_move, &sfx_click );
   LookModeInit( world, &console, &sfx_move, &sfx_click );
+  TargetModeInit( world, &console, &camera, &sfx_move, &sfx_click );
   InventoryUIInit( &sfx_move, &sfx_click );
 
   VisibilityInit( world );
 
-  ConsoleInit( &console );
   GameEventsInit( &console );
   ConsolePush( &console, "Welcome, adventurer.", white );
 
@@ -113,11 +128,12 @@ void GameSceneInit( void )
   EnemiesInit( enemies, &num_enemies );
   CombatInit( &console );
   CombatSetEnemies( enemies, &num_enemies );
+  CombatSetGroundItems( ground_items, &num_ground_items );
   CombatVFXInit();
   EnemyProjectileInit();
   EnemiesSetWorld( world );
-  was_moving = 0;
-  consumable_used = 0;
+  turn.was_moving = 0;
+  turn.enemy_delay = 0;
 
   /* NPCs & dialogue */
   FlagsInit();
@@ -128,6 +144,19 @@ void GameSceneInit( void )
 
   /* Ground items */
   GroundItemsInit( ground_items, &num_ground_items );
+
+  /* Shop */
+  ShopLoadPool( "resources/data/shops/floor_01_shop.duf" );
+  ShopUIInit( &sfx_move, &sfx_click, &console );
+
+  /* Poison pools */
+  PoisonPoolInit( &console );
+
+  /* Placed traps */
+  PlacedTrapsInit( &console );
+
+  /* Spell VFX */
+  SpellVFXInit( world );
 
   /* Spawn all dungeon entities (items, NPCs, enemies) */
   DungeonSpawn( npcs, &num_npcs, enemies, &num_enemies,
@@ -142,67 +171,79 @@ void GameSceneInit( void )
   TransitionIntroStart();
 }
 
-static void gs_Logic( float dt )
+/* ===== gs_Logic helper functions ===== */
+
+static void frame_begin( float dt )
 {
   a_DoInput();
   SoundManagerUpdate( dt );
-
-  /* Track whether the mouse actually moved this frame */
   mouse_moved = ( app.mouse.x != prev_mx || app.mouse.y != prev_my );
   prev_mx = app.mouse.x;
   prev_my = app.mouse.y;
+}
 
-  /* Intro cinematic — blocks all input until done */
-  if ( TransitionIntroActive() )
-  {
-    if ( app.keyboard[SDL_SCANCODE_ESCAPE] == 1 )
-    {
-      app.keyboard[SDL_SCANCODE_ESCAPE] = 0;
-      TransitionIntroSkip();
-    }
-    else
-    {
-      TransitionIntroUpdate( dt );
-    }
+static void frame_end( void )
+{
+  camera.x = player.world_x + PlayerShakeOX();
+  camera.y = player.world_y + PlayerShakeOY();
+  a_DoWidget();
+}
 
-    /* Override camera during intro */
-    camera.half_h = TransitionGetViewportH();
-    camera.x = player.world_x;
-    camera.y = player.world_y;
+static int handle_intro( float dt )
+{
+  if ( !TransitionIntroActive() ) return 0;
 
-    /* Compute visibility so darkness fade works during intro */
-    {
-      int vr, vc;
-      PlayerGetTile( &vr, &vc );
-      VisibilityUpdate( vr, vc );
-    }
-
-    a_DoWidget();
-    return;
-  }
-
-  /* ---- Dialogue UI (highest priority after intro) ---- */
-  if ( DialogueUILogic() )
-    goto gs_logic_end;
-
-  /* ---- Tile action menu ---- */
-  if ( TileActionsLogic( mouse_moved, enemies, num_enemies ) )
-    goto gs_logic_end;
-
-  /* ---- ESC: close look mode, then inventory menus, then main menu ---- */
   if ( app.keyboard[SDL_SCANCODE_ESCAPE] == 1 )
   {
     app.keyboard[SDL_SCANCODE_ESCAPE] = 0;
-    if ( LookModeActive() )
-      LookModeExit();
-    else if ( !InventoryUICloseMenus() )
-    {
-      a_WidgetCacheFree();
-      MainMenuInit();
-      return;
-    }
+    TransitionIntroSkip();
+  }
+  else
+  {
+    TransitionIntroUpdate( dt );
   }
 
+  camera.half_h = TransitionGetViewportH();
+  camera.x = player.world_x;
+  camera.y = player.world_y;
+
+  {
+    int vr, vc;
+    PlayerGetTile( &vr, &vc );
+    VisibilityUpdate( vr, vc );
+  }
+
+  a_DoWidget();
+  return 1;
+}
+
+static int handle_overlays( void )
+{
+  if ( DialogueUILogic() ) return 1;
+  if ( ShopUILogic() )     return 1;
+  if ( TileActionsLogic( mouse_moved, enemies, num_enemies ) ) return 1;
+  return 0;
+}
+
+/* Returns 1 if the scene exited (caller should return without frame_end) */
+static int handle_esc_key( void )
+{
+  if ( app.keyboard[SDL_SCANCODE_ESCAPE] != 1 ) return 0;
+
+  app.keyboard[SDL_SCANCODE_ESCAPE] = 0;
+  if ( TargetModeActive() )
+    TargetModeExit();
+  else if ( LookModeActive() )
+    LookModeExit();
+  else if ( !InventoryUICloseMenus() )
+  {
+    PauseMenuOpen();
+  }
+  return 0;
+}
+
+static void handle_inventory( void )
+{
   if ( app.keyboard[A_R] == 1 )
   {
     app.keyboard[A_R] = 0;
@@ -211,7 +252,6 @@ static void gs_Logic( float dt )
 
   InventoryUILogic( mouse_moved );
 
-  /* When inventory is focused, consume WASD/arrows */
   if ( InventoryUIFocused() )
   {
     app.keyboard[SDL_SCANCODE_W] = 0;
@@ -223,230 +263,297 @@ static void gs_Logic( float dt )
     app.keyboard[SDL_SCANCODE_LEFT] = 0;
     app.keyboard[SDL_SCANCODE_RIGHT] = 0;
   }
+}
 
-  /* ---- Movement update (always runs, even in look mode) ---- */
+static void update_systems( float dt )
+{
   MovementUpdate( dt );
   EnemiesUpdate( dt );
   EnemyProjectileUpdate( dt );
   CombatUpdate( dt );
   CombatVFXUpdate( dt );
+  SpellVFXUpdate( dt );
 
-  /* Update visibility around the player */
-  {
-    int vr, vc;
-    PlayerGetTile( &vr, &vc );
-    VisibilityUpdate( vr, vc );
-  }
+  PlayerGetTile( &frame_pr, &frame_pc );
+  VisibilityUpdate( frame_pr, frame_pc );
+}
 
-  /* Pickup ground items when player finishes moving */
-  if ( was_moving && !PlayerIsMoving() )
+/* Player's move just resolved — pickup items, tick poison, advance turn */
+static void handle_turn_end( float dt )
+{
+  if ( turn.was_moving && !PlayerIsMoving() )
   {
-    int pr, pc;
-    PlayerGetTile( &pr, &pc );
-    GroundItem_t* gi = GroundItemAt( ground_items, num_ground_items, pr, pc );
-    if ( gi )
+    /* Ground pickup / shop prompt */
+    ShopItem_t* si = ShopItemAt( frame_pr, frame_pc );
+    if ( si )
     {
-      ConsumableInfo_t* ci = &g_consumables[gi->consumable_idx];
-      int slot = InventoryAdd( INV_CONSUMABLE, gi->consumable_idx );
-      if ( slot >= 0 )
+      ShopUIOpen( (int)( si - g_shop_items ) );
+    }
+    else
+    {
+      GroundItem_t* gi = GroundItemAt( ground_items, num_ground_items,
+                                       frame_pr, frame_pc );
+      if ( gi )
       {
-        gi->alive = 0;
-        a_AudioPlaySound( &sfx_click, NULL );
-        ConsolePushF( &console, ci->color, "Picked up %s.", ci->name );
+        int inv_type = ( gi->item_type == GROUND_MAP ) ? INV_MAP : INV_CONSUMABLE;
+        const char* iname;
+        aColor_t    icolor;
+        if ( gi->item_type == GROUND_MAP )
+        {
+          iname  = g_maps[gi->item_idx].name;
+          icolor = g_maps[gi->item_idx].color;
+        }
+        else
+        {
+          iname  = g_consumables[gi->item_idx].name;
+          icolor = g_consumables[gi->item_idx].color;
+        }
+
+        int slot = InventoryAdd( inv_type, gi->item_idx );
+        if ( slot >= 0 )
+        {
+          gi->alive = 0;
+          a_AudioPlaySound( &sfx_click, NULL );
+          ConsolePushF( &console, icolor, "Picked up %s.", iname );
+        }
+        else
+        {
+          ConsolePushF( &console, (aColor_t){ 0xcf, 0x57, 0x3c, 255 },
+                        "Inventory full! Can't pick up %s.", iname );
+        }
+      }
+    }
+
+    /* Turn tick (skip when shop prompt just opened — browsing is free) */
+    if ( !ShopUIActive() && !EnemiesTurning() )
+    {
+      PoisonPoolTick( frame_pr, frame_pc );
+      GameEventsNewTurn();
+      player.turns_since_hit++;
+      for ( int i = 0; i < num_enemies; i++ )
+        if ( enemies[i].alive ) enemies[i].turns_since_hit++;
+
+      if ( EnemiesInCombat( enemies, num_enemies ) )
+      {
+        turn.enemy_delay = 0.2f;
       }
       else
       {
-        ConsolePushF( &console, (aColor_t){ 0xcf, 0x57, 0x3c, 255 },
-                      "Inventory full! Can't pick up %s.", ci->name );
+        EnemiesStartTurn( enemies, num_enemies, frame_pr, frame_pc, TileWalkable );
       }
+
+      NPCsIdleTick( npcs, num_npcs );
     }
   }
+  turn.was_moving = PlayerIsMoving();
 
-  /* Enemy turn: brief pause after player finishes, then enemies act */
-  if ( was_moving && !PlayerIsMoving() && !EnemiesTurning() )
+  /* Enemy turn delay countdown */
+  if ( turn.enemy_delay > 0 )
   {
-    enemy_turn_delay = 0.2f;
-    player.turns_since_hit++;
-    for ( int i = 0; i < num_enemies; i++ )
-      if ( enemies[i].alive ) enemies[i].turns_since_hit++;
-  }
-  was_moving = PlayerIsMoving();
-
-  if ( enemy_turn_delay > 0 )
-  {
-    enemy_turn_delay -= dt;
-    if ( enemy_turn_delay <= 0 )
+    turn.enemy_delay -= dt;
+    if ( turn.enemy_delay <= 0 && !EnemyProjectileInFlight()
+         && !SpellVFXActive() )
     {
-      enemy_turn_delay = 0;
-      int pr, pc;
-      PlayerGetTile( &pr, &pc );
-      EnemiesStartTurn( enemies, num_enemies, pr, pc, TileWalkable );
+      turn.enemy_delay = 0;
+      EnemiesStartTurn( enemies, num_enemies, frame_pr, frame_pc, TileWalkable );
+    }
+  }
+}
+
+static int handle_target_mode( void )
+{
+  int tr, tc, ci, si;
+  if ( TargetModeConfirmed( &tr, &tc, &ci, &si ) )
+  {
+    if ( GameEventResolveTarget( ci, si, tr, tc, enemies, num_enemies ) )
+    {
+      turn.enemy_delay = 0.2f;
+      player.turns_since_hit++;
+      for ( int i = 0; i < num_enemies; i++ )
+        if ( enemies[i].alive ) enemies[i].turns_since_hit++;
     }
   }
 
-  /* Using a consumable costs a turn */
-  if ( consumable_used && !PlayerIsMoving() && !EnemiesTurning()
-       && enemy_turn_delay <= 0 )
+  if ( TargetModeLogic( enemies, num_enemies ) )
   {
-    consumable_used = 0;
-    enemy_turn_delay = 0.2f;
-    player.turns_since_hit++;
-    for ( int i = 0; i < num_enemies; i++ )
-      if ( enemies[i].alive ) enemies[i].turns_since_hit++;
+    hover_row = hover_col = -1;
+    return 1;
   }
+  return 0;
+}
 
-  /* ---- Look mode ---- */
+static int handle_look_mode( void )
+{
   if ( LookModeLogic( mouse_moved ) )
   {
-    hover_row = -1;
-    hover_col = -1;
-    goto gs_logic_end;
+    hover_row = hover_col = -1;
+    return 1;
   }
 
-  /* ---- L key: enter look mode ---- */
   if ( app.keyboard[SDL_SCANCODE_L] == 1 )
   {
     app.keyboard[SDL_SCANCODE_L] = 0;
-    int pr, pc;
-    PlayerGetTile( &pr, &pc );
-    LookModeEnter( pr, pc );
+    LookModeEnter( frame_pr, frame_pc );
   }
+  return 0;
+}
 
-  /* ---- Arrow key / WASD movement (when not moving, not inventory focused) ---- */
-  if ( !PlayerIsMoving() && !EnemiesTurning() && !InventoryUIFocused()
-       && enemy_turn_delay <= 0 )
+static void handle_movement( void )
+{
+  if ( PlayerIsMoving() || EnemiesTurning() || InventoryUIFocused()
+       || turn.enemy_delay > 0 )
+    return;
+
+  int dr = 0, dc = 0;
+  if ( app.keyboard[SDL_SCANCODE_UP] == 1 || app.keyboard[SDL_SCANCODE_W] == 1 )
+  { app.keyboard[SDL_SCANCODE_UP] = 0; app.keyboard[SDL_SCANCODE_W] = 0; dc = -1; }
+  else if ( app.keyboard[SDL_SCANCODE_DOWN] == 1 || app.keyboard[SDL_SCANCODE_S] == 1 )
+  { app.keyboard[SDL_SCANCODE_DOWN] = 0; app.keyboard[SDL_SCANCODE_S] = 0; dc =  1; }
+  else if ( app.keyboard[SDL_SCANCODE_LEFT] == 1 || app.keyboard[SDL_SCANCODE_A] == 1 )
+  { app.keyboard[SDL_SCANCODE_LEFT] = 0; app.keyboard[SDL_SCANCODE_A] = 0; dr = -1; }
+  else if ( app.keyboard[SDL_SCANCODE_RIGHT] == 1 || app.keyboard[SDL_SCANCODE_D] == 1 )
+  { app.keyboard[SDL_SCANCODE_RIGHT] = 0; app.keyboard[SDL_SCANCODE_D] = 0; dr =  1; }
+
+  if ( dr == 0 && dc == 0 ) return;
+
+  int tr = frame_pr + dr;
+  int tc = frame_pc + dc;
+
+  Enemy_t* bump = EnemyAt( enemies, num_enemies, tr, tc );
+  NPC_t* bump_npc = NPCAt( npcs, num_npcs, tr, tc );
+  if ( bump )
   {
-    int dr = 0, dc = 0;
-    if ( app.keyboard[SDL_SCANCODE_UP] == 1 || app.keyboard[SDL_SCANCODE_W] == 1 )
-    { app.keyboard[SDL_SCANCODE_UP] = 0; app.keyboard[SDL_SCANCODE_W] = 0; dc = -1; }
-    else if ( app.keyboard[SDL_SCANCODE_DOWN] == 1 || app.keyboard[SDL_SCANCODE_S] == 1 )
-    { app.keyboard[SDL_SCANCODE_DOWN] = 0; app.keyboard[SDL_SCANCODE_S] = 0; dc =  1; }
-    else if ( app.keyboard[SDL_SCANCODE_LEFT] == 1 || app.keyboard[SDL_SCANCODE_A] == 1 )
-    { app.keyboard[SDL_SCANCODE_LEFT] = 0; app.keyboard[SDL_SCANCODE_A] = 0; dr = -1; }
-    else if ( app.keyboard[SDL_SCANCODE_RIGHT] == 1 || app.keyboard[SDL_SCANCODE_D] == 1 )
-    { app.keyboard[SDL_SCANCODE_RIGHT] = 0; app.keyboard[SDL_SCANCODE_D] = 0; dr =  1; }
-
-    if ( dr != 0 || dc != 0 )
+    PlayerLunge( dr, dc );
+    CombatAttack( bump );
+  }
+  else if ( bump_npc )
+  {
+    PlayerSetFacing( bump_npc->world_x < player.world_x );
+    if ( EnemiesInCombat( enemies, num_enemies ) )
     {
-      int pr, pc;
-      PlayerGetTile( &pr, &pc );
-      int tr = pr + dr;
-      int tc = pc + dc;
-
-      /* Bump-to-attack: enemy on target tile */
-      Enemy_t* bump = EnemyAt( enemies, num_enemies, tr, tc );
-      NPC_t* bump_npc = NPCAt( npcs, num_npcs, tr, tc );
-      if ( bump )
-      {
-        PlayerLunge( dr, dc );
-        CombatAttack( bump );
-      }
-      else if ( bump_npc )
-      {
-        PlayerSetFacing( bump_npc->world_x < player.world_x );
-        if ( EnemiesInCombat( enemies, num_enemies ) )
-        {
-          NPCType_t* nt = &g_npc_types[bump_npc->type_idx];
-          CombatVFXSpawnText( bump_npc->world_x, bump_npc->world_y,
-                              nt->combat_bark, nt->color );
-          ConsolePushF( &console, nt->color,
-                        "%s yells \"%s\"", nt->name, nt->combat_bark );
-        }
-        else
-        {
-          DialogueStart( bump_npc->type_idx );
-        }
-      }
-      else if ( TileWalkable( tr, tc ) )
-        PlayerStartMove( tr, tc );
-      else if ( TileHasDoor( tr, tc ) )
-      {
-        if ( TileActionsTryOpen( tr, tc ) )
-          PlayerStartMove( tr, tc );
-        else
-          PlayerShake( dr, dc );
-      }
-      else
-        PlayerWallBump( dr, dc );
+      NPCType_t* nt = &g_npc_types[bump_npc->type_idx];
+      CombatVFXSpawnText( bump_npc->world_x, bump_npc->world_y,
+                          nt->combat_bark, nt->color );
+      ConsolePushF( &console, nt->color,
+                    "%s yells \"%s\"", nt->name, nt->combat_bark );
+    }
+    else
+    {
+      DialogueStart( bump_npc->type_idx );
     }
   }
-
-  /* ---- Mouse hover over viewport tiles ---- */
+  else if ( TileWalkable( tr, tc ) )
+    PlayerStartMove( tr, tc );
+  else if ( TileHasDoor( tr, tc ) )
   {
-    aContainerWidget_t* vp = a_GetContainerFromWidget( "game_viewport" );
-    int mx = app.mouse.x;
-    int my = app.mouse.y;
-    hover_row = -1;
-    hover_col = -1;
+    if ( TileActionsTryOpen( tr, tc ) )
+      PlayerStartMove( tr, tc );
+    else
+      PlayerShake( dr, dc );
+  }
+  else
+    PlayerWallBump( dr, dc );
+}
 
-    if ( PointInRect( mx, my, vp->rect.x, vp->rect.y, vp->rect.w, vp->rect.h ) )
-    {
-      float wx, wy;
-      GV_ScreenToWorld( vp->rect, &camera, mx, my, &wx, &wy );
-      int r = (int)( wx / world->tile_w );
-      int c = (int)( wy / world->tile_h );
-      if ( r >= 0 && r < world->width && c >= 0 && c < world->height
-           && VisibilityGet( r, c ) > 0.01f )
-      {
-        hover_row = r;
-        hover_col = c;
-      }
+static void handle_mouse( void )
+{
+  aContainerWidget_t* vp = a_GetContainerFromWidget( "game_viewport" );
+  int mx = app.mouse.x;
+  int my = app.mouse.y;
+  hover_row = -1;
+  hover_col = -1;
 
-      /* Mouse is over a tile — clear inventory focus/highlights */
-      if ( mouse_moved && hover_row >= 0 )
-        InventoryUIUnfocus();
+  if ( !PointInRect( mx, my, vp->rect.x, vp->rect.y, vp->rect.w, vp->rect.h ) )
+    return;
 
-      /* Click on tile (blocked while moving / enemies turning / delay) */
-      if ( app.mouse.pressed && hover_row >= 0
-           && !PlayerIsMoving() && !EnemiesTurning()
-           && enemy_turn_delay <= 0 )
-      {
-        /* Rapid-move: click adjacent walkable tile within window */
-        if ( RapidMoveActive()
-             && TileAdjacent( hover_row, hover_col )
-             && TileWalkable( hover_row, hover_col )
-             && !EnemyAt( enemies, num_enemies, hover_row, hover_col )
-             && !NPCAt( npcs, num_npcs, hover_row, hover_col ) )
-        {
-          app.mouse.pressed = 0;
-          PlayerStartMove( hover_row, hover_col );
-        }
-        /* Normal click — open action menu */
-        else
-        {
-          app.mouse.pressed = 0;
-          int pr, pc;
-          PlayerGetTile( &pr, &pc );
-          int on_self = ( hover_row == pr && hover_col == pc );
-          TileActionsOpen( hover_row, hover_col, on_self );
-        }
-      }
-    }
+  float wx, wy;
+  GV_ScreenToWorld( vp->rect, &camera, mx, my, &wx, &wy );
+  int r = (int)( wx / world->tile_w );
+  int c = (int)( wy / world->tile_h );
+  if ( r >= 0 && r < world->width && c >= 0 && c < world->height
+       && VisibilityGet( r, c ) > 0.01f )
+  {
+    hover_row = r;
+    hover_col = c;
   }
 
-  /* ---- Mouse wheel: console scroll or viewport zoom ---- */
-  if ( app.mouse.wheel != 0 )
+  if ( app.mouse.pressed && hover_row >= 0
+       && !PlayerIsMoving() && !EnemiesTurning()
+       && turn.enemy_delay <= 0 )
   {
-    aContainerWidget_t* cp = a_GetContainerFromWidget( "console_panel" );
-    if ( PointInRect( app.mouse.x, app.mouse.y,
-                      cp->rect.x, cp->rect.y, cp->rect.w, cp->rect.h ) )
+    if ( RapidMoveActive()
+         && TileAdjacent( hover_row, hover_col )
+         && TileWalkable( hover_row, hover_col )
+         && !EnemyAt( enemies, num_enemies, hover_row, hover_col )
+         && !NPCAt( npcs, num_npcs, hover_row, hover_col ) )
     {
-      ConsoleScroll( &console, app.mouse.wheel );
-      app.mouse.wheel = 0;
+      app.mouse.pressed = 0;
+      PlayerStartMove( hover_row, hover_col );
     }
+    else
+    {
+      app.mouse.pressed = 0;
+      int on_self = ( hover_row == frame_pr && hover_col == frame_pc );
+      TileActionsOpen( hover_row, hover_col, on_self );
+    }
+  }
+}
+
+static void handle_zoom( void )
+{
+  if ( app.mouse.wheel == 0 ) return;
+
+  aContainerWidget_t* cp = a_GetContainerFromWidget( "console_panel" );
+  if ( PointInRect( app.mouse.x, app.mouse.y,
+                    cp->rect.x, cp->rect.y, cp->rect.w, cp->rect.h ) )
+  {
+    ConsoleScroll( &console, app.mouse.wheel );
+    app.mouse.wheel = 0;
   }
   if ( app.mouse.wheel != 0 )
   {
     GV_Zoom( &camera, app.mouse.wheel, ZOOM_MIN_H, ZOOM_MAX_H );
     app.mouse.wheel = 0;
   }
+}
 
-gs_logic_end:
-  /* Always center camera on player + shake offset */
-  camera.x = player.world_x + PlayerShakeOX();
-  camera.y = player.world_y + PlayerShakeOY();
+/* ===== Main logic loop ===== */
 
-  a_DoWidget();
+static void gs_Logic( float dt )
+{
+  frame_begin( dt );
+
+  /* Check HUD pause button click from previous draw frame */
+  if ( hud_pause_clicked )
+  {
+    hud_pause_clicked = 0;
+    if ( !PauseMenuActive() ) PauseMenuOpen();
+  }
+
+  if ( handle_intro( dt ) )         return;
+
+  if ( PauseMenuActive() )
+  {
+    int r = PauseMenuLogic();
+    if ( r == 2 ) { a_WidgetCacheFree(); MainMenuInit(); return; }
+    frame_end();
+    return;
+  }
+
+  if ( handle_overlays() )          { frame_end(); return; }
+  if ( handle_esc_key() )           return;
+
+  handle_inventory();
+  update_systems( dt );
+  handle_turn_end( dt );
+  if ( handle_target_mode() )       { frame_end(); return; }
+  if ( handle_look_mode() )         { frame_end(); return; }
+
+  handle_movement();
+  handle_mouse();
+  handle_zoom();
+
+  frame_end();
 }
 
 static void gs_Draw( float dt )
@@ -454,7 +561,8 @@ static void gs_Draw( float dt )
   (void)dt;
 
   /* Top bar */
-  HUDDrawTopBar( EnemiesInCombat( enemies, num_enemies ) );
+  if ( HUDDrawTopBar( EnemiesInCombat( enemies, num_enemies ) ) )
+    hud_pause_clicked = 1;
 
   /* Game viewport — shrink 1px on right so it doesn't overlap right panels */
   {
@@ -481,8 +589,8 @@ static void gs_Draw( float dt )
     a_DrawFilledRect( kr, PANEL_BG );
   }
 
-  /* Console panel (dialogue drawn later, on top of viewport) */
-  if ( !DialogueActive() )
+  /* Console panel (dialogue/shop UI drawn later, on top of viewport) */
+  if ( !DialogueActive() && !ShopUIActive() )
   {
     aContainerWidget_t* cp = a_GetContainerFromWidget( "console_panel" );
     aRectf_t cr = cp->rect;
@@ -506,14 +614,24 @@ static void gs_Draw( float dt )
 
     /* Apply combat hit shake to camera */
     GameCamera_t draw_cam = camera;
-    draw_cam.x += CombatShakeOX();
-    draw_cam.y += CombatShakeOY();
+    draw_cam.x += CombatShakeOX() + SpellVFXShakeOX();
+    draw_cam.y += CombatShakeOY() + SpellVFXShakeOY();
 
     if ( world && tileset )
       GV_DrawWorld( vp_rect, &draw_cam, world, tileset, settings.gfx_mode == GFX_ASCII );
 
     /* Draw dungeon props (easel etc.) before darkness */
     DungeonDrawProps( vp_rect, &draw_cam, world, settings.gfx_mode );
+
+    /* Draw shop rug + items on rug */
+    ShopDrawRug( vp_rect, &draw_cam, world, settings.gfx_mode );
+    ShopDrawItems( vp_rect, &draw_cam, world, settings.gfx_mode );
+
+    /* Draw poison pools */
+    PoisonPoolDrawAll( vp_rect, &draw_cam, world, settings.gfx_mode );
+
+    /* Draw placed traps */
+    PlacedTrapsDrawAll( vp_rect, &draw_cam, world, settings.gfx_mode );
 
     /* Draw ground items BEFORE enemies/darkness so they get dimmed */
     GroundItemsDrawAll( vp_rect, &draw_cam, ground_items, num_ground_items,
@@ -540,6 +658,9 @@ static void gs_Draw( float dt )
 
     /* Look mode cursor */
     LookModeDraw( vp_rect, &draw_cam );
+
+    /* Target mode range + cursor */
+    TargetModeDraw( vp_rect, &draw_cam, world );
 
     /* Tile action menu target highlight */
     if ( TileActionsIsOpen() )
@@ -575,10 +696,27 @@ static void gs_Draw( float dt )
     /* Floating damage numbers */
     CombatVFXDraw( vp_rect, &draw_cam );
 
+    /* Spell VFX (projectiles, zap lines, tile flashes) */
+    SpellVFXDraw( vp_rect, &draw_cam );
+
     /* Red flash overlay on hit (fires once, won't restart while active) */
     float flash = CombatFlashAlpha();
     if ( flash > 0.5f )
       a_DrawFilledRect( clip, (aColor_t){ 0xa5, 0x30, 0x30, (int)flash } );
+
+    /* Spell colored screen flash */
+    {
+      float sf = SpellVFXFlashAlpha();
+      if ( sf > 0.5f )
+      {
+        aColor_t sfc = SpellVFXFlashColor();
+        sfc.a = (int)sf;
+        a_DrawFilledRect( clip, sfc );
+      }
+    }
+
+    /* Quest tracker — top-left of viewport */
+    QuestTrackerDraw( vp_rect );
 
     a_DisableClipRect();
   }
@@ -591,6 +729,13 @@ static void gs_Draw( float dt )
     cr.y += TransitionGetConsoleOY();
     DialogueUIDraw( cr );
   }
+  else if ( ShopUIActive() )
+  {
+    aContainerWidget_t* cp = a_GetContainerFromWidget( "console_panel" );
+    aRectf_t cr = cp->rect;
+    cr.y += TransitionGetConsoleOY();
+    ShopUIDraw( cr );
+  }
 
   /* Tile action menu (drawn outside clip rect, over everything) */
   TileActionsDraw( enemies, num_enemies );
@@ -600,4 +745,7 @@ static void gs_Draw( float dt )
 
   InventoryUISetIntroOffset( TransitionGetRightOX(), TransitionGetUIAlpha() );
   InventoryUIDraw();
+
+  /* Pause menu — drawn on top of everything */
+  PauseMenuDraw();
 }

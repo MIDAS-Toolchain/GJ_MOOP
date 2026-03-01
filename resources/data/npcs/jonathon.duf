@@ -277,7 +277,7 @@
     goto: "millhaven_reply"
 }
 @millhaven_reply {
-    text: "Born and raised! Well, born and raised and died. Population went from twelve to eleven when I left. Probably should have told someone where I was going."
+    text: "Born and raised! Well, and died. Population went from twelve to eleven when I left. Probably should have told someone where I was going."
     set_lore: "jonathon"
     options: ["opt_millhaven_life", "opt_know_mayor", "opt_know_thom", "opt_leave"]
 }
@@ -288,7 +288,7 @@
     goto: "know_mayor_reply"
 }
 @know_mayor_reply {
-    text: "Know her? She's the one who gave me this note! 'To whom it may concern: the bearer of this letter has permission to leave the dungeon and return to town. Signed, Mayor Greta.' Got it the day before I died. Bit useless now."
+    text: "Know her? She's the one who gave me this note! 'To whom it may concern: the bearer of this letter has permission to leave the dungeon and return to town. Signed, Mayor Greta.' Got it before I died. Bit useless now."
     options: ["opt_about_note", "opt_know_thom", "opt_leave"]
 }
 @opt_know_thom {
@@ -312,20 +312,17 @@
     goto: "about_note_reply"
 }
 @about_note_reply {
-    text: "I mean... I literally cannot leave. I'm a skeleton in a dungeon.But I can't just GIVE it away. It's the last official document from my old life. Makes me feel... real."
-    options: ["opt_note_trade", "opt_note_please", "opt_leave"]
+    text: "I mean... I literally cannot leave. I'm a skeleton in a dungeon. But I can't just GIVE it away. It's the last official document from my old life. Makes me feel... real."
+    options: ["opt_note_please", "opt_know_thom", "opt_leave"]
 }
 @opt_note_please {
     label: "Please? It could really help someone."
+    color: "quest"
     goto: "note_please_reply"
 }
 @note_please_reply {
-    text: "Hmm. Tell you what. The hostile skeletons down here... they give the rest of us a bad name. Kill three of them for me and I'll hand it over. Call it a favour for the non-violent skeleton community."
+    text: "Hmm. Tell you what. The hostile skeletons down here... they are giving me a bad reputation. Kill three of them for me and I'll hand it over. Call it a favour for the non-violent skeleton community."
     options: ["opt_accept_skeleton_quest", "opt_leave"]
-}
-@opt_note_trade {
-    label: "I could trade you something?"
-    goto: "note_please_reply"
 }
 @opt_accept_skeleton_quest {
     label: "Deal. Three skeletons."
@@ -334,7 +331,7 @@
     goto: "quest_accepted_reply"
 }
 @quest_accepted_reply {
-    text: "Wonderful! And please, try not to feel weird about it. They're the mean ones. I'm the art one. Very different vibes."
+    text: "Wonderful! And please, try not to feel weird about it. They're the mean ones. I'm the art one. We are not the same."
     options: ["opt_leave"]
 }
 
@@ -359,7 +356,7 @@
     text: "You actually did it! My hero. Well, here you go. One official Mayor's note. I have no use for it. Can't exactly walk back into town looking like this. Thom would faint."
     clear_flag: "quest_skeletons"
     set_flag: "has_mayors_note"
-    give_item: "mayors_note"
+    give_item: "Mayor's Note"
     options: ["opt_you_ok", "opt_leave"]
 }
 

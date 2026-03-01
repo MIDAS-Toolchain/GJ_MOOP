@@ -7,8 +7,8 @@
 #include "npc.h"
 #include "ground_items.h"
 
-#define DUNGEON_W 29
-#define DUNGEON_H 31
+#define DUNGEON_W 37
+#define DUNGEON_H 50
 
 /* Builder */
 void DungeonBuild( World_t* world );

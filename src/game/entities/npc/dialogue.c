@@ -139,6 +139,11 @@ static void DialogueLoadFile( const char* path, const char* stem )
       npc->color = ParseDUFColor( d_DUFGetObjectItem( entry, "color" ) );
       copy_str( npc->description, d_DUFGetObjectItem( entry, "description" ), 256 );
       copy_str( npc->combat_bark, d_DUFGetObjectItem( entry, "combat_bark" ), 128 );
+      copy_str( npc->idle_bark,   d_DUFGetObjectItem( entry, "idle_bark" ),   128 );
+
+      dDUFValue_t* idle_cd = d_DUFGetObjectItem( entry, "idle_cooldown" );
+      if ( idle_cd && idle_cd->value_string )
+        npc->idle_cooldown = atoi( idle_cd->value_string );
 
       dDUFValue_t* img_path = d_DUFGetObjectItem( entry, "image_path" );
       if ( img_path && img_path->value_string && strlen( img_path->value_string ) > 0 )
@@ -225,6 +230,11 @@ static void DialogueLoadFile( const char* path, const char* stem )
     copy_str( de->give_item,  d_DUFGetObjectItem( entry, "give_item" ),  MAX_NAME_LENGTH );
     copy_str( de->take_item,  d_DUFGetObjectItem( entry, "take_item" ),  MAX_NAME_LENGTH );
     copy_str( de->set_lore,  d_DUFGetObjectItem( entry, "set_lore" ),  MAX_NAME_LENGTH );
+
+    { dDUFValue_t* v = d_DUFGetObjectItem( entry, "give_gold" );
+      if ( v ) de->give_gold = (int)v->value_int; }
+    { dDUFValue_t* v = d_DUFGetObjectItem( entry, "require_gold_min" );
+      if ( v ) de->require_gold_min = (int)v->value_int; }
 
     npc->num_entries++;
   }
@@ -364,6 +374,10 @@ static int check_conditions( DialogueEntry_t* de )
     if ( !has_item( de->require_item ) ) return 0;
   }
 
+  /* require_gold_min */
+  if ( de->require_gold_min > 0 && player.gold < de->require_gold_min )
+    return 0;
+
   return 1;
 }
 
@@ -414,6 +428,9 @@ static void execute_actions( DialogueEntry_t* de )
 
   if ( de->set_lore[0] )
     LoreUnlock( de->set_lore );
+
+  if ( de->give_gold > 0 )
+    player.gold += de->give_gold;
 }
 
 /* ---- Build filtered options for current speech node ---- */

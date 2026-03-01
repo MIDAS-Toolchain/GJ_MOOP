@@ -71,7 +71,7 @@ static int pending_class = -1;   /* set when embark triggers outro */
 
 static void cs_RebuildFiltered( void )
 {
-  num_filtered = ItemsBuildFiltered( last_class_idx, filtered, MAX_CONSUMABLES + MAX_DOORS );
+  num_filtered = ItemsBuildFiltered( last_class_idx, filtered, MAX_CONSUMABLES + MAX_DOORS, 0 );
   selected_item = 0;
   browsing_items = 1;
 }
@@ -97,6 +97,7 @@ static void cs_SelectClass( int index )
   player.selected_consumable = 0;
   player.equip_cursor = 0;
   player.inv_focused = 1;
+  player.gold = 3;
   for ( int i = 0; i < EQUIP_SLOTS; i++ )
     player.equipment[i] = -1;
   EquipStarterGear( g_class_keys[index] );

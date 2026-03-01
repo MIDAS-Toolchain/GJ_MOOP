@@ -4,6 +4,8 @@
     color: [180, 180, 200, 255]
     image_path: "resources/assets/npcs/graf.png"
     description: "A tired-looking guard leaning on a spear."
+    idle_bark: "*yawn*"
+    idle_cooldown: 3
 }
 
 # ==============================
@@ -28,14 +30,14 @@
     require_class: "Rogue"
     text: "I didn't see you there. Please don't rob me, I've only got this spear and a sandwich."
     set_flag: "knows_sandwich"
-    options: ["opt_who_are_you", "opt_whats_up", "opt_about_sandwich", "opt_leave"]
+    options: ["opt_who_are_you", "opt_whats_up", "opt_about_sandwich", "opt_ask_rats", "opt_about_rats_followup", "opt_leave"]
 }
 @greeting_mage {
     start: true
     priority: 1
     require_class: "Mage"
     text: "A mage! Can you magic me up a bed? I'll pay you in... moral support."
-    options: ["opt_who_are_you", "opt_whats_up", "opt_magic_bed", "opt_leave"]
+    options: ["opt_whats_up", "opt_magic_bed", "opt_who_are_you", "opt_ask_rats", "opt_about_rats_followup", "opt_leave"]
 }
 @greeting_quest_active {
     start: true
@@ -62,7 +64,7 @@
     goto: "who_are_you_reply"
 }
 @who_are_you_reply {
-    text: "Name's Graf. Town guard. Well, dungeon guard now, I suppose. Before this I guarded the bakery. Not from thieves. From customers. Thom's bread is a liability."
+    text: "Name's Graf. Town guard. Well, dungeon guard now, I suppose. Before this I guarded the bakery from angry customers."
     options: ["opt_graf_how_long", "opt_whats_up", "opt_about_town", "opt_leave"]
 }
 @opt_graf_how_long {
@@ -70,7 +72,7 @@
     goto: "graf_how_long_reply"
 }
 @graf_how_long_reply {
-    text: "Greta said I was 'uniquely suited for low-activity work.' I thought it was a compliment. Turns out it means standing in a dungeon until someone remembers you exist. Didn't bring a chair. There was no sunset. There is no home."
+    text: "Greta said I was 'uniquely suited for low-activity work.' I thought it was a compliment. Turns out it means standing in a dungeon until someone remembers I exist."
     options: ["opt_graf_regret", "opt_about_town", "opt_leave"]
 }
 @opt_graf_regret {
@@ -79,7 +81,7 @@
 }
 @graf_regret_reply {
     text: "Should've brought two sandwiches."
-    options: ["opt_whats_up", "opt_about_town", "opt_leave"]
+    options: ["opt_about_sandwich", "opt_whats_up", "opt_about_town", "opt_leave"]
 }
 
 # ==============================
@@ -111,7 +113,7 @@
     goto: "whats_up_reply"
 }
 @whats_up_reply {
-    text: "Guard duty. 'Stand by the dungeon entrance,' they said. 'Nothing ever happens,' they said. That was three weeks ago. I think they forgot about me."
+    text: "Guard duty. 'Stand by the dungeon entrance,' they said. 'Nothing ever happens,' they said. I don't even know where the entrance is anymore."
     options: ["opt_lost", "opt_why_not_leave", "opt_wait_three_weeks", "opt_about_town", "opt_leave"]
 }
 @opt_wait_three_weeks {
@@ -189,7 +191,7 @@
 }
 @dungeon_reply {
     text: "Used to be a mine. Then it was a cellar. Then someone found the doors. Colored doors that only certain folk can open. After that, adventurers started showing up and everything went sideways."
-    options: ["opt_doors_more", "opt_town_mayor", "opt_about_town", "opt_leave"]
+    options: ["opt_doors_more", "opt_town_mayor", "opt_about_town", "opt_ask_rats", "opt_about_rats_followup", "opt_leave"]
 }
 @opt_doors_more {
     label: "The colored doors... what do you know?"
@@ -199,7 +201,7 @@
 }
 @doors_reply {
     text: "Red ones need brute force. Green ones have some kind of tricky lock. Blue ones are sealed with magic, I think. And then there's the white ones that anyone can open. Dunno who built them. Dunno why. I just guard the entrance. Allegedly."
-    options: ["opt_ask_rats", "opt_about_rats_followup", "opt_about_town", "opt_leave"]
+    options: ["opt_lost", "opt_ask_rats", "opt_about_rats_followup", "opt_about_town", "opt_leave"]
 }
 
 # ==============================
@@ -245,7 +247,7 @@
     goto: "rats_info"
 }
 @rats_info {
-    text: "Big ones. Like, suspiciously big. I'd deal with them myself but... guard duty. Very important. Can't leave. Definitely not because I'm scared."
+    text: "Big ones. Like, suspiciously big. I'd deal with them myself but... guard duty. It's been tiring work."
     set_flag: "knows_about_rats"
     options: ["opt_accept_quest", "opt_already_killed", "opt_about_town", "opt_leave"]
 }
@@ -287,9 +289,10 @@
     goto: "already_killed_reply"
 }
 @already_killed_reply {
-    text: "You... already? Before I even asked? You absolute legend. I'm going to tell everyone in Millhaven about this. All twelve of them."
+    text: "You... already? Before I even asked? You absolute legend. Here, I've been sitting on this. Some kind of potion. Found it behind a loose brick. Figured I'd save it, but you clearly need it more than I do."
     clear_flag: "quest_rats"
     set_flag: "rats_cleared"
+    give_item: "Small Health Potion"
     options: ["opt_leave"]
 }
 @opt_not_yet {
@@ -307,9 +310,10 @@
     goto: "reward_node"
 }
 @reward_node {
-    text: "Three dead rats! You beautiful soul. Here, take this. Found it wedged behind a rock. No idea what it does but it looks important."
+    text: "Three dead rats! You beautiful soul. Here, take this. Some kind of healing potion. Found it behind a loose brick. Figured I'd save it, but you clearly need it more than I do."
     clear_flag: "quest_rats"
     set_flag: "rats_cleared"
+    give_item: "Small Health Potion"
     options: ["opt_leave"]
 }
 
@@ -418,19 +422,19 @@
     require_flag: "has_mayors_note"
     require_not_flag: "guard_leaving"
     text: "You again! What's that you've got there?"
-    options: ["opt_show_note", "opt_whats_up", "opt_leave"]
+    options: ["opt_show_note", "opt_whats_up", "opt_ask_rats", "opt_about_rats_followup","opt_leave"]
 }
 @opt_show_note {
     label: "A letter from Mayor Greta. Says the bearer can leave."
     goto: "show_note_reply"
 }
 @show_note_reply {
-    text: "Let me see that. 'To whom it may concern... permission to leave... signed, Mayor Greta.' This is... this is REAL. This is officially sanctioned departure! I'm not abandoning my post, I'm being RELIEVED! Here, take my sandwich. I won't need it. I'm going HOME. I'm going to sleep in a BED. I'm going to eat Old Thom's terrible bread and I'm going to LOVE IT."
+    text: "Let me see that. 'To whom it may concern... permission to leave... signed, Mayor Greta.' This is... this is REAL. I'm being RELIEVED! Here, take my sandwich. I won't need it. I'm going HOME. I'm going to sleep in a BED."
     set_flag: "guard_leaving"
     set_flag: "got_sandwich"
     clear_flag: "has_mayors_note"
-    give_item: "guards_sandwich"
-    options: ["opt_guard_goodbye", "opt_leave"]
+    give_item: "Graf's Sandwich"
+    options: ["opt_guard_goodbye", "opt_ask_rats", "opt_about_rats_followup", "opt_leave"]
 }
 @opt_guard_goodbye {
     label: "Take care of yourself."
@@ -438,7 +442,7 @@
 }
 @guard_goodbye_reply {
     text: "I will! First thing I'm doing is sleeping. Second thing is eating. Third thing is telling Mayor Greta she owes me three weeks of overtime. Goodbye, friend!"
-    options: ["opt_leave"]
+    options: ["opt_ask_rats", "opt_about_rats_followup", "opt_leave"]
 }
 
 # ==============================
@@ -449,7 +453,7 @@
     priority: 5
     require_flag: "guard_leaving"
     text: "Just let me... recalibrate myself. Haven't walked with purpose in three weeks. My legs forgot how."
-    options: ["opt_offer_help_leave", "opt_leave"]
+    options: ["opt_offer_help_leave", "opt_ask_rats", "opt_about_rats_followup", "opt_leave"]
 }
 @opt_offer_help_leave {
     label: "Want me to help you find the way out?"

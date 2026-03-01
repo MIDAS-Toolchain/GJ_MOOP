@@ -6,6 +6,7 @@
 #include "tween.h"
 #include "sound_manager.h"
 #include "movement.h"
+#include "doors.h"
 
 extern Player_t player;
 
@@ -102,7 +103,7 @@ int TileHasDoor( int r, int c )
 {
   if ( r < 0 || r >= world->width || c < 0 || c >= world->height ) return 0;
   int idx = c * world->width + r;
-  return world->midground[idx].tile != TILE_EMPTY;
+  return DoorIsDoor( world->midground[idx].tile );
 }
 
 void PlayerStartMove( int r, int c )

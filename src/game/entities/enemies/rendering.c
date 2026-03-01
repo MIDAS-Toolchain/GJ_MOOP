@@ -184,6 +184,13 @@ void EnemyProjectileSpawn( float sx, float sy, float ex, float ey,
   TweenFloat( &proj_tweens, &p->progress, 1.0f, 0.25f, TWEEN_LINEAR );
 }
 
+int EnemyProjectileInFlight( void )
+{
+  for ( int i = 0; i < MAX_PROJECTILES; i++ )
+    if ( projectiles[i].active ) return 1;
+  return 0;
+}
+
 void EnemyProjectileDraw( aRectf_t vp_rect, GameCamera_t* cam )
 {
   for ( int i = 0; i < MAX_PROJECTILES; i++ )

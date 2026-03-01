@@ -1,0 +1,12 @@
+@iron_shield {
+    name: "Iron Shield"
+    kind: "armor"
+    slot: "armor"
+    glyph: "["
+    damage: 0
+    defense: 2
+    effect: "none"
+    class: ""
+    description: "A battered iron shield. Blocks more than leather ever could."
+    color: [160, 160, 180, 255]
+}

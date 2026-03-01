@@ -7,9 +7,13 @@
 
 #define MAX_GROUND_ITEMS 16
 
+#define GROUND_CONSUMABLE 0
+#define GROUND_MAP        1
+
 typedef struct
 {
-  int   consumable_idx;    /* index into g_consumables[] */
+  int   item_type;         /* GROUND_CONSUMABLE or GROUND_MAP */
+  int   item_idx;          /* index into g_consumables[] or g_maps[] */
   int   row, col;
   float world_x, world_y;
   int   alive;             /* 1 = on ground, 0 = picked up */
@@ -19,6 +23,9 @@ void          GroundItemsInit( GroundItem_t* list, int* count );
 GroundItem_t* GroundItemSpawn( GroundItem_t* list, int* count,
                                int consumable_idx, int row, int col,
                                int tile_w, int tile_h );
+GroundItem_t* GroundItemSpawnMap( GroundItem_t* list, int* count,
+                                  int map_idx, int row, int col,
+                                  int tile_w, int tile_h );
 GroundItem_t* GroundItemAt( GroundItem_t* list, int count, int row, int col );
 
 void GroundItemsDrawAll( aRectf_t vp_rect, GameCamera_t* cam,

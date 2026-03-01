@@ -1,47 +1,93 @@
 # ==============================
 # LORE ENTRIES
 # Discovered through NPC dialogue, persists across runs.
-# Categories: Places, People, History
+# Categories: Places, People, Enemies, History
 # ==============================
 
+# ==============================
+# PLACES
+# ==============================
 @millhaven {
     title: "Millhaven"
     category: "Places"
     description: "A small town of about twelve residents. Main exports: complaints and burnt bread. Despite its size, it sits above one of the most mysterious dungeons in the region."
 }
-
 @the_dungeon {
     title: "The Dungeon"
     category: "Places"
     description: "Originally a mine, then a cellar, then something stranger. When the colored doors were discovered, adventurers started arriving and everything went sideways. Nobody knows how deep it goes."
 }
-
-@colored_doors {
-    title: "The Colored Doors"
-    category: "History"
-    description: "Red doors require brute force. Green doors have tricky locks. Blue doors are sealed with magic. White doors can be opened by anyone. Nobody knows who built them or why they're here."
-}
-
-@mayor_greta {
-    title: "Mayor Greta"
-    category: "People"
-    description: "The mayor of Millhaven. Lovely woman, by most accounts. Known for assigning guards to posts and then forgetting about them."
-}
-
 @old_thom_bakery {
     title: "Old Thom's Bakery"
     category: "Places"
-    description: "Old Thom runs the only bakery in Millhaven. Good man. Terrible baker. Every loaf comes out like a brick. The mercenaries love it though — doubles as rations and a blunt weapon."
-}
-@the_turning {
-    title: "The Turning"
-    category: "History"
-    description: "The dead in the dungeon slowly lose themselves over time. They stop talking, stop thinking, and become hostile. The deeper floors accelerate the process. Jonathon, a friendly skeleton on floor one, is the last one still holding on."
+    description: "Old Thom runs the only bakery in Millhaven. Good man. Terrible baker. Every loaf comes out like a brick. The mercenaries love it though, doubles as rations and a blunt weapon."
 }
 @the_depths {
     title: "The Depths"
     category: "Places"
     description: "No one who has gone to the bottom of the dungeon has returned. Survivors report a constant low hum that grows louder with depth. The hostile dead seem drawn toward it, walking deeper as if called."
+}
+@millhaven_before {
+    title: "Millhaven Before the Dungeon"
+    category: "Places"
+    description: "Before the miners arrived, Millhaven was a quiet town of twelve. Old Thom burnt bread, Mayor Greta kept order, and Jonathon painted the same three trees at the edge of town. Then the miners cracked open the wrong wall."
+}
+
+# ==============================
+# PEOPLE
+# ==============================
+@mayor_greta {
+    title: "Mayor Greta"
+    category: "People"
+    description: "The mayor of Millhaven. Lovely woman, by most accounts. Known for assigning guards to posts and then forgetting about them."
+}
+@graf {
+    title: "Graf the Guard"
+    category: "People"
+    description: "Millhaven's town guard, posted to dungeon watch by Mayor Greta, who described him as 'uniquely suited for low-activity work.' Previously guarded Old Thom's bakery from dissatisfied customers. Did not bring a chair. Has been standing for three weeks on one sandwich and pure spite."
+}
+@jonathon {
+    title: "Jonathon the Painter"
+    category: "People"
+    description: "A skeleton artist who died in the dungeon after tripping over his own easel. Former resident of Millhaven, population now eleven. Still painting. Still wearing the beret. Practices 'Subterranean Impressionism,' which mostly involves painting grey walls in slightly different shades of grey."
+}
+@the_miners {
+    title: "The Five Miners"
+    category: "People"
+    description: "Five miners came to Millhaven looking for iron. They found the tunnels instead. Three went deeper. Two came back and refused to speak about what they saw. They left town the next morning and never returned."
+}
+@shop_rats {
+    title: "Dungeon Bargains"
+    category: "People"
+    description: "A shop run by three rats in a trench coat calling themselves Steve Humanton. Gerald handles negotiations from the top, Pip manages finances from the middle, and Trevor provides structural support from the bottom. They collect items from dead adventurers and resell them at markup. Independent contractors."
+}
+
+# ==============================
+# ENEMIES
+# ==============================
+@the_turning {
+    title: "The Turning"
+    category: "Enemies"
+    description: "The dead in the dungeon slowly lose themselves over time. They stop talking, stop thinking, and become hostile. The deeper floors accelerate the process. Jonathon, a friendly skeleton on floor one, is the last one still holding on."
+}
+@rat_king {
+    title: "The Rat King"
+    category: "Enemies"
+    description: "A massive tangle of rats fused into one body, living inside the walls of the first floor. Drawn out by the smell of aged cheese. It guarded the path to the lower floors."
+}
+@rat_royalty {
+    title: "Rat Royalty"
+    category: "Enemies"
+    description: "The three shop rats refuse to discuss the Rat Queen. Gerald, Pip, and Trevor all react with visible terror at the mention. Whatever she is, she is worse than the King."
+}
+
+# ==============================
+# HISTORY
+# ==============================
+@colored_doors {
+    title: "The Colored Doors"
+    category: "History"
+    description: "Red doors require brute force. Green doors have tricky locks. Blue doors are sealed with magic. White doors can be opened by anyone. Nobody knows who built them or why they're here."
 }
 @dungeon_origins {
     title: "Dungeon Origins"
@@ -58,28 +104,8 @@
     category: "History"
     description: "The doors, the hum, the feast table, the dead that rise and walk. Some believe the dungeon itself is alive, or at least that it wants something. The colored doors seem to select for specific kinds of adventurers: a soldier, a thief, a mage. Over and over."
 }
-@millhaven_before {
-    title: "Millhaven Before the Dungeon"
-    category: "Places"
-    description: "Before the miners arrived, Millhaven was a quiet town of twelve. Old Thom burnt bread, Mayor Greta kept order, and Jonathon painted the same three trees at the edge of town. Then the miners cracked open the wrong wall."
-}
-@the_miners {
-    title: "The Five Miners"
-    category: "People"
-    description: "Five miners came to Millhaven looking for iron. They found the tunnels instead. Three went deeper. Two came back and refused to speak about what they saw. They left town the next morning and never returned."
-}
 @miners_journal {
     title: "The Miner's Journal"
     category: "History"
     description: "One of the two surviving miners left a journal at Old Thom's bakery. The last pages were filled with a single word written hundreds of times: 'OPEN.' Thom used the journal as kindling for his oven."
-}
-@jonathon {
-    title: "Jonathon the Painter"
-    category: "People"
-    description: "A skeleton artist who died in the dungeon after tripping over his own easel. Former resident of Millhaven, population now eleven. Still painting. Still wearing the beret. Practices 'Subterranean Impressionism,' which mostly involves painting grey walls in slightly different shades of grey."
-}
-@graf {
-    title: "Graf the Guard"
-    category: "People"
-    description: "Millhaven's town guard, posted to dungeon watch by Mayor Greta, who described him as 'uniquely suited for low-activity work.' Previously guarded Old Thom's bakery from dissatisfied customers. Did not bring a chair. Has been standing for three weeks on one sandwich and pure spite."
 }

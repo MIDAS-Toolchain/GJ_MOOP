@@ -1,6 +1,8 @@
 #include <string.h>
 #include <Archimedes.h>
 
+#include <stdlib.h>
+
 #include "defines.h"
 #include "npc.h"
 #include "dialogue.h"
@@ -8,6 +10,8 @@
 #include "draw_utils.h"
 #include "game_viewport.h"
 #include "world.h"
+#include "combat_vfx.h"
+#include "visibility.h"
 
 extern Player_t player;
 
@@ -87,6 +91,33 @@ void NPCsDrawAll( aRectf_t vp_rect, GameCamera_t* cam,
 
       a_DrawGlyph( nt->glyph, (int)sx, (int)sy, dw, dh,
                    nt->color, (aColor_t){ 0, 0, 0, 0 }, FONT_CODE_PAGE_437 );
+    }
+  }
+}
+
+void NPCsIdleTick( NPC_t* list, int count )
+{
+  for ( int i = 0; i < count; i++ )
+  {
+    if ( !list[i].alive ) continue;
+    NPCType_t* nt = &g_npc_types[list[i].type_idx];
+    if ( nt->idle_cooldown <= 0 || nt->idle_bark[0] == '\0' ) continue;
+
+    if ( list[i].idle_cd > 0 )
+    {
+      list[i].idle_cd--;
+      continue;
+    }
+
+    /* Only bark if the player can see the NPC */
+    if ( VisibilityGet( list[i].row, list[i].col ) < 0.01f ) continue;
+
+    /* ~30% chance each eligible turn */
+    if ( rand() % 100 < 30 )
+    {
+      CombatVFXSpawnText( list[i].world_x, list[i].world_y,
+                          nt->idle_bark, nt->color );
+      list[i].idle_cd = nt->idle_cooldown;
     }
   }
 }

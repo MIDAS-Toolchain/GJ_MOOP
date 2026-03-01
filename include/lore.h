@@ -20,6 +20,7 @@ void LoreSave( void );
 /* Returns 1 if newly unlocked, 0 if already known or not found */
 int  LoreUnlock( const char* key );
 int  LoreIsDiscovered( const char* key );
+void LoreResetAll( void );
 
 int          LoreGetCount( void );
 LoreEntry_t* LoreGetEntry( int index );

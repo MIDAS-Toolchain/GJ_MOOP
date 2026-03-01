@@ -27,7 +27,7 @@ void EnemiesLoadTypes( void )
   g_num_enemy_types = 0;
 
   dDUFValue_t* root = NULL;
-  dDUFError_t* err = d_DUFParseFile( "resources/data/enemies.duf", &root );
+  dDUFError_t* err = d_DUFParseFile( "resources/data/enemies_floor_01.duf", &root );
 
   if ( err != NULL )
   {
@@ -55,18 +55,31 @@ void EnemiesLoadTypes( void )
     dDUFValue_t* def      = d_DUFGetObjectItem( entry, "defense" );
     dDUFValue_t* ai       = d_DUFGetObjectItem( entry, "ai" );
     dDUFValue_t* desc     = d_DUFGetObjectItem( entry, "description" );
-    dDUFValue_t* range    = d_DUFGetObjectItem( entry, "range" );
-    dDUFValue_t* color    = d_DUFGetObjectItem( entry, "color" );
-    dDUFValue_t* img_path = d_DUFGetObjectItem( entry, "image_path" );
+    dDUFValue_t* range     = d_DUFGetObjectItem( entry, "range" );
+    dDUFValue_t* drop_item = d_DUFGetObjectItem( entry, "drop_item" );
+    dDUFValue_t* gold_drop = d_DUFGetObjectItem( entry, "gold_drop" );
+    dDUFValue_t* color     = d_DUFGetObjectItem( entry, "color" );
+    dDUFValue_t* img_path  = d_DUFGetObjectItem( entry, "image_path" );
 
-    if ( name )  strncpy( t->name, name->value_string, MAX_NAME_LENGTH - 1 );
-    if ( glyph ) strncpy( t->glyph, glyph->value_string, 7 );
-    if ( hp )    t->hp      = (int)hp->value_int;
-    if ( dmg )   t->damage  = (int)dmg->value_int;
-    if ( def )   t->defense = (int)def->value_int;
-    if ( ai )    strncpy( t->ai, ai->value_string, MAX_NAME_LENGTH - 1 );
-    if ( desc )  strncpy( t->description, desc->value_string, 255 );
-    if ( range ) t->range = (int)range->value_int;
+    if ( name )      strncpy( t->name, name->value_string, MAX_NAME_LENGTH - 1 );
+    if ( glyph )     strncpy( t->glyph, glyph->value_string, 7 );
+    if ( hp )        t->hp      = (int)hp->value_int;
+    if ( dmg )       t->damage  = (int)dmg->value_int;
+    if ( def )       t->defense = (int)def->value_int;
+    if ( ai )        strncpy( t->ai, ai->value_string, MAX_NAME_LENGTH - 1 );
+    if ( desc )      strncpy( t->description, desc->value_string, 255 );
+    if ( range )     t->range = (int)range->value_int;
+    if ( drop_item )
+      strncpy( t->drop_item, drop_item->value_string, MAX_NAME_LENGTH - 1 );
+    if ( gold_drop ) t->gold_drop = (int)gold_drop->value_int;
+
+    dDUFValue_t* on_death_v      = d_DUFGetObjectItem( entry, "on_death" );
+    dDUFValue_t* pool_duration_v = d_DUFGetObjectItem( entry, "pool_duration" );
+    dDUFValue_t* pool_damage_v   = d_DUFGetObjectItem( entry, "pool_damage" );
+    if ( on_death_v )      strncpy( t->on_death, on_death_v->value_string, MAX_NAME_LENGTH - 1 );
+    if ( pool_duration_v ) t->pool_duration = (int)pool_duration_v->value_int;
+    if ( pool_damage_v )   t->pool_damage   = (int)pool_damage_v->value_int;
+
     t->color = ParseDUFColor( color );
 
     if ( img_path && strlen( img_path->value_string ) > 0 )

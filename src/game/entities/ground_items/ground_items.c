@@ -4,6 +4,7 @@
 #include "defines.h"
 #include "ground_items.h"
 #include "items.h"
+#include "maps.h"
 #include "game_viewport.h"
 #include "world.h"
 #include "visibility.h"
@@ -23,7 +24,28 @@ GroundItem_t* GroundItemSpawn( GroundItem_t* list, int* count,
     return NULL;
 
   GroundItem_t* g = &list[*count];
-  g->consumable_idx = consumable_idx;
+  g->item_type = GROUND_CONSUMABLE;
+  g->item_idx  = consumable_idx;
+  g->row     = row;
+  g->col     = col;
+  g->world_x = row * tile_w + tile_w / 2.0f;
+  g->world_y = col * tile_h + tile_h / 2.0f;
+  g->alive   = 1;
+  ( *count )++;
+  return g;
+}
+
+GroundItem_t* GroundItemSpawnMap( GroundItem_t* list, int* count,
+                                  int map_idx, int row, int col,
+                                  int tile_w, int tile_h )
+{
+  if ( *count >= MAX_GROUND_ITEMS || map_idx < 0
+       || map_idx >= g_num_maps )
+    return NULL;
+
+  GroundItem_t* g = &list[*count];
+  g->item_type = GROUND_MAP;
+  g->item_idx  = map_idx;
   g->row     = row;
   g->col     = col;
   g->world_x = row * tile_w + tile_w / 2.0f;
@@ -54,11 +76,29 @@ void GroundItemsDrawAll( aRectf_t vp_rect, GameCamera_t* cam,
     /* Skip items outside visible tiles */
     if ( VisibilityGet( list[i].row, list[i].col ) < 0.01f ) continue;
 
-    ConsumableInfo_t* ci = &g_consumables[list[i].consumable_idx];
+    /* Get glyph/color/image based on item type */
+    const char* glyph = NULL;
+    aColor_t color = { 255, 255, 255, 255 };
+    aImage_t* image = NULL;
 
-    if ( ci->image && gfx_mode == GFX_IMAGE )
+    if ( list[i].item_type == GROUND_MAP )
     {
-      GV_DrawSprite( vp_rect, cam, ci->image,
+      MapInfo_t* mi = &g_maps[list[i].item_idx];
+      glyph = mi->glyph;
+      color = mi->color;
+      image = mi->image;
+    }
+    else
+    {
+      ConsumableInfo_t* ci = &g_consumables[list[i].item_idx];
+      glyph = ci->glyph;
+      color = ci->color;
+      image = ci->image;
+    }
+
+    if ( image && gfx_mode == GFX_IMAGE )
+    {
+      GV_DrawSprite( vp_rect, cam, image,
                      list[i].world_x, list[i].world_y,
                      (float)world->tile_w, (float)world->tile_h );
     }
@@ -73,8 +113,8 @@ void GroundItemsDrawAll( aRectf_t vp_rect, GameCamera_t* cam,
       int dw = (int)( world->tile_w * ( vp_rect.w / ( half_w * 2.0f ) ) );
       int dh = (int)( world->tile_h * ( vp_rect.h / ( cam->half_h * 2.0f ) ) );
 
-      a_DrawGlyph( ci->glyph, (int)sx, (int)sy, dw, dh,
-                   ci->color, (aColor_t){ 0, 0, 0, 0 }, FONT_CODE_PAGE_437 );
+      a_DrawGlyph( glyph, (int)sx, (int)sy, dw, dh,
+                   color, (aColor_t){ 0, 0, 0, 0 }, FONT_CODE_PAGE_437 );
     }
   }
 }

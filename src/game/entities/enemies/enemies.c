@@ -5,8 +5,10 @@
 #include "enemies.h"
 #include "npc.h"
 #include "combat.h"
+#include "combat_vfx.h"
 #include "world.h"
 #include "tween.h"
+#include "placed_traps.h"
 
 static World_t* world = NULL;
 static NPC_t*   npc_list  = NULL;
@@ -72,6 +74,9 @@ static void start_next_attack( void );
 
 static void tick_and_move( int i )
 {
+  /* Stunned enemies skip their turn */
+  if ( turn_list[i].stun_turns > 0 ) return;
+
   EnemyType_t* t = &g_enemy_types[turn_list[i].type_idx];
 
   int old_row = turn_list[i].row;
@@ -79,7 +84,7 @@ static void tick_and_move( int i )
   int old_ai  = turn_list[i].ai_state;
 
   if ( strcmp( t->ai, "basic" ) == 0 )
-    EnemyRatTick( &turn_list[i], turn_pr, turn_pc,
+    EnemyBasicAITick( &turn_list[i], turn_pr, turn_pc,
                   turn_walkable, turn_list, turn_count );
   else if ( strcmp( t->ai, "ranged_telegraph" ) == 0 )
     EnemySkeletonTick( &turn_list[i], turn_pr, turn_pc,
@@ -116,6 +121,26 @@ static void tick_and_move( int i )
   {
     if ( turn_list[i].row < old_row ) turn_list[i].facing_left = 0;
     else if ( turn_list[i].row > old_row ) turn_list[i].facing_left = 1;
+
+    /* Check for placed bear trap on destination tile */
+    PlacedTrap_t* trap = PlacedTrapAt( turn_list[i].row, turn_list[i].col );
+    if ( trap )
+    {
+      float wx = turn_list[i].row * world->tile_w + world->tile_w / 2.0f;
+      float wy = turn_list[i].col * world->tile_h + world->tile_h / 2.0f;
+
+      turn_list[i].hp -= trap->damage;
+      turn_list[i].stun_turns = trap->stun_turns;
+
+      CombatVFXSpawnNumber( wx, wy, trap->damage,
+                            (aColor_t){ 0xde, 0x9e, 0x41, 255 } );
+      CombatVFXSpawnText( wx, wy, "Trapped!",
+                          (aColor_t){ 0xde, 0x9e, 0x41, 255 } );
+      PlacedTrapRemove( trap );
+
+      if ( turn_list[i].hp <= 0 )
+        CombatHandleEnemyDeath( &turn_list[i] );
+    }
 
     float tx = turn_list[i].row * world->tile_w + world->tile_w / 2.0f;
     float ty = turn_list[i].col * world->tile_h + world->tile_h / 2.0f;
@@ -182,7 +207,8 @@ static void start_next_attack( void )
 {
   while ( move_idx < turn_count )
   {
-    if ( turn_list[move_idx].alive && was_adjacent[move_idx] )
+    if ( turn_list[move_idx].alive && was_adjacent[move_idx]
+         && turn_list[move_idx].stun_turns <= 0 )
     {
       EnemyType_t* at = &g_enemy_types[turn_list[move_idx].type_idx];
       if ( at->range > 0 ) { move_idx++; continue; } /* ranged — no melee */
@@ -199,7 +225,12 @@ static void start_next_attack( void )
     move_idx++;
   }
 
-  /* No more attackers */
+  /* No more attackers — decrement stun at end of turn */
+  for ( int i = 0; i < turn_count; i++ )
+  {
+    if ( turn_list[i].alive && turn_list[i].stun_turns > 0 )
+      turn_list[i].stun_turns--;
+  }
   turn_state = TURN_IDLE;
 }
 
@@ -222,6 +253,35 @@ void EnemiesStartTurn( Enemy_t* list, int count,
     int dc = abs( player_col - list[i].col );
     was_adjacent[i] = list[i].alive && ( dr + dc == 1 );
     did_move[i] = 0;
+  }
+
+  /* Process status effects before AI runs */
+  for ( int i = 0; i < count; i++ )
+  {
+    if ( !list[i].alive ) continue;
+
+    /* Poison DOT */
+    if ( list[i].poison_ticks > 0 )
+    {
+      list[i].hp -= list[i].poison_dmg;
+      list[i].poison_ticks--;
+      CombatVFXSpawnNumber( list[i].world_x, list[i].world_y,
+                            list[i].poison_dmg,
+                            (aColor_t){ 0x50, 0xc8, 0x50, 255 } );
+      if ( list[i].hp <= 0 )
+      {
+        CombatVFXSpawnText( list[i].world_x, list[i].world_y,
+                            "Poisoned!", (aColor_t){ 0x50, 0xc8, 0x50, 255 } );
+        CombatHandleEnemyDeath( &list[i] );
+      }
+    }
+
+    /* Stun/freeze — show VFX (decrement happens at end of turn) */
+    if ( list[i].alive && list[i].stun_turns > 0 )
+    {
+      CombatVFXSpawnText( list[i].world_x, list[i].world_y,
+                          "Stunned!", (aColor_t){ 0x64, 0xb4, 0xff, 255 } );
+    }
   }
 
   /* Start sequential movement from enemy 0 */

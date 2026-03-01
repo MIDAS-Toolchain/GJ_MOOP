@@ -1,0 +1,88 @@
+@central_room {
+  room_id: "0"
+  name: "Central Room"
+}
+@jonathon_studio {
+  room_id: "1"
+  name: "Jonathon's Studio"
+}
+@north_room {
+  room_id: "2"
+  name: "North Room"
+}
+@gallery {
+  room_id: "3"
+  name: "Gallery"
+}
+@mercenary_room {
+  room_id: "4"
+  name: "Mercenary Room"
+}
+@west_room {
+  room_id: "5"
+  name: "West Room"
+}
+@east_room {
+  room_id: "6"
+  name: "East Room"
+}
+@southwest_room {
+  room_id: "7"
+  name: "Southwest Room"
+}
+@south_room {
+  room_id: "8"
+  name: "South Room"
+}
+@southeast_room {
+  room_id: "9"
+  name: "Southeast Room"
+}
+@room_a_left {
+  room_id: "!"
+  name: "Room A Left"
+}
+@mat_mine {
+  room_id: "@"
+  name: "Mat's Mine"
+}
+@jake_mine {
+  room_id: "~"
+  name: "Jake's Mine"
+}
+@chris_mine {
+  room_id: "$"
+  name: "Chris's Mine"
+}
+@red_chamber {
+  room_id: "%"
+  name: "Red Chamber"
+}
+@blue_chamber {
+  room_id: "^"
+  name: "Blue Chamber"
+}
+@green_chamber {
+  room_id: "&"
+  name: "Green Chamber"
+}
+@white_chamber {
+  room_id: "*"
+  name: "White Chamber"
+}
+@rogue_annex {
+  room_id: "("
+  name: "Rogue Annex"
+}
+@merc_annex {
+  room_id: ")"
+  name: "Mercenary Annex"
+}
+@merc_upper {
+  room_id: "["
+  name: "Merc Upper Barracks"
+}
+@merc_lower {
+  room_id: "]"
+  name: "Merc Lower Barracks"
+}

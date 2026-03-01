@@ -6,8 +6,31 @@
 #include "player.h"
 #include "items.h"
 #include "movement.h"
+#include "shop.h"
 
 extern Player_t player;
+
+/* Spawn a random class-appropriate consumable at (row, col) */
+static void spawn_random_consumable( GroundItem_t* items, int* num_items,
+                                     int row, int col, int tw, int th )
+{
+  int ci = 0;
+  for ( int i = 0; i < 3; i++ )
+  {
+    if ( strcmp( player.name, g_classes[i].name ) == 0 )
+    { ci = i; break; }
+  }
+  FilteredItem_t f[16];
+  int nf = ItemsBuildFiltered( ci, f, 16, 0 );
+  int cons[3], nc = 0;
+  for ( int i = 0; i < nf && nc < 3; i++ )
+  {
+    if ( f[i].type == FILTERED_CONSUMABLE )
+      cons[nc++] = f[i].index;
+  }
+  if ( nc > 0 )
+    GroundItemSpawn( items, num_items, cons[rand() % nc], row, col, tw, th );
+}
 
 void DungeonSpawn( NPC_t* npcs, int* num_npcs,
                    Enemy_t* enemies, int* num_enemies,
@@ -38,7 +61,7 @@ void DungeonSpawn( NPC_t* npcs, int* num_npcs,
 
     /* Get class-appropriate consumables */
     FilteredItem_t filtered[16];
-    int num_filtered = ItemsBuildFiltered( class_idx, filtered, 16 );
+    int num_filtered = ItemsBuildFiltered( class_idx, filtered, 16, 0 );
 
     /* Spawn up to 3 consumables at first 3 shuffled corners */
     int spawned = 0;
@@ -104,9 +127,25 @@ void DungeonSpawn( NPC_t* npcs, int* num_npcs,
     }
   }
 
+  /* New room (southwest, off green-door corridor) */
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "rat" ),
+              7, 26, world->tile_w, world->tile_h );
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "skeleton" ),
+              6, 25, world->tile_w, world->tile_h );
+  spawn_random_consumable( items, num_items, 8, 27,
+                           world->tile_w, world->tile_h );
+
   /* Skeleton in the gallery (below Jonathon's studio) */
   EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "skeleton" ),
               23, 11, world->tile_w, world->tile_h );
+
+  /* Undead miners in class-locked rooms */
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "miner_mat" ),
+              2, 8, world->tile_w, world->tile_h );
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "miner_jake" ),
+              17, 6, world->tile_w, world->tile_h );
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "miner_chris" ),
+              22, 23, world->tile_w, world->tile_h );
 
   /* Rats in side rooms */
   EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "rat" ),
@@ -117,4 +156,77 @@ void DungeonSpawn( NPC_t* npcs, int* num_npcs,
               4, 18, world->tile_w, world->tile_h );   /* west */
   EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "rat" ),
               24, 18, world->tile_w, world->tile_h );  /* east */
+
+  /* Slimes + consumable loot */
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "slime" ),
+              4, 32, world->tile_w, world->tile_h );    /* room ! */
+  spawn_random_consumable( items, num_items, 3, 31,
+                           world->tile_w, world->tile_h );
+
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "slime" ),
+              2, 12, world->tile_w, world->tile_h );    /* room 4 (merc) */
+  spawn_random_consumable( items, num_items, 3, 11,
+                           world->tile_w, world->tile_h );
+
+  /* Red corridor encounters */
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "rat" ),
+              10, 37, world->tile_w, world->tile_h );   /* red hallway blocker */
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "skeleton" ),
+              13, 39, world->tile_w, world->tile_h );   /* red corridor room */
+
+  /* Blue corridor encounter */
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "skeleton" ),
+              25, 37, world->tile_w, world->tile_h );   /* blue corridor */
+
+  /* Green corridor encounter */
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "skeleton" ),
+              29, 38, world->tile_w, world->tile_h );   /* green corridor */
+
+  /* South wing chambers (separate class paths) */
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "skeleton" ),
+              13, 45, world->tile_w, world->tile_h );   /* red chamber */
+  spawn_random_consumable( items, num_items, 12, 45,
+                           world->tile_w, world->tile_h );
+
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "slime" ),
+              23, 45, world->tile_w, world->tile_h );   /* blue chamber */
+  spawn_random_consumable( items, num_items, 22, 46,
+                           world->tile_w, world->tile_h );
+
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "rat" ),
+              32, 45, world->tile_w, world->tile_h );   /* green chamber */
+  spawn_random_consumable( items, num_items, 31, 46,
+                           world->tile_w, world->tile_h );
+
+  spawn_random_consumable( items, num_items, 5, 45,
+                           world->tile_w, world->tile_h ); /* white chamber reward */
+
+  /* Rogue Annex */
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "rat" ),
+              29, 13, world->tile_w, world->tile_h );
+  spawn_random_consumable( items, num_items, 30, 12,
+                           world->tile_w, world->tile_h );
+
+  /* Merc Annex */
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "rat" ),
+              30, 18, world->tile_w, world->tile_h );
+  spawn_random_consumable( items, num_items, 31, 17,
+                           world->tile_w, world->tile_h );
+
+  /* Merc Upper Barracks */
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "skeleton" ),
+              30, 3, world->tile_w, world->tile_h );
+  spawn_random_consumable( items, num_items, 31, 2,
+                           world->tile_w, world->tile_h );
+
+  /* Merc Lower Barracks */
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "slime" ),
+              30, 8, world->tile_w, world->tile_h );
+  spawn_random_consumable( items, num_items, 31, 7,
+                           world->tile_w, world->tile_h );
+
+  /* Shop in Room 9 (SE room) */
+  NPCSpawn( npcs, num_npcs, NPCTypeByKey( "dungeonbargains" ),
+            22, 28, world->tile_w, world->tile_h );
+  ShopSpawn( world );
 }

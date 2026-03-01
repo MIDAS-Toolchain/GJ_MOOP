@@ -8,9 +8,11 @@
 #include "player.h"
 #include "console.h"
 #include "items.h"
+#include "maps.h"
 #include "tween.h"
 #include "dialogue.h"
 #include "movement.h"
+#include "poison_pool.h"
 
 extern Player_t player;
 
@@ -20,6 +22,10 @@ static aSoundEffect_t sfx_hit;
 /* Enemy list for buff effects (cleave, reach) */
 static Enemy_t* combat_enemies     = NULL;
 static int*     combat_enemy_count = NULL;
+
+/* Ground items for enemy drops */
+static GroundItem_t* combat_ground_items = NULL;
+static int*          combat_ground_count = NULL;
 
 /* Return total effect_value for all equipped items with the given effect name */
 static int equipped_effect( const char* name )
@@ -81,6 +87,12 @@ void CombatSetEnemies( Enemy_t* list, int* count )
   combat_enemy_count = count;
 }
 
+void CombatSetGroundItems( GroundItem_t* list, int* count )
+{
+  combat_ground_items = list;
+  combat_ground_count = count;
+}
+
 void CombatInit( Console_t* con )
 {
   console = con;
@@ -100,11 +112,64 @@ float CombatFlashAlpha( void ) { return hit_flash_alpha; }
 float CombatShakeOX( void )    { return hit_shake_x; }
 float CombatShakeOY( void )    { return hit_shake_y; }
 
+void CombatHandleEnemyDeath( Enemy_t* e )
+{
+  EnemyType_t* t = &g_enemy_types[e->type_idx];
+
+  e->alive = 0;
+  ConsolePushF( console, (aColor_t){ 0x75, 0xa7, 0x43, 255 },
+                "You defeated the %s!", t->name );
+
+  char kill_flag[MAX_NAME_LENGTH + 8];
+  snprintf( kill_flag, sizeof( kill_flag ), "%s_kills", t->key );
+  FlagIncr( kill_flag );
+
+  /* Gold drop */
+  if ( t->gold_drop > 0 )
+  {
+    player.gold += t->gold_drop;
+    ConsolePushF( console, (aColor_t){ 0xda, 0xaf, 0x20, 255 },
+                  "Picked up %d gold.", t->gold_drop );
+  }
+
+  /* Drop item on death — check maps first, then consumables */
+  if ( t->drop_item[0] != '\0' && combat_ground_items && combat_ground_count )
+  {
+    int mi = MapByKey( t->drop_item );
+    if ( mi >= 0 )
+    {
+      GroundItemSpawnMap( combat_ground_items, combat_ground_count,
+                          mi, e->row, e->col, 16, 16 );
+      ConsolePushF( console, g_maps[mi].color,
+                    "The %s dropped %s!", t->name, g_maps[mi].name );
+    }
+    else
+    {
+      int ci = ConsumableByKey( t->drop_item );
+      if ( ci >= 0 )
+      {
+        GroundItemSpawn( combat_ground_items, combat_ground_count,
+                         ci, e->row, e->col, 16, 16 );
+        ConsolePushF( console, g_consumables[ci].color,
+                      "The %s dropped %s!", t->name, g_consumables[ci].name );
+      }
+    }
+  }
+
+  /* On-death hazard: spawn poison pool */
+  if ( t->on_death[0] != '\0'
+       && strcmp( t->on_death, "poison_pool" ) == 0 )
+  {
+    PoisonPoolSpawn( e->row, e->col, t->pool_duration, t->pool_damage );
+    ConsolePushF( console, (aColor_t){ 50, 220, 50, 255 },
+                  "The %s dissolves into a poison pool!", t->name );
+  }
+}
+
 /* Helper: deal damage to an enemy, handle death + kill tracking.
    Returns 1 if the enemy died. */
 static int deal_damage( Enemy_t* e, int dmg, aColor_t vfx_color )
 {
-  EnemyType_t* t = &g_enemy_types[e->type_idx];
   e->hp -= dmg;
   e->turns_since_hit = 0;
 
@@ -112,12 +177,7 @@ static int deal_damage( Enemy_t* e, int dmg, aColor_t vfx_color )
 
   if ( e->hp <= 0 )
   {
-    e->alive = 0;
-    ConsolePushF( console, (aColor_t){ 0x75, 0xa7, 0x43, 255 },
-                  "You defeated the %s!", t->name );
-    char kill_flag[MAX_NAME_LENGTH + 8];
-    snprintf( kill_flag, sizeof( kill_flag ), "%s_kills", t->key );
-    FlagIncr( kill_flag );
+    CombatHandleEnemyDeath( e );
     return 1;
   }
   return 0;
@@ -146,7 +206,8 @@ static void resolve_buff( Enemy_t* primary )
       if ( dr + dc == 1 )
       {
         EnemyType_t* ct = &g_enemy_types[ce->type_idx];
-        int cdmg = player.buff.bonus_damage > 0 ? player.buff.bonus_damage : 1;
+        int cdmg = PlayerStat( "damage" ) + player.buff.bonus_damage;
+        if ( cdmg < 1 ) cdmg = 1;
         ConsolePushF( console, buff_color,
                       "Cleave hits %s for %d damage!", ct->name, cdmg );
         deal_damage( ce, cdmg, buff_color );
@@ -168,7 +229,8 @@ static void resolve_buff( Enemy_t* primary )
       if ( ce->row == behind_r && ce->col == behind_c )
       {
         EnemyType_t* ct = &g_enemy_types[ce->type_idx];
-        int cdmg = player.buff.bonus_damage > 0 ? player.buff.bonus_damage : 1;
+        int cdmg = PlayerStat( "damage" ) + player.buff.bonus_damage;
+        if ( cdmg < 1 ) cdmg = 1;
         ConsolePushF( console, buff_color,
                       "Reach hits %s for %d damage!", ct->name, cdmg );
         deal_damage( ce, cdmg, buff_color );
@@ -245,20 +307,8 @@ void CombatEnemyHit( Enemy_t* e )
   int thorns = equipped_effect( "thorns" );
   if ( thorns > 0 && e->alive )
   {
-    e->hp -= thorns;
-    e->turns_since_hit = 0;
-    CombatVFXSpawnNumber( e->world_x, e->world_y, thorns,
-                          (aColor_t){ 0xde, 0x9e, 0x41, 255 } );
     ConsolePushF( console, (aColor_t){ 0xde, 0x9e, 0x41, 255 },
                   "Thorns deals %d damage to %s.", thorns, t->name );
-    if ( e->hp <= 0 )
-    {
-      e->alive = 0;
-      ConsolePushF( console, (aColor_t){ 0x75, 0xa7, 0x43, 255 },
-                    "You defeated the %s!", t->name );
-      char kill_flag[MAX_NAME_LENGTH + 8];
-      snprintf( kill_flag, sizeof( kill_flag ), "%s_kills", t->key );
-      FlagIncr( kill_flag );
-    }
+    deal_damage( e, thorns, (aColor_t){ 0xde, 0x9e, 0x41, 255 } );
   }
 }

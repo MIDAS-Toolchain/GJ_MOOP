@@ -6,6 +6,7 @@
 #include "player.h"
 #include "items.h"
 #include "transitions.h"
+#include "draw_utils.h"
 
 extern Player_t player;
 
@@ -21,7 +22,9 @@ extern Player_t player;
 #define PANEL_BG  (aColor_t){ 0x09, 0x0a, 0x14, 200 }
 #define PANEL_FG  (aColor_t){ 0xc7, 0xcf, 0xcc, 255 }
 
-void HUDDrawTopBar( int in_combat )
+static int pause_hovered = 0;
+
+int HUDDrawTopBar( int in_combat )
 {
   aContainerWidget_t* tb = a_GetContainerFromWidget( "top_bar" );
   aRectf_t r = tb->rect;
@@ -83,6 +86,12 @@ void HUDDrawTopBar( int in_combat )
   a_DrawText( buf, (int)sx, (int)( ty + 4 ), ts );
   sx += strlen( buf ) * 8.0f * TB_STAT_SCALE + TB_STAT_GAP;
 
+  /* Gold */
+  snprintf( buf, sizeof( buf ), "G: %d", player.gold );
+  ts.fg = (aColor_t){ 0xda, 0xaf, 0x20, 255 };
+  a_DrawText( buf, (int)sx, (int)( ty + 4 ), ts );
+  sx += strlen( buf ) * 8.0f * TB_STAT_SCALE + TB_STAT_GAP;
+
   /* Equipment effects — gold */
   ts.fg = (aColor_t){ 0xde, 0x9e, 0x41, 255 };
   for ( int i = 0; i < EQUIP_SLOTS; i++ )
@@ -105,9 +114,26 @@ void HUDDrawTopBar( int in_combat )
     sx += 9 * 8.0f * TB_STAT_SCALE + TB_STAT_GAP;
   }
 
-  /* Settings[ESC] — far right */
-  ts.scale = TB_ESC_SCALE;
-  ts.fg = (aColor_t){ 0x57, 0x72, 0x77, 255 };
-  ts.align = TEXT_ALIGN_RIGHT;
-  a_DrawText( "Settings[ESC]", (int)( r.x + r.w - TB_PAD_X ), (int)( ty + 6 ), ts );
+  /* Pause[ESC] — far right, clickable */
+  {
+    const char* pause_text = "Pause[ESC]";
+    float text_w = strlen( pause_text ) * 8.0f * TB_ESC_SCALE;
+    float btn_x = r.x + r.w - TB_PAD_X - text_w;
+    float btn_y = ty + 2;
+    float btn_h = r.h - TB_PAD_Y * 2;
+
+    int hit = PointInRect( app.mouse.x, app.mouse.y,
+                           btn_x, btn_y, text_w, btn_h );
+    pause_hovered = hit;
+
+    ts.scale = TB_ESC_SCALE;
+    ts.fg = hit ? (aColor_t){ 0xde, 0x9e, 0x41, 255 }
+                : (aColor_t){ 0x57, 0x72, 0x77, 255 };
+    ts.align = TEXT_ALIGN_RIGHT;
+    a_DrawText( pause_text, (int)( r.x + r.w - TB_PAD_X ), (int)( ty + 6 ), ts );
+
+    if ( hit && app.mouse.pressed && app.mouse.button == SDL_BUTTON_LEFT )
+      return 1;
+  }
+  return 0;
 }
