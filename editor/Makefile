@@ -46,7 +46,8 @@ ENTITY_EDITOR_SRCS = ee_Creation.c\
 WORLD_EDITOR_SRCS = we_Creation.c\
 										we_Edit.c\
 										we_Load.c\
-										we_Save.c
+										we_Save.c\
+										we_Utils.c
 
 NATIVE_LIB_OBJS = $(patsubst %.c, $(OBJ_DIR_NATIVE)/%.o, $(EDITOR_SRCS))
 ENTITY_EDITOR_LIB_OBJS = $(patsubst %.c, $(OBJ_DIR_EE)/%.o, $(ENTITY_EDITOR_SRCS))

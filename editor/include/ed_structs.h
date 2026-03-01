@@ -37,8 +37,8 @@ typedef struct
 
 typedef struct
 {
-  SDL_Rect rects[MAX_GLYPHS];
-  SDL_Texture* texture;
+  aRectf_t rects[MAX_GLYPHS];
+  aImage_t* img;
   int count;
 } GlyphArray_t;
 

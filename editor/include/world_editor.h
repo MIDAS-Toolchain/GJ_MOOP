@@ -14,9 +14,6 @@
 #include "ed_defines.h"
 #include "ed_structs.h"
 
-#define EDITOR_WORLD_WIDTH  1024
-#define EDITOR_WORLD_HEIGHT 1024
-
 extern World_t* map;
 
 enum

@@ -17,6 +17,7 @@
 #include "editor.h"
 #include "entity_editor.h"
 #include "items_editor.h"
+#include "utils.h"
 #include "world.h"
 #include "world_editor.h"
 
@@ -125,33 +126,6 @@ static void e_WorldEditorLogic( float dt )
   
   a_ViewportInput( &app.g_viewport, EDITOR_WORLD_WIDTH, EDITOR_WORLD_HEIGHT );
   
-  if ( map != NULL )
-  {
-    aPoint2f_t scale = a_ViewportCalculateScale();
-    float view_x = app.g_viewport.x - app.g_viewport.w;
-    float view_y = app.g_viewport.y - app.g_viewport.h;
-
-    float world_mouse_x = (app.mouse.x / scale.x) + view_x;
-    float world_mouse_y = (app.mouse.y / scale.y) + view_y;
-
-    float relative_x = world_mouse_x - originx;
-    float relative_y = world_mouse_y - originy;
-
-    int cell_x = (int)( relative_x / 16);
-    int cell_y = (int)( relative_y / 16 );
-
-    if ( app.mouse.button == 1 )
-    {
-      app.mouse.button = 0;
-      if ( cell_x >= 0 && cell_x < EDITOR_WORLD_WIDTH &&
-           cell_y >= 0 && cell_x < EDITOR_WORLD_HEIGHT )
-      {
-        int index = cell_y * map->width + cell_x;
-        map->background[index].tile = 1;
-      }
-    }
-  }
-
   a_DoWidget();
 }
 

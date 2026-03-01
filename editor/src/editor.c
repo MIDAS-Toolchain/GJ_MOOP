@@ -25,20 +25,11 @@ static void ed_Draw( float );
 GlyphArray_t* game_glyphs = NULL;
 aColor_t master_colors[MAX_COLOR_GROUPS][48] = {0};
 
-aTileset_t* test_set;
-World_t* world;
-
-int ascii_on = 0;
-
 void EditorInit( void )
 {
   app.delegate.logic = ed_Logic;
   app.delegate.draw  = ed_Draw;
   
-  test_set = a_TilesetCreate( "resources/assets/tilemap.png", 32, 32 );
-
-  world = WorldCreate( 10, 10, 32, 32 );
-
   app.g_viewport = (aRectf_t){0};
 
   a_WidgetsInit( "resources/widgets/editor/editor.auf" );
@@ -83,12 +74,6 @@ static void ed_Logic( float dt )
     app.keyboard[A_F1] = 0;
     a_WidgetsInit( "resources/widgets/editor/editor.auf" );
   }
-  
-  if ( app.keyboard[A_T] == 1 )
-  {
-    app.keyboard[A_T] = 0;
-    ascii_on = !ascii_on;
-  }
 
   a_DoWidget();
 }
@@ -113,10 +98,7 @@ static void ed_Draw( float dt )
   };
 
   a_DrawText( fps_text, 600, 100, fps_style );
-  //a_Blit(test_set[0].img, 250, 250);
   
-  WorldDraw( 100, 100, world, test_set, ascii_on );
-
   a_DrawWidgets();
 }
 
