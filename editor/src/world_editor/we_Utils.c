@@ -76,8 +76,8 @@ void we_DrawGlyphPalette( int originx, int originy, int glyph_index )
     
     a_DrawFilledRect( glyph_palette_rect, black );
    
-    a_BlitTextureRect( game_glyphs->texture, game_glyphs->rects[i],
-                       gx + originx, gy + originy, 1, white );
+    /*a_BlitTextureRect( game_glyphs->texture, game_glyphs->rects[i],
+                       gx + originx, gy + originy, 1, white );*/
 
     if ( i == glyph_index )
     {

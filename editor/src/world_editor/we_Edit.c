@@ -75,6 +75,9 @@ static void we_EditLogic( float dt )
     e_GetCellAtMouseInViewport( map->width, map->height,
                      originx, originy, &grid_x, &grid_y );
     if ( editor_mode == WEM_SELECT )
+    {
+
+    }
 
     if ( app.mouse.button == 1 )
     {
