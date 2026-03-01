@@ -17,12 +17,13 @@
 #include "editor.h"
 #include "entity_editor.h"
 #include "items_editor.h"
+#include "world.h"
 #include "world_editor.h"
 
 static void e_WorldEditorLogic( float );
 static void e_WorldEditorDraw( float );
 
-aWorld_t* map = NULL;
+World_t* map = NULL;
 
 static aPoint2f_t selected_pos;
 static aPoint2f_t highlighted_pos;
@@ -31,11 +32,28 @@ char* pos_text;
 static int originx = 0;
 static int originy = 0;
 
+static int toggle_ascii = 0;
+aTileset_t* tile_set = NULL;
+
 void e_WorldEditorInit( void )
 {
-  aWidget_t* w;
   app.delegate.logic = e_WorldEditorLogic;
   app.delegate.draw  = e_WorldEditorDraw;
+  
+  tile_set = a_TilesetCreate( "resources/assets/level01tilemap.png", 16, 16 );
+ 
+  //originx = EDITOR_WORLD_WIDTH /2;
+  //originy = EDITOR_WORLD_HEIGHT/2;
+  if ( map != NULL )
+  {
+    originx = app.g_viewport.x - ( (float)( map->width  * map->tile_w ) / 2 );
+    originy = app.g_viewport.y - ( (float)( map->height * map->tile_h ) / 2 );
+  }
+ 
+  float ratio = SCREEN_WIDTH/SCREEN_HEIGHT;
+  float view_h = 50.0f;
+  float view_w = view_h * ratio;
+  app.g_viewport = (aRectf_t){ 512.0f, 512.0f, view_h, view_w };
 
   pos_text = malloc( sizeof(char) * 50 );
 
@@ -104,12 +122,45 @@ static void e_WorldEditorLogic( float dt )
     app.keyboard[SDL_SCANCODE_ESCAPE] = 0;
     EditorInit();
   }
+  
+  a_ViewportInput( &app.g_viewport, EDITOR_WORLD_WIDTH, EDITOR_WORLD_HEIGHT );
+  
+  if ( map != NULL )
+  {
+    aPoint2f_t scale = a_ViewportCalculateScale();
+    float view_x = app.g_viewport.x - app.g_viewport.w;
+    float view_y = app.g_viewport.y - app.g_viewport.h;
+
+    float world_mouse_x = (app.mouse.x / scale.x) + view_x;
+    float world_mouse_y = (app.mouse.y / scale.y) + view_y;
+
+    float relative_x = world_mouse_x - originx;
+    float relative_y = world_mouse_y - originy;
+
+    int cell_x = (int)( relative_x / 16);
+    int cell_y = (int)( relative_y / 16 );
+
+    if ( app.mouse.button == 1 )
+    {
+      app.mouse.button = 0;
+      if ( cell_x >= 0 && cell_x < EDITOR_WORLD_WIDTH &&
+           cell_y >= 0 && cell_x < EDITOR_WORLD_HEIGHT )
+      {
+        int index = cell_y * map->width + cell_x;
+        map->background[index].tile = 1;
+      }
+    }
+  }
 
   a_DoWidget();
 }
 
 static void e_WorldEditorDraw( float dt )
 {
+  if ( map != NULL )
+  {
+    WorldDraw( originx, originy, map, tile_set, toggle_ascii );
+  }
 
   a_DrawWidgets();
 }

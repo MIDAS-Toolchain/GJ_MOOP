@@ -15,5 +15,7 @@
 #define MAX_COLOR_PALETTE       48
 #define GAME_GLYPH_TEXTURE_SIZE 256
 
+#define MAX_ROOMS 64
+
 #endif
 
