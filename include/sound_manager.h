@@ -13,4 +13,8 @@ void SoundManagerPlayGame( void );
 void SoundManagerPlayFootstep( void );
 void SoundManagerStop( void );
 
+void SoundManagerSetMusicVolume( int pct );  /* 0-100 */
+void SoundManagerSetSfxVolume( int pct );    /* 0-100 */
+int  SoundManagerGetSfxVolume( void );
+
 #endif

@@ -1,0 +1,469 @@
+@npc {
+    name: "Graf"
+    glyph: "G"
+    color: [180, 180, 200, 255]
+    image_path: "resources/assets/npcs/graf.png"
+    description: "A tired-looking guard leaning on a spear."
+}
+
+# ==============================
+# GREETINGS (priority-based)
+# ==============================
+@greeting {
+    start: true
+    priority: 0
+    text: "Halt. State your... *yawn* ...business."
+    options: ["opt_friendly", "opt_who_are_you", "opt_whats_up", "opt_hostile", "opt_leave"]
+}
+@greeting_merc {
+    start: true
+    priority: 1
+    require_class: "Mercenary"
+    text: "A fellow sword-arm! Finally, someone who gets it. I've been standing here for... what day is it?"
+    options: ["opt_who_are_you", "opt_whats_up", "opt_ask_rats", "opt_about_rats_followup", "opt_leave"]
+}
+@greeting_rogue {
+    start: true
+    priority: 1
+    require_class: "Rogue"
+    text: "I didn't see you there. Please don't rob me, I've only got this spear and a sandwich."
+    set_flag: "knows_sandwich"
+    options: ["opt_who_are_you", "opt_whats_up", "opt_about_sandwich", "opt_leave"]
+}
+@greeting_mage {
+    start: true
+    priority: 1
+    require_class: "Mage"
+    text: "A mage! Can you magic me up a bed? I'll pay you in... moral support."
+    options: ["opt_who_are_you", "opt_whats_up", "opt_magic_bed", "opt_leave"]
+}
+@greeting_quest_active {
+    start: true
+    priority: 2
+    require_flag: "quest_rats"
+    text: "You're back. Please tell me the rats are dead. I can hear them chewing at night."
+    options: ["opt_claim_reward", "opt_not_yet", "opt_whats_up", "opt_about_town", "opt_leave"]
+}
+@greeting_post_rats {
+    start: true
+    priority: 3
+    require_flag: "rats_cleared"
+    text: "My hero! It's almost quiet enough to sleep now. Almost."
+    options: ["opt_whats_up", "opt_ask_for_sandwich", "opt_about_town", "opt_leave"]
+}
+
+# ==============================
+# WHO ARE YOU
+# ==============================
+@opt_who_are_you {
+    label: "Who are you, anyway?"
+    color: "lore"
+    set_lore: "graf"
+    goto: "who_are_you_reply"
+}
+@who_are_you_reply {
+    text: "Name's Graf. Town guard. Well, dungeon guard now, I suppose. Before this I guarded the bakery. Not from thieves. From customers. Thom's bread is a liability."
+    options: ["opt_graf_how_long", "opt_whats_up", "opt_about_town", "opt_leave"]
+}
+@opt_graf_how_long {
+    label: "How'd you end up down here?"
+    goto: "graf_how_long_reply"
+}
+@graf_how_long_reply {
+    text: "Greta said I was 'uniquely suited for low-activity work.' I thought it was a compliment. Turns out it means standing in a dungeon until someone remembers you exist. Didn't bring a chair. There was no sunset. There is no home."
+    options: ["opt_graf_regret", "opt_about_town", "opt_leave"]
+}
+@opt_graf_regret {
+    label: "Any regrets?"
+    goto: "graf_regret_reply"
+}
+@graf_regret_reply {
+    text: "Should've brought two sandwiches."
+    options: ["opt_whats_up", "opt_about_town", "opt_leave"]
+}
+
+# ==============================
+# FRIENDLY / HOSTILE openers
+# ==============================
+@opt_friendly {
+    label: "Just passing through."
+    goto: "friendly_reply"
+}
+@friendly_reply {
+    text: "Be careful down there. And if you find a way out... tell me. Please."
+    options: ["opt_whats_up", "opt_ask_rats", "opt_about_rats_followup", "opt_leave"]
+}
+@opt_hostile {
+    label: "None of your business."
+    color: "danger"
+    goto: "hostile_reply"
+}
+@hostile_reply {
+    text: "Fine. Fine! Everyone's so rude down here. Even the rats have better manners."
+    options: ["opt_leave"]
+}
+
+# ==============================
+# WHAT ARE YOU DOING HERE branch
+# ==============================
+@opt_whats_up {
+    label: "What are you doing down here?"
+    goto: "whats_up_reply"
+}
+@whats_up_reply {
+    text: "Guard duty. 'Stand by the dungeon entrance,' they said. 'Nothing ever happens,' they said. That was three weeks ago. I think they forgot about me."
+    options: ["opt_lost", "opt_why_not_leave", "opt_wait_three_weeks", "opt_about_town", "opt_leave"]
+}
+@opt_wait_three_weeks {
+    label: "Three weeks?! What have you been eating?"
+    goto: "sandwich_reveal"
+}
+@sandwich_reveal {
+    text: "...ham and cheese sandwich. One. For three weeks. I've been rationing it. Don't look at me like that."
+    set_flag: "knows_sandwich"
+    options: ["opt_lost", "opt_about_town", "opt_ask_rats", "opt_about_rats_followup", "opt_leave"]
+}
+@opt_lost {
+    label: "Wait, are you lost?"
+    goto: "lost_reply"
+}
+@lost_reply {
+    text: "Lost is a strong word. I prefer 'geographically uncertain.' The entrance was definitely... One of the directions."
+    options: ["opt_help_him", "opt_why_not_leave", "opt_about_town", "opt_leave"]
+}
+@opt_help_him {
+    label: "I could help you find the way out."
+    goto: "help_reply"
+}
+@help_reply {
+    text: "And abandon my post? I may be tired, confused, and mildly hallucinating, but I am a PROFESSIONAL. ...but if you happen to clear a path, I won't NOT follow it."
+    options: ["opt_about_town", "opt_ask_rats", "opt_about_rats_followup", "opt_leave"]
+}
+@opt_why_not_leave {
+    label: "Why don't you just... leave?"
+    goto: "why_not_leave_reply"
+}
+@why_not_leave_reply {
+    text: "I tried! Walked for an hour, ended up back here. Twice. I think the dungeon is mocking me."
+    options: ["opt_lost", "opt_about_town", "opt_leave"]
+}
+
+# ==============================
+# TOWN LORE branch
+# ==============================
+@opt_about_town {
+    label: "Tell me about the town."
+    color: "lore"
+    set_lore: "millhaven"
+    goto: "town_reply"
+}
+@town_reply {
+    text: "Ah, Millhaven! Population: dwindling. Main exports: complaints and burnt bread. But it's home."
+    options: ["opt_town_mayor", "opt_town_bakery", "opt_town_dungeon", "opt_leave"]
+}
+@opt_town_mayor {
+    label: "Who's in charge?"
+    color: "lore"
+    set_lore: "mayor_greta"
+    goto: "mayor_reply"
+}
+@mayor_reply {
+    text: "Mayor Greta. Lovely woman. Assigned me to this post personally. I think it was a compliment? She said I was 'uniquely suited for low-activity work.'"
+    options: ["opt_town_bakery", "opt_town_dungeon", "opt_about_town", "opt_leave"]
+}
+@opt_town_bakery {
+    label: "What's the deal with the burnt bread?"
+    color: "lore"
+    set_lore: "old_thom_bakery"
+    goto: "bakery_reply"
+}
+@bakery_reply {
+    text: "Old Thom runs the bakery. Good man. Terrible baker. Every loaf comes out like a brick. The Mercenaries love it though. Double as rations AND a blunt weapon."
+    options: ["opt_town_mayor", "opt_town_dungeon", "opt_about_town", "opt_leave"]
+}
+@opt_town_dungeon {
+    label: "What IS this dungeon?"
+    color: "lore"
+    set_lore: "the_dungeon"
+    goto: "dungeon_reply"
+}
+@dungeon_reply {
+    text: "Used to be a mine. Then it was a cellar. Then someone found the doors. Colored doors that only certain folk can open. After that, adventurers started showing up and everything went sideways."
+    options: ["opt_doors_more", "opt_town_mayor", "opt_about_town", "opt_leave"]
+}
+@opt_doors_more {
+    label: "The colored doors... what do you know?"
+    color: "lore"
+    set_lore: "colored_doors"
+    goto: "doors_reply"
+}
+@doors_reply {
+    text: "Red ones need brute force. Green ones have some kind of tricky lock. Blue ones are sealed with magic, I think. And then there's the white ones that anyone can open. Dunno who built them. Dunno why. I just guard the entrance. Allegedly."
+    options: ["opt_ask_rats", "opt_about_rats_followup", "opt_about_town", "opt_leave"]
+}
+
+# ==============================
+# SANDWICH (Rogue gets it free, others earn it)
+# ==============================
+@opt_about_sandwich {
+    label: "Tell me about this sandwich."
+    goto: "sandwich_reply"
+}
+@sandwich_reply {
+    text: "Ham and cheese. Three weeks old. I've been rationing it. Don't judge me. It's the only thing keeping me going. Well, that and spite."
+    set_flag: "knows_sandwich"
+    options: ["opt_whats_up", "opt_ask_rats", "opt_about_rats_followup", "opt_leave"]
+}
+
+# ==============================
+# MAGIC BED (Mage-specific)
+# ==============================
+@opt_magic_bed {
+    label: "That's not how magic works."
+    goto: "magic_bed_reply"
+}
+@magic_bed_reply {
+    text: "Not even a small one? A cot? A pillow? Last mage I met turned a rat into a slightly larger rat. A pillow should be easier than that."
+    options: ["opt_magic_try", "opt_whats_up", "opt_ask_rats", "opt_about_rats_followup", "opt_leave"]
+}
+@opt_magic_try {
+    label: "I could try, but it would probably explode."
+    goto: "magic_try_reply"
+}
+@magic_try_reply {
+    text: "At this point I'd sleep on an exploding pillow. Three weeks on stone floor does things to a man. My back sounds like a bag of gravel."
+    options: ["opt_whats_up", "opt_ask_rats", "opt_about_rats_followup", "opt_leave"]
+}
+
+# ==============================
+# RAT QUEST
+# ==============================
+@opt_ask_rats {
+    label: "Tell me about the rats."
+    require_not_flag: "knows_about_rats"
+    color: "quest"
+    goto: "rats_info"
+}
+@rats_info {
+    text: "Big ones. Like, suspiciously big. I'd deal with them myself but... guard duty. Very important. Can't leave. Definitely not because I'm scared."
+    set_flag: "knows_about_rats"
+    options: ["opt_accept_quest", "opt_already_killed", "opt_about_town", "opt_leave"]
+}
+@opt_about_rats_followup {
+    label: "About those rats..."
+    require_flag: "knows_about_rats"
+    require_not_flag: "quest_rats"
+    require_not_flag: "rats_cleared"
+    color: "quest"
+    goto: "rats_followup"
+}
+@rats_followup {
+    text: "Still big. Still here. Still terrifying. You reconsidering?"
+    options: ["opt_accept_quest", "opt_leave"]
+}
+@opt_accept_quest {
+    label: "I'll handle it."
+    set_flag: "quest_rats"
+    color: "quest"
+    goto: "quest_accepted"
+}
+@quest_accepted {
+    text: "Really? Oh thank the gods. Kill three of them and I'll owe you one. A big one."
+    options: ["opt_sandwich_warning", "opt_about_town", "opt_leave"]
+}
+@opt_sandwich_warning {
+    label: "...and the sandwich?"
+    require_flag: "knows_sandwich"
+    goto: "sandwich_warning_reply"
+}
+@sandwich_warning_reply {
+    text: "Not the sandwich though. The sandwich is mine."
+    options: ["opt_leave"]
+}
+@opt_already_killed {
+    label: "I already killed them."
+    require_flag_min: "rat_kills:3"
+    color: "complete"
+    goto: "already_killed_reply"
+}
+@already_killed_reply {
+    text: "You... already? Before I even asked? You absolute legend. I'm going to tell everyone in Millhaven about this. All twelve of them."
+    clear_flag: "quest_rats"
+    set_flag: "rats_cleared"
+    options: ["opt_leave"]
+}
+@opt_not_yet {
+    label: "Still working on it."
+    goto: "not_yet_reply"
+}
+@not_yet_reply {
+    text: "No rush. Well, some rush. They're getting bolder. One of them looked at me yesterday. With INTENT."
+    options: ["opt_leave"]
+}
+@opt_claim_reward {
+    label: "The rats are dead."
+    require_flag_min: "rat_kills:3"
+    color: "complete"
+    goto: "reward_node"
+}
+@reward_node {
+    text: "Three dead rats! You beautiful soul. Here, take this. Found it wedged behind a rock. No idea what it does but it looks important."
+    clear_flag: "quest_rats"
+    set_flag: "rats_cleared"
+    options: ["opt_leave"]
+}
+
+# ==============================
+# SANDWICH NEGOTIATIONS (post-rats, requires knows_sandwich)
+# ==============================
+@opt_ask_for_sandwich {
+    label: "So about that sandwich..."
+    require_flag: "rats_cleared"
+    require_flag: "knows_sandwich"
+    goto: "sandwich_no_1"
+}
+@sandwich_no_1 {
+    text: "No."
+    options: ["opt_sandwich_please", "opt_sandwich_earned", "opt_sandwich_give_up"]
+}
+@opt_sandwich_please {
+    label: "Please?"
+    goto: "sandwich_no_2"
+}
+@sandwich_no_2 {
+    text: "I killed rats for you. I navigate this dungeon alone. I haven't slept in three weeks. This sandwich is the last thing I have. No."
+    options: ["opt_sandwich_half", "opt_sandwich_logic", "opt_sandwich_give_up"]
+}
+@opt_sandwich_half {
+    label: "What about half?"
+    goto: "sandwich_no_3"
+}
+@sandwich_no_3 {
+    text: "You want me to rip my sandwich in half? With my bare hands? In this economy?"
+    options: ["opt_sandwich_logic", "opt_sandwich_desperate", "opt_sandwich_give_up"]
+}
+@opt_sandwich_earned {
+    label: "I killed your rats. I earned that sandwich."
+    goto: "sandwich_no_4"
+}
+@sandwich_no_4 {
+    text: "You earned a favour. The sandwich is not a favour. The sandwich is family."
+    options: ["opt_sandwich_half", "opt_sandwich_logic", "opt_sandwich_give_up"]
+}
+@opt_sandwich_logic {
+    label: "It's three weeks old. It can't be good anymore."
+    goto: "sandwich_no_5"
+}
+@sandwich_no_5 {
+    text: "Good? GOOD? It was never good. It was ham and cheese from Old Thom's bakery. The bread was burnt before I even got it. That's not the point."
+    options: ["opt_sandwich_what_is_point", "opt_sandwich_give_up"]
+}
+@opt_sandwich_what_is_point {
+    label: "Then what IS the point?"
+    goto: "sandwich_speech"
+}
+@sandwich_speech {
+    text: "The point is that when everything else is gone... when you're lost in a dungeon, forgotten by your mayor, surrounded by rats... you hold onto what you've got. And what I've got is this sandwich."
+    options: ["opt_sandwich_respect", "opt_sandwich_last_try", "opt_sandwich_give_up"]
+}
+@opt_sandwich_respect {
+    label: "...I respect that."
+    goto: "sandwich_respect_reply"
+}
+@sandwich_respect_reply {
+    text: "Thank you. That's all I ask. A little respect. For me. And the sandwich."
+    set_flag: "respects_sandwich"
+    options: ["opt_leave"]
+}
+@opt_sandwich_desperate {
+    label: "What if I just... took it?"
+    color: "danger"
+    goto: "sandwich_threat_reply"
+}
+@sandwich_threat_reply {
+    text: "You'd fight a tired, sleep-deprived guard over a three-week-old sandwich? ...I'd fight back. Don't test me. I've got a spear and nothing to lose."
+    options: ["opt_sandwich_logic", "opt_sandwich_give_up"]
+}
+@opt_sandwich_last_try {
+    label: "What if I trade you something?"
+    goto: "sandwich_trade"
+}
+@sandwich_trade {
+    text: "Unless you've got a letter from the mayor saying I can go home... no. Actually, do you have that? Please tell me you have that."
+    options: ["opt_sandwich_no_sorry", "opt_sandwich_give_up"]
+}
+@opt_sandwich_no_sorry {
+    label: "...no."
+    goto: "sandwich_no_final"
+}
+@sandwich_no_final {
+    text: "*sighs* Then we're done negotiating. Go kill something. I'll be here. With my sandwich."
+    options: ["opt_leave"]
+}
+@opt_sandwich_give_up {
+    label: "Fine, keep your sandwich."
+    goto: "sandwich_give_up_reply"
+}
+@sandwich_give_up_reply {
+    text: "I will. Thank you. It's nice to win one for a change."
+    options: ["opt_leave"]
+}
+
+# ==============================
+# MAYOR'S NOTE (requires has_mayors_note)
+# ==============================
+@greeting_has_note {
+    start: true
+    priority: 4
+    require_flag: "has_mayors_note"
+    require_not_flag: "guard_leaving"
+    text: "You again! What's that you've got there?"
+    options: ["opt_show_note", "opt_whats_up", "opt_leave"]
+}
+@opt_show_note {
+    label: "A letter from Mayor Greta. Says the bearer can leave."
+    goto: "show_note_reply"
+}
+@show_note_reply {
+    text: "Let me see that. 'To whom it may concern... permission to leave... signed, Mayor Greta.' This is... this is REAL. This is officially sanctioned departure! I'm not abandoning my post, I'm being RELIEVED! Here, take my sandwich. I won't need it. I'm going HOME. I'm going to sleep in a BED. I'm going to eat Old Thom's terrible bread and I'm going to LOVE IT."
+    set_flag: "guard_leaving"
+    set_flag: "got_sandwich"
+    clear_flag: "has_mayors_note"
+    give_item: "guards_sandwich"
+    options: ["opt_guard_goodbye", "opt_leave"]
+}
+@opt_guard_goodbye {
+    label: "Take care of yourself."
+    goto: "guard_goodbye_reply"
+}
+@guard_goodbye_reply {
+    text: "I will! First thing I'm doing is sleeping. Second thing is eating. Third thing is telling Mayor Greta she owes me three weeks of overtime. Goodbye, friend!"
+    options: ["opt_leave"]
+}
+
+# ==============================
+# POST-DEPARTURE
+# ==============================
+@greeting_leaving {
+    start: true
+    priority: 5
+    require_flag: "guard_leaving"
+    text: "Just let me... recalibrate myself. Haven't walked with purpose in three weeks. My legs forgot how."
+    options: ["opt_offer_help_leave", "opt_leave"]
+}
+@opt_offer_help_leave {
+    label: "Want me to help you find the way out?"
+    goto: "help_leave_reply"
+}
+@help_leave_reply {
+    text: "Oh I'm good, I just need to... find my footing. Give me a minute. Or ten. The knees are doing a thing."
+    options: ["opt_leave"]
+}
+
+# ==============================
+# LEAVE
+# ==============================
+@opt_leave {
+    label: "[Leave]"
+    goto: "end"
+}

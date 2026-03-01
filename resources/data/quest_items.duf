@@ -1,0 +1,22 @@
+@guards_sandwich {
+    name: "Graf's Sandwich"
+    type: "quest"
+    glyph: "%"
+    bonus_damage: 0
+    effect: "eat_sandwich"
+    heal: 1
+    image_path: ""
+    description: "A three-week-old ham and cheese sandwich. It smells... assertive."
+    color: [200, 180, 80, 255]
+}
+
+@stinky_cheese {
+    name: "Stinky Cheese"
+    type: "quest"
+    glyph: "*"
+    bonus_damage: 0
+    effect: "lure"
+    image_path: ""
+    description: "The cheese from Graf's sandwich. The smell is... overwhelming. Something in the walls might like it."
+    color: [220, 200, 60, 255]
+}

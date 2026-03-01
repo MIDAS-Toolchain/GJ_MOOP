@@ -22,6 +22,14 @@ typedef struct { int type; int index; } InvSlot_t;
 
 typedef struct
 {
+  int active;
+  int bonus_damage;
+  char effect[MAX_NAME_LENGTH];
+  int heal;
+} ConsumableBuff_t;
+
+typedef struct
+{
   char name[MAX_NAME_LENGTH];
   int hp;
   int max_hp;
@@ -30,6 +38,8 @@ typedef struct
   dStaticTable_t* stats;                /* computed stats: "damage", "defense" */
   char consumable_type[MAX_NAME_LENGTH];
   char description[256];
+  char glyph[8];
+  aColor_t color;
   aImage_t* image;
 
   float world_x;
@@ -43,6 +53,7 @@ typedef struct
   int equip_cursor;
   int inv_focused;                      /* 1 = inventory panel, 0 = equipment panel */
   int turns_since_hit;
+  ConsumableBuff_t buff;
 } Player_t;
 
 void PlayerInitStats( void );

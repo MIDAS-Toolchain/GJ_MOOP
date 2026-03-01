@@ -55,6 +55,7 @@ void EnemiesLoadTypes( void )
     dDUFValue_t* def      = d_DUFGetObjectItem( entry, "defense" );
     dDUFValue_t* ai       = d_DUFGetObjectItem( entry, "ai" );
     dDUFValue_t* desc     = d_DUFGetObjectItem( entry, "description" );
+    dDUFValue_t* range    = d_DUFGetObjectItem( entry, "range" );
     dDUFValue_t* color    = d_DUFGetObjectItem( entry, "color" );
     dDUFValue_t* img_path = d_DUFGetObjectItem( entry, "image_path" );
 
@@ -65,6 +66,7 @@ void EnemiesLoadTypes( void )
     if ( def )   t->defense = (int)def->value_int;
     if ( ai )    strncpy( t->ai, ai->value_string, MAX_NAME_LENGTH - 1 );
     if ( desc )  strncpy( t->description, desc->value_string, 255 );
+    if ( range ) t->range = (int)range->value_int;
     t->color = ParseDUFColor( color );
 
     if ( img_path && strlen( img_path->value_string ) > 0 )
@@ -108,6 +110,12 @@ Enemy_t* EnemySpawn( Enemy_t* list, int* count,
   e->hp             = g_enemy_types[type_idx].hp;
   e->alive          = 1;
   e->turns_since_hit = 99;
+  e->chase_turns     = 0;
+  e->last_seen_row   = -1;
+  e->last_seen_col   = -1;
+  e->ai_state        = 0;
+  e->ai_dir_row      = 0;
+  e->ai_dir_col      = 0;
   ( *count )++;
   return e;
 }
@@ -120,4 +128,11 @@ Enemy_t* EnemyAt( Enemy_t* list, int count, int row, int col )
       return &list[i];
   }
   return NULL;
+}
+
+int EnemiesInCombat( Enemy_t* list, int count )
+{
+  for ( int i = 0; i < count; i++ )
+    if ( list[i].alive && list[i].chase_turns > 0 ) return 1;
+  return 0;
 }

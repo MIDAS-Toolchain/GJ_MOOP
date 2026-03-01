@@ -41,6 +41,11 @@ void GV_ScreenToWorld( aRectf_t rect, GameCamera_t* cam,
                        int screen_x, int screen_y,
                        float* world_x, float* world_y );
 
+/* Convert world coordinates to screen coordinates */
+void GV_WorldToScreen( aRectf_t rect, GameCamera_t* cam,
+                       float wx, float wy,
+                       float* screen_x, float* screen_y );
+
 /* Draw an outline around a tile at grid position (x, y) */
 void GV_DrawTileOutline( aRectf_t rect, GameCamera_t* cam,
                          int tile_x, int tile_y,

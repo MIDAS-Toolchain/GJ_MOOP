@@ -3,4 +3,7 @@
 
 void GameSceneInit( void );
 
+/* Signal that a consumable was used — triggers enemy turn cost */
+void GameSceneUseConsumable( void );
+
 #endif

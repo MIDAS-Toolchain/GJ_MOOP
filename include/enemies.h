@@ -16,6 +16,7 @@ typedef struct
   int      defense;
   char     ai[MAX_NAME_LENGTH];
   char     description[256];
+  int      range;
   aColor_t color;
   aImage_t* image;
 } EnemyType_t;
@@ -29,6 +30,12 @@ typedef struct
   int   alive;
   int   facing_left;
   int   turns_since_hit;
+  int   chase_turns;
+  int   last_seen_row;
+  int   last_seen_col;
+  int   ai_state;
+  int   ai_dir_row;
+  int   ai_dir_col;
 } Enemy_t;
 
 extern EnemyType_t g_enemy_types[MAX_ENEMY_TYPES];
@@ -41,15 +48,22 @@ Enemy_t* EnemySpawn( Enemy_t* list, int* count,
                      int type_idx, int row, int col,
                      int tile_w, int tile_h );
 Enemy_t* EnemyAt( Enemy_t* list, int count, int row, int col );
+int      EnemiesInCombat( Enemy_t* list, int count );
 
 void EnemyRatTick( Enemy_t* e, int player_row, int player_col,
                    int (*walkable)(int,int),
                    Enemy_t* all, int count );
 
+void EnemySkeletonTick( Enemy_t* e, int player_row, int player_col,
+                        int (*walkable)(int,int),
+                        Enemy_t* all, int count );
+
 /* enemies.c — enemy turn management (owns its own tween manager) */
 #include "world.h"
 
 void EnemiesSetWorld( World_t* w );
+void EnemiesSetNPCs( void* npcs, int* num_npcs );
+int  EnemyBlockedByNPC( int row, int col );
 void EnemiesUpdate( float dt );
 int  EnemiesTurning( void );
 
@@ -64,5 +78,16 @@ void EnemiesStartTurn( Enemy_t* list, int count,
 void EnemiesDrawAll( aRectf_t vp_rect, GameCamera_t* cam,
                      Enemy_t* list, int count,
                      World_t* world, int gfx_mode );
+
+void EnemiesDrawTelegraph( aRectf_t vp_rect, GameCamera_t* cam,
+                           Enemy_t* list, int count,
+                           World_t* world );
+
+/* Arrow projectile VFX */
+void EnemyProjectileInit( void );
+void EnemyProjectileUpdate( float dt );
+void EnemyProjectileSpawn( float sx, float sy, float ex, float ey,
+                           int dir_row, int dir_col );
+void EnemyProjectileDraw( aRectf_t vp_rect, GameCamera_t* cam );
 
 #endif

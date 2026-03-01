@@ -4,19 +4,20 @@
 #include "defines.h"
 #include "draw_utils.h"
 #include "class_select.h"
+#include "lore_scene.h"
 #include "settings.h"
 #include "sound_manager.h"
 
 static void mm_Logic( float );
 static void mm_Draw( float );
 
-#define NUM_BUTTONS   3
+#define NUM_BUTTONS   4
 #define BTN_H         42.0f
 #define BTN_SPACING   14.0f
 
-enum { BTN_PLAY, BTN_SETTINGS, BTN_QUIT };
+enum { BTN_PLAY, BTN_LORE, BTN_SETTINGS, BTN_QUIT };
 
-static const char* btn_labels[NUM_BUTTONS] = { "Play", "Settings", "Quit" };
+static const char* btn_labels[NUM_BUTTONS] = { "Play", "Lore", "Settings", "Quit" };
 
 static int cursor = 0;
 static int hovered[NUM_BUTTONS] = { 0 };
@@ -53,6 +54,10 @@ static void mm_Execute( int index )
     case BTN_PLAY:
       a_WidgetCacheFree();
       ClassSelectInit();
+      break;
+    case BTN_LORE:
+      a_WidgetCacheFree();
+      LoreSceneInit();
       break;
     case BTN_SETTINGS:
       a_WidgetCacheFree();
@@ -139,9 +144,7 @@ static void mm_Logic( float dt )
 
 static void mm_Draw( float dt )
 {
-  /* Dark background fill */
-  a_DrawFilledRect( (aRectf_t){ 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT },
-                    (aColor_t){ 0x09, 0x0a, 0x14, 255 } );
+  /* bg handled by app.background set in init */
 
   /* Title */
   {
@@ -165,7 +168,7 @@ static void mm_Draw( float dt )
     float total_h = NUM_BUTTONS * BTN_H + ( NUM_BUTTONS - 1 ) * BTN_SPACING;
     float by = r.y + ( r.h - total_h ) / 2.0f;
 
-    aColor_t bg_norm  = { 0x09, 0x0a, 0x14, 255 };
+    aColor_t bg_norm  = { 0x10, 0x14, 0x1f, 255 };
     aColor_t bg_hover = { 0x20, 0x2e, 0x37, 255 };
     aColor_t fg_norm  = { 0x81, 0x97, 0x96, 255 };
     aColor_t fg_hover = { 0xc7, 0xcf, 0xcc, 255 };

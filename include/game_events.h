@@ -18,4 +18,7 @@ void GameEventsInit( Console_t* c );
 void GameEvent( GameEventType_t type, int index );
 void GameEventSwap( int new_idx, int old_idx );
 
+/* Try to use a consumable. Returns 1 on success, 0 on failure (wrong type). */
+int  GameEventUseConsumable( int consumable_index );
+
 #endif

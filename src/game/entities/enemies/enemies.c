@@ -3,11 +3,14 @@
 #include <Archimedes.h>
 
 #include "enemies.h"
+#include "npc.h"
 #include "combat.h"
 #include "world.h"
 #include "tween.h"
 
 static World_t* world = NULL;
+static NPC_t*   npc_list  = NULL;
+static int*     npc_count = NULL;
 static TweenManager_t tweens;
 
 /* Turn state machine */
@@ -31,6 +34,18 @@ void EnemiesSetWorld( World_t* w )
   world = w;
   InitTweenManager( &tweens );
   turn_state = TURN_IDLE;
+}
+
+void EnemiesSetNPCs( void* npcs, int* num )
+{
+  npc_list  = (NPC_t*)npcs;
+  npc_count = num;
+}
+
+int EnemyBlockedByNPC( int row, int col )
+{
+  if ( !npc_list || !npc_count ) return 0;
+  return NPCAt( npc_list, *npc_count, row, col ) != NULL;
 }
 
 /* --- Lunge callback data --- */
@@ -61,10 +76,41 @@ static void tick_and_move( int i )
 
   int old_row = turn_list[i].row;
   int old_col = turn_list[i].col;
+  int old_ai  = turn_list[i].ai_state;
 
   if ( strcmp( t->ai, "basic" ) == 0 )
     EnemyRatTick( &turn_list[i], turn_pr, turn_pc,
                   turn_walkable, turn_list, turn_count );
+  else if ( strcmp( t->ai, "ranged_telegraph" ) == 0 )
+    EnemySkeletonTick( &turn_list[i], turn_pr, turn_pc,
+                       turn_walkable, turn_list, turn_count );
+
+  /* Skeleton just fired — spawn arrow projectile */
+  if ( old_ai == 1 && turn_list[i].ai_state == 3 )
+  {
+    float tw = world->tile_w, th = world->tile_h;
+    float sx = turn_list[i].row * tw + tw / 2.0f;
+    float sy = turn_list[i].col * th + th / 2.0f;
+
+    int cr = turn_list[i].row, cc = turn_list[i].col;
+    for ( int s = 0; s < t->range; s++ )
+    {
+      int nr = cr + turn_list[i].ai_dir_row;
+      int nc = cc + turn_list[i].ai_dir_col;
+      if ( nr < 0 || nr >= world->width || nc < 0 || nc >= world->height )
+        break;
+      int idx = nc * world->width + nr;
+      if ( world->background[idx].solid || world->midground[idx].solid )
+        break;
+      cr = nr;
+      cc = nc;
+    }
+
+    EnemyProjectileSpawn( sx, sy,
+                          cr * tw + tw / 2.0f, cc * th + th / 2.0f,
+                          turn_list[i].ai_dir_row,
+                          turn_list[i].ai_dir_col );
+  }
 
   if ( turn_list[i].row != old_row || turn_list[i].col != old_col )
   {
@@ -138,6 +184,8 @@ static void start_next_attack( void )
   {
     if ( turn_list[move_idx].alive && was_adjacent[move_idx] )
     {
+      EnemyType_t* at = &g_enemy_types[turn_list[move_idx].type_idx];
+      if ( at->range > 0 ) { move_idx++; continue; } /* ranged — no melee */
       int dr = abs( turn_pr - turn_list[move_idx].row );
       int dc = abs( turn_pc - turn_list[move_idx].col );
       if ( dr + dc == 1 )

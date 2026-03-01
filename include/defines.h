@@ -12,7 +12,9 @@
 
 typedef struct
 {
-  int gfx_mode;
+  int gfx_mode;    /* GFX_IMAGE or GFX_ASCII */
+  int music_vol;   /* 0-100 */
+  int sfx_vol;     /* 0-100 */
 } GameSettings_t;
 
 extern Player_t player;

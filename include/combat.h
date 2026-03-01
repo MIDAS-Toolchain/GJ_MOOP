@@ -5,6 +5,7 @@
 #include "enemies.h"
 
 void CombatInit( Console_t* con );
+void CombatSetEnemies( Enemy_t* list, int* count );
 void CombatUpdate( float dt );
 
 /* Player attacks enemy. Enemy retaliates if still alive. Returns 1 if enemy dies. */

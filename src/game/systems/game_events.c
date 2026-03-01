@@ -6,6 +6,9 @@
 #include "items.h"
 #include "console.h"
 #include "game_events.h"
+#include "game_scene.h"
+
+extern Player_t player;
 
 static Console_t* con;
 
@@ -68,6 +71,36 @@ static void evt_UseConsumable( int index )
 {
   ConsumableInfo_t* c = &g_consumables[index];
   ConsolePushF( con, c->color, "%s used %s", player.name, c->name );
+}
+
+int GameEventUseConsumable( int consumable_index )
+{
+  if ( consumable_index < 0 || consumable_index >= g_num_consumables )
+    return 0;
+
+  ConsumableInfo_t* c = &g_consumables[consumable_index];
+
+  if ( strcmp( c->type, "food" ) == 0 )
+  {
+    player.buff.active = 1;
+    player.buff.bonus_damage = c->bonus_damage;
+    strncpy( player.buff.effect, c->effect, MAX_NAME_LENGTH - 1 );
+    player.buff.heal = c->heal;
+
+    if ( strcmp( c->effect, "none" ) != 0 && strlen( c->effect ) > 0 )
+      ConsolePushF( con, c->color, "%s eats %s. Next attack: %s (+%d dmg).",
+                    player.name, c->name, c->effect, c->bonus_damage );
+    else
+      ConsolePushF( con, c->color, "%s eats %s. Next attack: +%d dmg.",
+                    player.name, c->name, c->bonus_damage );
+
+    GameSceneUseConsumable();
+    return 1;
+  }
+
+  ConsolePushF( con, (aColor_t){ 0xcf, 0x57, 0x3c, 255 },
+                "%s can't use %s yet.", player.name, c->name );
+  return 0;
 }
 
 void GameEvent( GameEventType_t type, int index )

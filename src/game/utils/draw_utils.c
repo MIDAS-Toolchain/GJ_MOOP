@@ -19,12 +19,8 @@ void DrawImageOrGlyph( aImage_t* img, const char* glyph, aColor_t color,
   }
   else if ( glyph && glyph[0] != '\0' )
   {
-    aTextStyle_t style = a_default_text_style;
-    style.fg = color;
-    style.bg = (aColor_t){ 0, 0, 0, 0 };
-    style.scale = size / 16.0f;
-    style.align = TEXT_ALIGN_CENTER;
-    a_DrawText( glyph, (int)( x + size / 2.0f ), (int)y, style );
+    a_DrawGlyph( glyph, (int)x, (int)y, (int)size, (int)size,
+                 color, (aColor_t){ 0, 0, 0, 0 }, FONT_CODE_PAGE_437 );
   }
 }
 

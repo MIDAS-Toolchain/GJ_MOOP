@@ -10,6 +10,9 @@ static aMusic_t music_game;
 static int game_music_active = 0;
 static int menu_music_active = 0;
 
+static int g_music_pct = 100;
+static int g_sfx_pct   = 100;
+
 /* Footsteps — pick a random one each move */
 #define FOOTSTEP_COUNT 10
 static aSoundEffect_t footsteps[FOOTSTEP_COUNT];
@@ -90,8 +93,8 @@ void SoundManagerCrossfadeToGame( void )
 {
   if ( game_music_active ) return;
   d_LogInfo( "[sound] crossfade to game music" );
-  a_AudioSetMusicVolume( 80 );
-  a_AudioPlayMusic( &music_game, -1, 500 );
+  a_AudioSetMusicVolume( 80 * g_music_pct / 100 );
+  a_AudioPlayMusic( &music_game, -1, MUSIC_FADE_MS );
   game_music_active = 1;
   menu_music_active = 0;
 }
@@ -101,7 +104,7 @@ void SoundManagerPlayMenu( void )
   if ( !menu_music_active )
   {
     a_AudioStopMusic( MUSIC_FADE_MS );
-    a_AudioSetMusicVolume( AUDIO_MAX_VOLUME );
+    a_AudioSetMusicVolume( AUDIO_MAX_VOLUME * g_music_pct / 100 );
     a_AudioPlayMusic( &music_menu, -1, MUSIC_FADE_MS );
     menu_music_active = 1;
   }
@@ -118,7 +121,7 @@ void SoundManagerPlayGame( void )
   if ( !game_music_active )
   {
     a_AudioStopMusic( MUSIC_FADE_MS );
-    a_AudioSetMusicVolume( 80 );
+    a_AudioSetMusicVolume( 80 * g_music_pct / 100 );
     a_AudioPlayMusic( &music_game, -1, MUSIC_FADE_MS );
     game_music_active = 1;
   }
@@ -148,7 +151,7 @@ void SoundManagerPlayFootstep( void )
 
   a_TimerStart( footstep_timer );
   aAudioOptions_t opts = a_AudioDefaultOptions();
-  opts.volume = (int)( AUDIO_MAX_VOLUME * 0.7f );
+  opts.volume = (int)( AUDIO_MAX_VOLUME * 0.7f ) * g_sfx_pct / 100;
   a_AudioPlaySound( &footsteps[ rand() % FOOTSTEP_COUNT ], &opts );
 }
 
@@ -157,4 +160,24 @@ void SoundManagerStop( void )
   a_AudioStopMusic( MUSIC_FADE_MS );
   a_AudioHaltChannel( AUDIO_CHANNEL_WEATHER );
   StopAllTweens( &amb_tweens );
+}
+
+void SoundManagerSetMusicVolume( int pct )
+{
+  if ( pct < 0 ) pct = 0;
+  if ( pct > 100 ) pct = 100;
+  g_music_pct = pct;
+  a_AudioSetMusicVolume( AUDIO_MAX_VOLUME * g_music_pct / 100 );
+}
+
+void SoundManagerSetSfxVolume( int pct )
+{
+  if ( pct < 0 ) pct = 0;
+  if ( pct > 100 ) pct = 100;
+  g_sfx_pct = pct;
+}
+
+int SoundManagerGetSfxVolume( void )
+{
+  return g_sfx_pct;
 }

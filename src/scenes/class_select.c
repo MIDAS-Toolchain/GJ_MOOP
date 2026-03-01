@@ -25,6 +25,7 @@ static void mage_button( void );
 #define LIST_PAD_X        8.0f
 #define LIST_PAD_Y        4.0f
 #define LIST_TITLE_GAP    24.0f   /* gap below "Can Use:" / "Can Open:" label */
+#define SECTION_TITLE_H  24.0f   /* height for section title text drawn in code */
 #define LIST_TEXT_GAP     8.0f    /* gap between icon and name text */
 #define LIST_HIT_MARGIN   2.0f    /* extra px around row for mouse hit detection */
 
@@ -85,10 +86,13 @@ static void cs_SelectClass( int index )
   player.class_defense = g_classes[index].defense;
   strncpy( player.consumable_type, g_classes[index].consumable_type, MAX_NAME_LENGTH - 1 );
   strncpy( player.description, g_classes[index].description, 255 );
+  strncpy( player.glyph, g_classes[index].glyph, 7 );
+  player.color = g_classes[index].color;
   player.image = g_classes[index].image;
   player.world_x = 64.0f;
   player.world_y = 64.0f;
   memset( player.inventory, 0, sizeof( player.inventory ) );
+  memset( &player.buff, 0, sizeof( ConsumableBuff_t ) );
   player.inv_cursor = 0;
   player.selected_consumable = 0;
   player.equip_cursor = 0;
@@ -241,9 +245,7 @@ static void cs_Logic( float dt )
     {
       aContainerWidget_t* cpanel = a_GetContainerFromWidget( "consumables_panel" );
       aRectf_t cr = cpanel->rect;
-      float title_h = 0;
-      if ( cpanel->num_components > 0 )
-        title_h = cpanel->components[0].rect.h + LIST_TITLE_GAP;
+      float title_h = SECTION_TITLE_H + LIST_TITLE_GAP;
       float cy_start = cr.y + title_h + LIST_PAD_Y;
 
       if ( mx >= (int)cr.x && mx <= (int)( cr.x + cr.w ) )
@@ -273,9 +275,7 @@ static void cs_Logic( float dt )
     {
       aContainerWidget_t* dpanel = a_GetContainerFromWidget( "doors_panel" );
       aRectf_t dr = dpanel->rect;
-      float title_h = 0;
-      if ( dpanel->num_components > 0 )
-        title_h = dpanel->components[0].rect.h + LIST_TITLE_GAP;
+      float title_h = SECTION_TITLE_H + LIST_TITLE_GAP;
       float dy_start = dr.y + title_h + LIST_PAD_Y;
 
       if ( mx >= (int)dr.x && mx <= (int)( dr.x + dr.w ) )
@@ -387,15 +387,13 @@ static void cs_Draw( float dt )
     aColor_t panel_fg = (aColor_t){ 0xc7, 0xcf, 0xcc, (int)( 255 * panel_a ) };
 
     aContainerWidget_t* cp = a_GetContainerFromWidget( "consumables_panel" );
-    float cp_th = 0;
-    if ( cp->num_components > 0 ) cp_th = cp->components[0].rect.h + LIST_TITLE_GAP;
+    float cp_th = SECTION_TITLE_H + LIST_TITLE_GAP;
     float cp_h = cp_th + LIST_PAD_Y + nc * ( LIST_ITEM_SIZE + LIST_ROW_SPACING ) + LIST_PAD_Y;
     a_DrawFilledRect( (aRectf_t){ cp->rect.x, cp->rect.y, cp->rect.w, cp_h }, panel_bg );
     a_DrawRect( (aRectf_t){ cp->rect.x, cp->rect.y, cp->rect.w, cp_h }, panel_fg );
 
     aContainerWidget_t* dp = a_GetContainerFromWidget( "doors_panel" );
-    float dp_th = 0;
-    if ( dp->num_components > 0 ) dp_th = dp->components[0].rect.h + LIST_TITLE_GAP;
+    float dp_th = SECTION_TITLE_H + LIST_TITLE_GAP;
     float dp_h = dp_th + LIST_PAD_Y + no * ( LIST_ITEM_SIZE + LIST_ROW_SPACING ) + LIST_PAD_Y;
     a_DrawFilledRect( (aRectf_t){ dp->rect.x, dp->rect.y, dp->rect.w, dp_h }, panel_bg );
     a_DrawRect( (aRectf_t){ dp->rect.x, dp->rect.y, dp->rect.w, dp_h }, panel_fg );
@@ -418,43 +416,65 @@ static void cs_Draw( float dt )
     }
   }
 
-  /* Widget labels — skip once fade is underway (can't modulate widget alpha) */
+  /* Widget labels (buttons only) — skip once fade is underway */
   if ( !in_outro )
     a_DrawWidgets();
 
-  /* Update WT_OUTPUT widgets with hovered class data */
-  aContainerWidget_t* panel = a_GetContainerFromWidget( "info_panel" );
+  /* Title — draw directly */
+  if ( !in_outro )
+  {
+    aContainerWidget_t* tp = a_GetContainerFromWidget( "title_panel" );
+    aRectf_t tr = tp->rect;
+    aTextStyle_t tts = a_default_text_style;
+    tts.fg = (aColor_t){ 0xde, 0x9e, 0x41, 255 };
+    tts.bg = (aColor_t){ 0, 0, 0, 0 };
+    tts.scale = 2.0f;
+    tts.align = TEXT_ALIGN_CENTER;
+    a_DrawText( "Choose Your Class", (int)( tr.x + tr.w / 2.0f ),
+                (int)( tr.y + tr.h * 0.25f ), tts );
+  }
 
   if ( last_class_idx >= 0 )
   {
-    /* Output widget text — only when not fading */
+    /* Class info panel — draw directly */
     if ( !in_outro )
     {
+      aContainerWidget_t* ip = a_GetContainerFromWidget( "info_panel" );
+      aRectf_t ir = ip->rect;
+
+      a_DrawFilledRect( ir, (aColor_t){ 0x09, 0x0a, 0x14, 200 } );
+      a_DrawRect( ir, (aColor_t){ 0xc7, 0xcf, 0xcc, 255 } );
+
+      float tx = ir.x + 10.0f;
+      float ty = ir.y + 8.0f;
       char stat_buf[128];
 
-      for ( int i = 0; i < panel->num_components; i++ )
-      {
-        aWidget_t* w = &panel->components[i];
+      aTextStyle_t ts = a_default_text_style;
+      ts.bg = (aColor_t){ 0, 0, 0, 0 };
 
-        if ( strncmp( w->name, "out_name", MAX_NAME_LENGTH ) == 0 )
-          a_OutputWidgetSetText( w, g_classes[last_class_idx].name );
+      ts.fg = (aColor_t){ 0xde, 0x9e, 0x41, 255 };
+      ts.scale = 1.5f;
+      a_DrawText( g_classes[last_class_idx].name, (int)tx, (int)ty, ts );
+      ty += 26.0f;
 
-        if ( strncmp( w->name, "out_stats", MAX_NAME_LENGTH ) == 0 )
-        {
-          snprintf( stat_buf, sizeof( stat_buf ), "HP: %d  DMG: %d  DEF: %d",
-                    g_classes[last_class_idx].hp, g_classes[last_class_idx].base_damage, g_classes[last_class_idx].defense );
-          a_OutputWidgetSetText( w, stat_buf );
-        }
+      ts.fg = (aColor_t){ 0xc7, 0xcf, 0xcc, 255 };
+      ts.scale = 1.2f;
+      snprintf( stat_buf, sizeof( stat_buf ), "HP: %d  DMG: %d  DEF: %d",
+                g_classes[last_class_idx].hp, g_classes[last_class_idx].base_damage,
+                g_classes[last_class_idx].defense );
+      a_DrawText( stat_buf, (int)tx, (int)ty, ts );
+      ty += 22.0f;
 
-        if ( strncmp( w->name, "out_uses", MAX_NAME_LENGTH ) == 0 )
-        {
-          snprintf( stat_buf, sizeof( stat_buf ), "%s", g_classes[last_class_idx].consumable_type );
-          a_OutputWidgetSetText( w, stat_buf );
-        }
+      ts.fg = (aColor_t){ 0x81, 0x97, 0x96, 255 };
+      snprintf( stat_buf, sizeof( stat_buf ), "Uses: %s",
+                g_classes[last_class_idx].consumable_type );
+      a_DrawText( stat_buf, (int)tx, (int)ty, ts );
+      ty += 22.0f;
 
-        if ( strncmp( w->name, "out_desc", MAX_NAME_LENGTH ) == 0 )
-          a_OutputWidgetSetText( w, g_classes[last_class_idx].description );
-      }
+      ts.fg = (aColor_t){ 0xa8, 0xb5, 0xb2, 255 };
+      ts.scale = 1.1f;
+      ts.wrap_width = (int)( ir.w - 20.0f );
+      a_DrawText( g_classes[last_class_idx].description, (int)tx, (int)ty, ts );
     }
 
     /* Draw character image or glyph — stays visible during outro */
@@ -502,6 +522,47 @@ static void cs_Draw( float dt )
       }
     }
 
+    /* Starter trinket panel */
+    if ( !in_outro )
+    {
+      const char* class_key = g_class_keys[last_class_idx];
+      EquipmentInfo_t* trinket = NULL;
+      for ( int ei = 0; ei < g_num_equipment; ei++ )
+      {
+        if ( strcmp( g_equipment[ei].class_name, class_key ) == 0 &&
+             strcmp( g_equipment[ei].kind, "trinket" ) == 0 )
+        { trinket = &g_equipment[ei]; break; }
+      }
+
+      if ( trinket )
+      {
+        aContainerWidget_t* gp = a_GetContainerFromWidget( "gear_panel" );
+        aRectf_t gr = gp->rect;
+
+        a_DrawFilledRect( gr, (aColor_t){ 0x09, 0x0a, 0x14, 200 } );
+        a_DrawRect( gr, trinket->color );
+
+        aTextStyle_t gts = a_default_text_style;
+        gts.bg = (aColor_t){ 0, 0, 0, 0 };
+
+        /* Name */
+        gts.fg = trinket->color;
+        gts.scale = 1.4f;
+        a_DrawText( trinket->name, (int)( gr.x + 10 ), (int)( gr.y + 6 ), gts );
+
+        /* Effect */
+        gts.fg = (aColor_t){ 0xde, 0x9e, 0x41, 255 };
+        gts.scale = 1.1f;
+        a_DrawText( trinket->effect, (int)( gr.x + 10 ), (int)( gr.y + 30 ), gts );
+
+        /* Description */
+        gts.fg = (aColor_t){ 0xa8, 0xb5, 0xb2, 255 };
+        gts.scale = 1.0f;
+        gts.wrap_width = (int)( gr.w - 20.0f );
+        a_DrawText( trinket->description, (int)( gr.x + 10 ), (int)( gr.y + 50 ), gts );
+      }
+    }
+
     /* Item lists + modal + buttons — fade with panels during outro */
     if ( panel_a > 0.01f )
     {
@@ -510,11 +571,16 @@ static void cs_Draw( float dt )
       /* Draw consumables for the hovered class (left panel) */
       {
         aContainerWidget_t* cpanel = a_GetContainerFromWidget( "consumables_panel" );
-        float title_h = 0;
-        if ( cpanel->num_components > 0 )
-          title_h = cpanel->components[0].rect.h + LIST_TITLE_GAP;
+        float title_h = SECTION_TITLE_H + LIST_TITLE_GAP;
 
         aRectf_t cr = cpanel->rect;
+
+        /* Section title */
+        aTextStyle_t st = a_default_text_style;
+        st.fg = (aColor_t){ 0xc7, 0xcf, 0xcc, (int)( 255 * panel_a ) };
+        st.bg = (aColor_t){ 0, 0, 0, 0 };
+        st.scale = 1.2f;
+        a_DrawText( "Can Use:", (int)( cr.x + LIST_PAD_X ), (int)( cr.y + 4.0f ), st );
         float cx = cr.x + LIST_PAD_X;
         float cy = cr.y + title_h + LIST_PAD_Y;
 
@@ -551,11 +617,16 @@ static void cs_Draw( float dt )
       /* Draw openables for the hovered class (right panel) */
       {
         aContainerWidget_t* dpanel = a_GetContainerFromWidget( "doors_panel" );
-        float title_h = 0;
-        if ( dpanel->num_components > 0 )
-          title_h = dpanel->components[0].rect.h + LIST_TITLE_GAP;
+        float title_h = SECTION_TITLE_H + LIST_TITLE_GAP;
 
         aRectf_t dr = dpanel->rect;
+
+        /* Section title */
+        aTextStyle_t dt = a_default_text_style;
+        dt.fg = (aColor_t){ 0xc7, 0xcf, 0xcc, (int)( 255 * panel_a ) };
+        dt.bg = (aColor_t){ 0, 0, 0, 0 };
+        dt.scale = 1.2f;
+        a_DrawText( "Can Open:", (int)( dr.x + LIST_PAD_X ), (int)( dr.y + 4.0f ), dt );
         float dx = dr.x + LIST_PAD_X;
         float dy = dr.y + title_h + LIST_PAD_Y;
 
@@ -697,8 +768,8 @@ static void cs_Draw( float dt )
         float ey = btn_panel_bot + 30.0f;
 
         DrawButton( ex, ey, EMBARK_W, EMBARK_H, "Embark [Enter]", 2.0f, embark_hovered,
-                    (aColor_t){ 0x09, 0x0a, 0x14, (int)( 255 * panel_a ) }, (aColor_t){ 0x20, 0x2e, 0x37, (int)( 255 * panel_a ) },
-                    (aColor_t){ 0xc7, 0xcf, 0xcc, (int)( 255 * panel_a ) }, (aColor_t){ 0xeb, 0xed, 0xe9, (int)( 255 * panel_a ) } );
+                    (aColor_t){ 0x10, 0x14, 0x1f, (int)( 255 * panel_a ) }, (aColor_t){ 0x20, 0x2e, 0x37, (int)( 255 * panel_a ) },
+                    (aColor_t){ 0x81, 0x97, 0x96, (int)( 255 * panel_a ) }, (aColor_t){ 0xc7, 0xcf, 0xcc, (int)( 255 * panel_a ) } );
       }
 
       /* Draw back button — below embark */
@@ -708,8 +779,8 @@ static void cs_Draw( float dt )
         float by = btn_panel_bot + 30.0f + EMBARK_H + 30.0f;
 
         DrawButton( bx, by, BACK_W, BACK_H, "Back [ESC]", 1.0f, back_hovered,
-                    (aColor_t){ 0x09, 0x0a, 0x14, (int)( 255 * panel_a ) }, (aColor_t){ 0x20, 0x2e, 0x37, (int)( 255 * panel_a ) },
-                    (aColor_t){ 0x81, 0x97, 0x96, (int)( 255 * panel_a ) }, fade_white );
+                    (aColor_t){ 0x10, 0x14, 0x1f, (int)( 255 * panel_a ) }, (aColor_t){ 0x20, 0x2e, 0x37, (int)( 255 * panel_a ) },
+                    (aColor_t){ 0x81, 0x97, 0x96, (int)( 255 * panel_a ) }, (aColor_t){ 0xc7, 0xcf, 0xcc, (int)( 255 * panel_a ) } );
       }
     } /* end panel fade */
   }

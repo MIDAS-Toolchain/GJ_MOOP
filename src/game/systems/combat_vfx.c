@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <Archimedes.h>
 
 #include "combat_vfx.h"
@@ -35,11 +36,29 @@ typedef struct
 static HitMarker_t markers[MAX_MARKERS];
 static TweenManager_t vfx_tweens;
 
+/* ---- Floating text bubbles ---- */
+
+#define MAX_TEXT_MARKERS 4
+
+typedef struct
+{
+  float    wx, wy;
+  float    oy;
+  float    alpha;
+  char     text[64];
+  aColor_t color;
+  int      active;
+} TextMarker_t;
+
+static TextMarker_t text_markers[MAX_TEXT_MARKERS];
+
 void CombatVFXInit( void )
 {
   InitTweenManager( &vfx_tweens );
   for ( int i = 0; i < MAX_MARKERS; i++ )
     markers[i].active = 0;
+  for ( int i = 0; i < MAX_TEXT_MARKERS; i++ )
+    text_markers[i].active = 0;
 }
 
 void CombatVFXUpdate( float dt )
@@ -51,6 +70,11 @@ void CombatVFXUpdate( float dt )
   {
     if ( markers[i].active && markers[i].alpha < 1.0f )
       markers[i].active = 0;
+  }
+  for ( int i = 0; i < MAX_TEXT_MARKERS; i++ )
+  {
+    if ( text_markers[i].active && text_markers[i].alpha < 1.0f )
+      text_markers[i].active = 0;
   }
 }
 
@@ -80,6 +104,28 @@ void CombatVFXSpawnNumber( float wx, float wy, int amount, aColor_t color )
   TweenFloat( &vfx_tweens, &m->alpha, 0.0f, 0.6f, TWEEN_EASE_IN_QUAD );
 }
 
+void CombatVFXSpawnText( float wx, float wy, const char* text, aColor_t color )
+{
+  int slot = -1;
+  for ( int i = 0; i < MAX_TEXT_MARKERS; i++ )
+    if ( !text_markers[i].active ) { slot = i; break; }
+  if ( slot < 0 ) return;
+
+  TextMarker_t* m = &text_markers[slot];
+  m->wx    = wx;
+  m->wy    = wy - 10.0f;   /* start above the sprite's head */
+  m->oy    = 0;
+  m->alpha = 255.0f;
+  strncpy( m->text, text, 63 );
+  m->text[63] = '\0';
+  m->color  = color;
+  m->active = 1;
+
+  /* Gentle drift up, then fade out after a readable pause */
+  TweenFloat( &vfx_tweens, &m->oy, -5.0f, 1.2f, TWEEN_EASE_OUT_QUAD );
+  TweenFloat( &vfx_tweens, &m->alpha, 0.0f, 1.2f, TWEEN_EASE_IN_CUBIC );
+}
+
 void CombatVFXDraw( aRectf_t vp_rect, GameCamera_t* cam )
 {
   float sx, sy, cl, ct;
@@ -105,6 +151,26 @@ void CombatVFXDraw( aRectf_t vp_rect, GameCamera_t* cam )
     ts.scale = 1.5f;
     ts.align = TEXT_ALIGN_CENTER;
     a_DrawText( buf, (int)screen_x, (int)screen_y, ts );
+  }
+
+  /* Floating text bubbles */
+  for ( int i = 0; i < MAX_TEXT_MARKERS; i++ )
+  {
+    if ( !text_markers[i].active ) continue;
+    TextMarker_t* m = &text_markers[i];
+
+    float screen_x = ( m->wx - cl ) * sx + vp_rect.x;
+    float screen_y = ( m->wy + m->oy - ct ) * sy + vp_rect.y;
+
+    aColor_t c = m->color;
+    c.a = (int)m->alpha;
+
+    aTextStyle_t ts = a_default_text_style;
+    ts.fg    = c;
+    ts.bg    = (aColor_t){ 0, 0, 0, 0 };
+    ts.scale = 1.2f;
+    ts.align = TEXT_ALIGN_CENTER;
+    a_DrawText( m->text, (int)screen_x, (int)screen_y, ts );
   }
 }
 

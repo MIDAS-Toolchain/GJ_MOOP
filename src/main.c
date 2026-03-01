@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -8,10 +9,12 @@
 #include <Daedalus.h>
 #include "defines.h"
 #include "sound_manager.h"
+#include "persist.h"
+#include "lore.h"
 #include "main_menu.h"
 
 Player_t player;
-GameSettings_t settings = { .gfx_mode = GFX_IMAGE };
+GameSettings_t settings = { .gfx_mode = GFX_IMAGE, .music_vol = 100, .sfx_vol = 100 };
 
 void aMainloop( void )
 {
@@ -49,6 +52,23 @@ int main( void )
   d_SetGlobalLogger( logger );
 
   SoundManagerInit();
+  PersistInit();
+
+  /* Load persisted settings */
+  {
+    char* s = PersistLoad( "settings" );
+    if ( s )
+    {
+      sscanf( s, "%d\n%d\n%d",
+              &settings.gfx_mode, &settings.music_vol, &settings.sfx_vol );
+      free( s );
+    }
+    SoundManagerSetMusicVolume( settings.music_vol );
+    SoundManagerSetSfxVolume( settings.sfx_vol );
+  }
+
+  LoreLoadDefinitions();
+  LoreLoadSave();
   MainMenuInit();
 
   #ifdef __EMSCRIPTEN__

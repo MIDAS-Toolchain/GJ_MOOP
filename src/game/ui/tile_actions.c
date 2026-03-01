@@ -1,4 +1,5 @@
 #include <string.h>
+#include <ctype.h>
 #include <Archimedes.h>
 
 #include "defines.h"
@@ -8,10 +9,15 @@
 #include "movement.h"
 #include "combat.h"
 #include "tile_actions.h"
+#include "npc.h"
+#include "dialogue.h"
+#include "combat_vfx.h"
+#include "ground_items.h"
+#include "items.h"
 
 extern Player_t player;
 
-#define TILE_ACTION_COUNT 3
+#define TILE_ACTION_COUNT 4
 
 static World_t*       world;
 static GameCamera_t*  camera;
@@ -30,11 +36,13 @@ static int tile_action_cursor  = 0;
 static int tile_action_row, tile_action_col;
 static int tile_action_on_self = 0;
 
-/* Check if midground has a door at (r,c) */
+/* Check if midground has a door at (r,c).
+   Door tile indices: 2=blue, 3=green, 4=red, 5=white */
 static int tile_has_door( int r, int c )
 {
   int idx = c * world->width + r;
-  return world->midground[idx].tile != TILE_EMPTY;
+  uint32_t t = world->midground[idx].tile;
+  return t >= 2 && t <= 5;
 }
 
 /* Can the current player class open this door?
@@ -126,6 +134,12 @@ int TileActionsTryOpen( int r, int c )
 }
 
 /* Build the label list for the current tile action target */
+static NPC_t* ta_npcs      = NULL;
+static int*   ta_num_npcs  = NULL;
+
+static GroundItem_t* ta_ground_items     = NULL;
+static int*          ta_num_ground_items = NULL;
+
 static int build_labels( const char** labels, Enemy_t* enemies, int num_enemies )
 {
   int adjacent = TileAdjacent( tile_action_row, tile_action_col );
@@ -136,6 +150,16 @@ static int build_labels( const char** labels, Enemy_t* enemies, int num_enemies 
   if ( e && adjacent )
   {
     labels[0] = "Attack";
+    labels[1] = "Look";
+    return 2;
+  }
+
+  /* NPC: Talk action */
+  NPC_t* n = NPCAt( ta_npcs, *ta_num_npcs,
+                     tile_action_row, tile_action_col );
+  if ( n && adjacent )
+  {
+    labels[0] = "Talk";
     labels[1] = "Look";
     return 2;
   }
@@ -174,6 +198,18 @@ void TileActionsInit( World_t* w, GameCamera_t* cam, Console_t* con,
   a_AudioLoadSound( "resources/soundeffects/door_green_open.ogg", &sfx_door_green );
   a_AudioLoadSound( "resources/soundeffects/door_blue_open.ogg",  &sfx_door_blue );
   a_AudioLoadSound( "resources/soundeffects/door_fail.ogg",       &sfx_door_fail );
+}
+
+void TileActionsSetNPCs( NPC_t* npcs, int* num_npcs )
+{
+  ta_npcs     = npcs;
+  ta_num_npcs = num_npcs;
+}
+
+void TileActionsSetGroundItems( GroundItem_t* items, int* count )
+{
+  ta_ground_items     = items;
+  ta_num_ground_items = count;
 }
 
 void TileActionsOpen( int row, int col, int on_self )
@@ -349,6 +385,27 @@ int TileActionsLogic( int mouse_moved, Enemy_t* enemies, int num_enemies )
         CombatAttack( ae );
       }
     }
+    else if ( strcmp( action, "Talk" ) == 0 )
+    {
+      NPC_t* tn = NPCAt( ta_npcs, *ta_num_npcs,
+                           tile_action_row, tile_action_col );
+      if ( tn )
+      {
+        PlayerSetFacing( tn->world_x < player.world_x );
+        if ( EnemiesInCombat( enemies, num_enemies ) )
+        {
+          NPCType_t* nt = &g_npc_types[tn->type_idx];
+          CombatVFXSpawnText( tn->world_x, tn->world_y,
+                              nt->combat_bark, nt->color );
+          ConsolePushF( console, nt->color,
+                        "%s yells \"%s\"", nt->name, nt->combat_bark );
+        }
+        else
+        {
+          DialogueStart( tn->type_idx );
+        }
+      }
+    }
     else /* Look */
     {
       if ( tile_action_on_self )
@@ -360,15 +417,52 @@ int TileActionsLogic( int mouse_moved, Enemy_t* enemies, int num_enemies )
       {
         Enemy_t* le = EnemyAt( enemies, num_enemies,
                                 tile_action_row, tile_action_col );
+        NPC_t* ln = NPCAt( ta_npcs, *ta_num_npcs,
+                             tile_action_row, tile_action_col );
         if ( le )
         {
           EnemyType_t* lt = &g_enemy_types[le->type_idx];
+          char desc[256];
+          strncpy( desc, lt->description, 255 ); desc[255] = '\0';
+          desc[0] = (char)tolower( (unsigned char)desc[0] );
+          int elen = (int)strlen( desc );
+          int eperiod = ( elen > 0 && desc[elen - 1] == '.' );
           ConsolePushF( console, lt->color,
-                        "%s - %s", lt->name, lt->description );
+                        eperiod ? "You see %s" : "You see %s.", desc );
+          ConsolePushF( console, lt->color,
+                        "  HP: %d/%d  DMG: %d  DEF: %d",
+                        le->hp, lt->hp, lt->damage, lt->defense );
+          if ( lt->range > 0 )
+            ConsolePushF( console, lt->color,
+                          "  Ranged (range %d)", lt->range );
+        }
+        else if ( ln )
+        {
+          NPCType_t* lnt = &g_npc_types[ln->type_idx];
+          char desc[256];
+          strncpy( desc, lnt->description, 255 ); desc[255] = '\0';
+          desc[0] = (char)tolower( (unsigned char)desc[0] );
+          int dlen = (int)strlen( desc );
+          int has_period = ( dlen > 0 && desc[dlen - 1] == '.' );
+          ConsolePushF( console, lnt->color,
+                        has_period ? "You see %s" : "You see %s.", desc );
         }
         else
         {
-          if ( tile_has_door( tile_action_row, tile_action_col ) )
+          /* Check for ground items */
+          GroundItem_t* gi = ( ta_ground_items && ta_num_ground_items )
+            ? GroundItemAt( ta_ground_items, *ta_num_ground_items,
+                            tile_action_row, tile_action_col )
+            : NULL;
+          if ( gi )
+          {
+            ConsumableInfo_t* ci = &g_consumables[gi->consumable_idx];
+            ConsolePushF( console, ci->color,
+                          "You see %s on the ground.", ci->name );
+            ConsolePushF( console, (aColor_t){ 0xa8, 0xb5, 0xb2, 255 },
+                          "  %s", ci->description );
+          }
+          else if ( tile_has_door( tile_action_row, tile_action_col ) )
           {
             door_describe( tile_action_row, tile_action_col );
           }

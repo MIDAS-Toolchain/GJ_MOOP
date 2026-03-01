@@ -1,69 +1,52 @@
+[WT_CONTAINER.settings_title]
+(w,h):(calc(
+    SCREEN.W * 3 / 4
+    ), calc(
+    SCREEN.h / 10
+    )
+)
+(x,y):(calc(
+    SCREEN.w / 2 - THIS.w / 2
+    ),calc(
+    16
+    )
+)
 [WT_CONTAINER.settings_panel]
-(x,y):(
-    calc(SCREEN.w * 0.25),
-    calc(SCREEN.h * 0.15)
+(w,h):(calc(
+    SCREEN.W / 2
+    ), calc(
+    SCREEN.h / 2
+    )
 )
-(w,h):(
-    calc(SCREEN.w * 0.50),
-    calc(SCREEN.h * 0.70)
+(x,y):(calc(
+    SCREEN.w / 2 - THIS.w / 2
+    ),calc(
+    SCREEN.h / 2 - THIS.h / 2
+    )
 )
-boxed:1
-label:"Settings"
-toggle_label:1
-padding:12
-flex:2
-spacing:15
-click_sound:"resources/soundeffects/menu_click.wav"
-hover_sound:"resources/soundeffects/menu_move.wav"
-fg:[218,175,32,255]
-bg:[0,0,0,200]
-[[WT_SELECT.gfx_mode]]
-(x,y):(10,10)
-label:"Graphics"
-toggle_label:1
-boxed:1
-padding:5
-options:["Image","ASCII"]
-fg:[200,200,200,255]
-bg:[60,60,60,255]
-ag:[218,175,32,255]
-[[WT_SLIDER.music_vol]]
-(x,y):(10,10)
-label:"Music"
-toggle_label:1
-boxed:1
-padding:5
-step:5
-fg:[200,200,200,255]
-bg:[60,60,60,255]
-ag:[218,175,32,255]
-[[WT_SLIDER.sfx_vol]]
-(x,y):(10,10)
-label:"SFX"
-toggle_label:1
-boxed:1
-padding:5
-step:5
-fg:[200,200,200,255]
-bg:[60,60,60,255]
-ag:[218,175,32,255]
-[[WT_SELECT.resolution]]
-(x,y):(10,10)
-label:"Resolution"
-toggle_label:1
-boxed:1
-padding:5
-options:["1280x720","1920x1080","2560x1440"]
-fg:[200,200,200,255]
-bg:[60,60,60,255]
-ag:[218,175,32,255]
-[[WT_BUTTON.back]]
-on_release:0
-(x,y):(10,10)
-label:"Back"
-toggle_label:1
-boxed:1
-padding:5
-fg:[200,200,200,255]
-bg:[60,60,60,255]
-ag:[218,175,32,255]
+[WT_CONTAINER.settings_back]
+(w,h):(calc(
+    160
+    ), calc(
+    42
+    )
+)
+(x,y):(calc(
+    SCREEN.w / 4
+    ),calc(
+    SCREEN.h - 58
+    )
+)
+[WT_CONTAINER.settings_hint]
+(w,h):(calc(
+    SCREEN.W / 2
+    ), calc(
+    24
+    )
+)
+(x,y):(calc(
+    SCREEN.w / 2 - THIS.w / 2
+    ),calc(
+    SCREEN.h - 32
+    )
+)

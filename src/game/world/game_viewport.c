@@ -59,35 +59,22 @@ void GV_DrawWorld( aRectf_t rect, GameCamera_t* cam,
 
     if ( draw_ascii )
     {
-      aRectf_t gs = a_GetGlyphSize();
-      float scale = dh / gs.h;
-      if ( scale < 0.1f ) scale = 0.1f;
+      /* Snap to pixel grid like image mode */
+      int nx = (int)dx;
+      int ny = (int)dy;
+      int nw = (int)( dx + dw + 0.5f ) - (int)dx;
+      int nh = (int)( dy + dh + 0.5f ) - (int)dy;
 
-      aTextStyle_t ts = {
-        .type      = FONT_CODE_PAGE_437,
-        .align     = TEXT_ALIGN_CENTER,
-        .wrap_width = 0,
-        .scale     = scale,
-        .padding   = 0
-      };
-
-      ts.fg = bg.glyph_fg;
-      ts.bg = bg.glyph_bg;
-      a_DrawText( bg.glyph, (int)dx, (int)dy, ts );
+      a_DrawGlyph( bg.glyph, nx, ny, nw, nh,
+                   bg.glyph_fg, bg.glyph_bg, FONT_CODE_PAGE_437 );
 
       if ( has_mg && mg.glyph[0] != '\0' )
-      {
-        ts.fg = mg.glyph_fg;
-        ts.bg = mg.glyph_bg;
-        a_DrawText( mg.glyph, (int)dx, (int)dy, ts );
-      }
+        a_DrawGlyph( mg.glyph, nx, ny, nw, nh,
+                     mg.glyph_fg, mg.glyph_bg, FONT_CODE_PAGE_437 );
 
       if ( has_fg && fg.glyph[0] != '\0' )
-      {
-        ts.fg = fg.glyph_fg;
-        ts.bg = fg.glyph_bg;
-        a_DrawText( fg.glyph, (int)dx, (int)dy, ts );
-      }
+        a_DrawGlyph( fg.glyph, nx, ny, nw, nh,
+                     fg.glyph_fg, fg.glyph_bg, FONT_CODE_PAGE_437 );
     }
     else
     {
@@ -204,6 +191,16 @@ void GV_ScreenToWorld( aRectf_t rect, GameCamera_t* cam,
 
   *world_x = ( screen_x - rect.x ) / sx + cl;
   *world_y = ( screen_y - rect.y ) / sy + ct;
+}
+
+void GV_WorldToScreen( aRectf_t rect, GameCamera_t* cam,
+                       float wx, float wy,
+                       float* screen_x, float* screen_y )
+{
+  float s_x, s_y, cl, ct;
+  gv_transform( rect, cam, &s_x, &s_y, &cl, &ct );
+  *screen_x = ( wx - cl ) * s_x + rect.x;
+  *screen_y = ( wy - ct ) * s_y + rect.y;
 }
 
 void GV_DrawTileOutline( aRectf_t rect, GameCamera_t* cam,

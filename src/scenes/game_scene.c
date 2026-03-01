@@ -20,6 +20,12 @@
 #include "look_mode.h"
 #include "hud.h"
 #include "visibility.h"
+#include "npc.h"
+#include "dialogue.h"
+#include "dialogue_ui.h"
+#include "ground_items.h"
+#include "items.h"
+#include "dungeon.h"
 
 static void gs_Logic( float );
 static void gs_Draw( float );
@@ -54,6 +60,17 @@ static int      num_enemies = 0;
 static int      was_moving = 0;    /* tracks previous frame's moving state */
 static float    enemy_turn_delay = 0;  /* brief pause before enemies act */
 
+/* NPCs */
+static NPC_t    npcs[MAX_NPCS];
+static int      num_npcs = 0;
+
+/* Ground items */
+static GroundItem_t ground_items[MAX_GROUND_ITEMS];
+static int          num_ground_items = 0;
+static int          consumable_used = 0;
+
+void GameSceneUseConsumable( void ) { consumable_used = 1; }
+
 void GameSceneInit( void )
 {
   app.delegate.logic = gs_Logic;
@@ -64,94 +81,11 @@ void GameSceneInit( void )
   a_WidgetsInit( "resources/widgets/game_scene.auf" );
   app.active_widget = a_GetWidget( "inv_panel" );
 
-  /* ---- Build dungeon from character map ----
-     '#' = wall   '.' = floor   '+' = door
-     Edit this to reshape the dungeon. */
-  #define MAP_W 29
-  #define MAP_H 25
-  static const char* dungeon[MAP_H] = {
-    /*         1111111111222222222 */
-    /* 0123456789012345678901234567 8 */
-    "#############################",  /*  0 */
-    "#############################",  /*  1  north room top wall      */
-    "###########.......###########",  /*  2  north room interior      */
-    "###########.......###########",  /*  3                           */
-    "###########.......###########",  /*  4                           */
-    "##############.##############",  /*  5  opening + corridor       */
-    "##############.##############",  /*  6                           */
-    "##############.##############",  /*  7                           */
-    "##############+##############",  /*  8  central room, north door */
-    "###########.......###########",  /*  9  central room interior    */
-    "##.....####.......####.....##",  /* 10  west room + east room    */
-    "##.....####.......####.....##",  /* 11                           */
-    "##........+.......+........##",  /* 12  west door + east door    */
-    "##.....####.......####.....##",  /* 13                           */
-    "##.....####.......####.....##",  /* 14                           */
-    "###########.......###########",  /* 15  central room interior    */
-    "##############+##############",  /* 16  central room, south door */
-    "##############.##############",  /* 17  corridor                 */
-    "##############.##############",  /* 18                           */
-    "##############.##############",  /* 19  opening                  */
-    "###########.......###########",  /* 20  south room interior      */
-    "###########.......###########",  /* 21                           */
-    "###########.......###########",  /* 22                           */
-    "#############################",  /* 23  south room bottom wall   */
-    "#############################",  /* 24                           */
-  };
-
+  /* ---- Build dungeon ---- */
   tileset = a_TilesetCreate( "resources/assets/tiles/level01tilemap.png", 16, 16 );
-  world   = WorldCreate( MAP_W, MAP_H, 16, 16 );
-
-  /* Parse the character map into tiles */
-  for ( int y = 0; y < MAP_H; y++ )
-  {
-    for ( int x = 0; x < MAP_W; x++ )
-    {
-      int  idx = y * MAP_W + x;
-      char c   = dungeon[y][x];
-
-      if ( c == '#' )
-      {
-        world->background[idx].tile     = 1;
-        world->background[idx].glyph    = "#";
-        world->background[idx].glyph_fg = (aColor_t){ 0x81, 0x97, 0x96, 255 };
-        world->background[idx].solid    = 1;
-      }
-      else if ( c == '+' )
-      {
-        /* Floor underneath the door */
-        world->background[idx].tile     = 0;
-        world->background[idx].glyph    = ".";
-        world->background[idx].glyph_fg = (aColor_t){ 0x39, 0x4a, 0x50, 255 };
-        /* Door on midground (solid until opened) */
-        world->midground[idx].tile     = 2;
-        world->midground[idx].glyph    = "+";
-        world->midground[idx].glyph_fg = (aColor_t){ 0xc0, 0x94, 0x73, 255 };
-        world->midground[idx].solid    = 1;
-      }
-      /* '.' tiles keep the WorldCreate default (floor, tile 0) */
-    }
-  }
-
-  /* Give each central-room door its own color + tile */
-  {
-    struct { int x, y; uint32_t tile; aColor_t color; } doors[] = {
-      { 14,  8, 2, { 0x4f, 0x8f, 0xba, 255 } },  /* north: blue  */
-      { 14, 16, 3, { 0x75, 0xa7, 0x43, 255 } },  /* south: green */
-      { 10, 12, 4, { 0xa5, 0x30, 0x30, 255 } },  /* west:  red   */
-      { 18, 12, 5, { 0xc7, 0xcf, 0xcc, 255 } },  /* east:  white */
-    };
-    for ( int i = 0; i < 4; i++ )
-    {
-      int idx = doors[i].y * MAP_W + doors[i].x;
-      world->midground[idx].tile     = doors[i].tile;
-      world->midground[idx].glyph_fg = doors[i].color;
-    }
-  }
-
-  /* Player starts in center of central room (tile 14,12) */
-  player.world_x = 14 * 16 + 8.0f;
-  player.world_y = 12 * 16 + 8.0f;
+  world   = WorldCreate( DUNGEON_W, DUNGEON_H, 16, 16 );
+  DungeonBuild( world );
+  DungeonPlayerStart( &player.world_x, &player.world_y );
 
   /* Initialize game camera centered on player */
   camera = (GameCamera_t){ player.world_x, player.world_y, 64.0f };
@@ -178,19 +112,31 @@ void GameSceneInit( void )
   EnemiesLoadTypes();
   EnemiesInit( enemies, &num_enemies );
   CombatInit( &console );
+  CombatSetEnemies( enemies, &num_enemies );
   CombatVFXInit();
+  EnemyProjectileInit();
   EnemiesSetWorld( world );
-  EnemySpawn( enemies, &num_enemies, EnemyTypeByKey( "rat" ),
-              13, 10, world->tile_w, world->tile_h );  /* central */
-  EnemySpawn( enemies, &num_enemies, EnemyTypeByKey( "rat" ),
-              14, 3, world->tile_w, world->tile_h );   /* north */
-  EnemySpawn( enemies, &num_enemies, EnemyTypeByKey( "rat" ),
-              14, 21, world->tile_w, world->tile_h );  /* south */
-  EnemySpawn( enemies, &num_enemies, EnemyTypeByKey( "rat" ),
-              4, 12, world->tile_w, world->tile_h );   /* west */
-  EnemySpawn( enemies, &num_enemies, EnemyTypeByKey( "rat" ),
-              24, 12, world->tile_w, world->tile_h );  /* east */
   was_moving = 0;
+  consumable_used = 0;
+
+  /* NPCs & dialogue */
+  FlagsInit();
+  DialogueLoadAll();
+  EnemiesSetNPCs( npcs, &num_npcs );
+  NPCsInit( npcs, &num_npcs );
+  DialogueUIInit( &sfx_move, &sfx_click );
+
+  /* Ground items */
+  GroundItemsInit( ground_items, &num_ground_items );
+
+  /* Spawn all dungeon entities (items, NPCs, enemies) */
+  DungeonSpawn( npcs, &num_npcs, enemies, &num_enemies,
+                ground_items, &num_ground_items, world );
+
+  TileActionsSetNPCs( npcs, &num_npcs );
+  TileActionsSetGroundItems( ground_items, &num_ground_items );
+
+  DungeonHandlerInit( world );
 
   SoundManagerPlayGame();
   TransitionIntroStart();
@@ -224,11 +170,22 @@ static void gs_Logic( float dt )
     camera.x = player.world_x;
     camera.y = player.world_y;
 
+    /* Compute visibility so darkness fade works during intro */
+    {
+      int vr, vc;
+      PlayerGetTile( &vr, &vc );
+      VisibilityUpdate( vr, vc );
+    }
+
     a_DoWidget();
     return;
   }
 
-  /* ---- Tile action menu (highest priority after intro) ---- */
+  /* ---- Dialogue UI (highest priority after intro) ---- */
+  if ( DialogueUILogic() )
+    goto gs_logic_end;
+
+  /* ---- Tile action menu ---- */
   if ( TileActionsLogic( mouse_moved, enemies, num_enemies ) )
     goto gs_logic_end;
 
@@ -270,6 +227,7 @@ static void gs_Logic( float dt )
   /* ---- Movement update (always runs, even in look mode) ---- */
   MovementUpdate( dt );
   EnemiesUpdate( dt );
+  EnemyProjectileUpdate( dt );
   CombatUpdate( dt );
   CombatVFXUpdate( dt );
 
@@ -278,6 +236,30 @@ static void gs_Logic( float dt )
     int vr, vc;
     PlayerGetTile( &vr, &vc );
     VisibilityUpdate( vr, vc );
+  }
+
+  /* Pickup ground items when player finishes moving */
+  if ( was_moving && !PlayerIsMoving() )
+  {
+    int pr, pc;
+    PlayerGetTile( &pr, &pc );
+    GroundItem_t* gi = GroundItemAt( ground_items, num_ground_items, pr, pc );
+    if ( gi )
+    {
+      ConsumableInfo_t* ci = &g_consumables[gi->consumable_idx];
+      int slot = InventoryAdd( INV_CONSUMABLE, gi->consumable_idx );
+      if ( slot >= 0 )
+      {
+        gi->alive = 0;
+        a_AudioPlaySound( &sfx_click, NULL );
+        ConsolePushF( &console, ci->color, "Picked up %s.", ci->name );
+      }
+      else
+      {
+        ConsolePushF( &console, (aColor_t){ 0xcf, 0x57, 0x3c, 255 },
+                      "Inventory full! Can't pick up %s.", ci->name );
+      }
+    }
   }
 
   /* Enemy turn: brief pause after player finishes, then enemies act */
@@ -300,6 +282,17 @@ static void gs_Logic( float dt )
       PlayerGetTile( &pr, &pc );
       EnemiesStartTurn( enemies, num_enemies, pr, pc, TileWalkable );
     }
+  }
+
+  /* Using a consumable costs a turn */
+  if ( consumable_used && !PlayerIsMoving() && !EnemiesTurning()
+       && enemy_turn_delay <= 0 )
+  {
+    consumable_used = 0;
+    enemy_turn_delay = 0.2f;
+    player.turns_since_hit++;
+    for ( int i = 0; i < num_enemies; i++ )
+      if ( enemies[i].alive ) enemies[i].turns_since_hit++;
   }
 
   /* ---- Look mode ---- */
@@ -342,10 +335,27 @@ static void gs_Logic( float dt )
 
       /* Bump-to-attack: enemy on target tile */
       Enemy_t* bump = EnemyAt( enemies, num_enemies, tr, tc );
+      NPC_t* bump_npc = NPCAt( npcs, num_npcs, tr, tc );
       if ( bump )
       {
         PlayerLunge( dr, dc );
         CombatAttack( bump );
+      }
+      else if ( bump_npc )
+      {
+        PlayerSetFacing( bump_npc->world_x < player.world_x );
+        if ( EnemiesInCombat( enemies, num_enemies ) )
+        {
+          NPCType_t* nt = &g_npc_types[bump_npc->type_idx];
+          CombatVFXSpawnText( bump_npc->world_x, bump_npc->world_y,
+                              nt->combat_bark, nt->color );
+          ConsolePushF( &console, nt->color,
+                        "%s yells \"%s\"", nt->name, nt->combat_bark );
+        }
+        else
+        {
+          DialogueStart( bump_npc->type_idx );
+        }
       }
       else if ( TileWalkable( tr, tc ) )
         PlayerStartMove( tr, tc );
@@ -395,7 +405,8 @@ static void gs_Logic( float dt )
         if ( RapidMoveActive()
              && TileAdjacent( hover_row, hover_col )
              && TileWalkable( hover_row, hover_col )
-             && !EnemyAt( enemies, num_enemies, hover_row, hover_col ) )
+             && !EnemyAt( enemies, num_enemies, hover_row, hover_col )
+             && !NPCAt( npcs, num_npcs, hover_row, hover_col ) )
         {
           app.mouse.pressed = 0;
           PlayerStartMove( hover_row, hover_col );
@@ -443,7 +454,7 @@ static void gs_Draw( float dt )
   (void)dt;
 
   /* Top bar */
-  HUDDrawTopBar();
+  HUDDrawTopBar( EnemiesInCombat( enemies, num_enemies ) );
 
   /* Game viewport — shrink 1px on right so it doesn't overlap right panels */
   {
@@ -470,7 +481,8 @@ static void gs_Draw( float dt )
     a_DrawFilledRect( kr, PANEL_BG );
   }
 
-  /* Console panel */
+  /* Console panel (dialogue drawn later, on top of viewport) */
+  if ( !DialogueActive() )
   {
     aContainerWidget_t* cp = a_GetContainerFromWidget( "console_panel" );
     aRectf_t cr = cp->rect;
@@ -500,9 +512,20 @@ static void gs_Draw( float dt )
     if ( world && tileset )
       GV_DrawWorld( vp_rect, &draw_cam, world, tileset, settings.gfx_mode == GFX_ASCII );
 
+    /* Draw dungeon props (easel etc.) before darkness */
+    DungeonDrawProps( vp_rect, &draw_cam, world, settings.gfx_mode );
+
+    /* Draw ground items BEFORE enemies/darkness so they get dimmed */
+    GroundItemsDrawAll( vp_rect, &draw_cam, ground_items, num_ground_items,
+                        world, settings.gfx_mode );
+
     /* Draw enemies BEFORE darkness so they get dimmed too */
     EnemiesDrawAll( vp_rect, &draw_cam, enemies, num_enemies,
                     world, settings.gfx_mode );
+
+    /* Draw NPCs before darkness */
+    NPCsDrawAll( vp_rect, &draw_cam, npcs, num_npcs,
+                  world, settings.gfx_mode );
 
     /* Darkness overlay — covers world + enemies, player drawn on top.
        fade param: 0 = all black (intro start), 1 = normal visibility. */
@@ -523,6 +546,10 @@ static void gs_Draw( float dt )
       GV_DrawTileOutline( vp_rect, &draw_cam,
                           TileActionsGetRow(), TileActionsGetCol(),
                           world->tile_w, world->tile_h, GOLD );
+
+    /* Skeleton telegraph + projectiles */
+    EnemiesDrawTelegraph( vp_rect, &draw_cam, enemies, num_enemies, world );
+    EnemyProjectileDraw( vp_rect, &draw_cam );
 
     /* Player sprite (drawn after darkness — always visible) */
     PlayerDraw( vp_rect, &draw_cam, settings.gfx_mode );
@@ -554,6 +581,15 @@ static void gs_Draw( float dt )
       a_DrawFilledRect( clip, (aColor_t){ 0xa5, 0x30, 0x30, (int)flash } );
 
     a_DisableClipRect();
+  }
+
+  /* Dialogue UI — drawn on top of viewport */
+  if ( DialogueActive() )
+  {
+    aContainerWidget_t* cp = a_GetContainerFromWidget( "console_panel" );
+    aRectf_t cr = cp->rect;
+    cr.y += TransitionGetConsoleOY();
+    DialogueUIDraw( cr );
   }
 
   /* Tile action menu (drawn outside clip rect, over everything) */

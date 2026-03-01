@@ -1,0 +1,65 @@
+[WT_CONTAINER.lore_title]
+(w,h):(calc(
+    SCREEN.W * 3 / 4
+    ), calc(
+    SCREEN.h / 10
+    )
+)
+(x,y):(calc(
+    SCREEN.w / 2 - THIS.w / 2
+    ),calc(
+    16
+    )
+)
+[WT_CONTAINER.lore_categories]
+(w,h):(calc(
+    SCREEN.W / 4
+    ), calc(
+    SCREEN.h * 3 / 4
+    )
+)
+(x,y):(calc(
+    SCREEN.w / 8
+    ),calc(
+    SCREEN.h / 8
+    )
+)
+[WT_CONTAINER.lore_entries]
+(w,h):(calc(
+    SCREEN.W / 2
+    ), calc(
+    SCREEN.h * 3 / 4
+    )
+)
+(x,y):(calc(
+    SCREEN.w / 8 + SCREEN.W / 4 + 16
+    ),calc(
+    SCREEN.h / 8
+    )
+)
+[WT_CONTAINER.lore_back]
+(w,h):(calc(
+    160
+    ), calc(
+    42
+    )
+)
+(x,y):(calc(
+    SCREEN.w / 8
+    ),calc(
+    SCREEN.h - 58
+    )
+)
+[WT_CONTAINER.lore_hint]
+(w,h):(calc(
+    SCREEN.W / 2
+    ), calc(
+    24
+    )
+)
+(x,y):(calc(
+    SCREEN.w / 2 - THIS.w / 2
+    ),calc(
+    SCREEN.h - 32
+    )
+)

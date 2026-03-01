@@ -401,9 +401,11 @@ int InventoryUILogic( int mouse_moved )
         }
         else if ( slot->type == INV_CONSUMABLE )
         {
-          GameEvent( EVT_USE_CONSUMABLE, slot->index );
-          slot->type = INV_EMPTY;
-          slot->index = 0;
+          if ( GameEventUseConsumable( slot->index ) )
+          {
+            slot->type = INV_EMPTY;
+            slot->index = 0;
+          }
         }
       }
       else if ( inv_action_cursor == 1 ) /* Look */

@@ -5,9 +5,17 @@
 #include "game_viewport.h"
 #include "console.h"
 #include "enemies.h"
+#include "npc.h"
 
 void TileActionsInit( World_t* w, GameCamera_t* cam, Console_t* con,
                       aSoundEffect_t* move, aSoundEffect_t* click );
+
+/* Set NPC list for tile actions (call once after NPCs are initialized) */
+void TileActionsSetNPCs( NPC_t* npcs, int* num_npcs );
+
+/* Set ground item list for tile actions (Look shows ground items) */
+#include "ground_items.h"
+void TileActionsSetGroundItems( GroundItem_t* items, int* count );
 
 /* Process tile action menu input.  Returns 1 if input was consumed. */
 int  TileActionsLogic( int mouse_moved, Enemy_t* enemies, int num_enemies );

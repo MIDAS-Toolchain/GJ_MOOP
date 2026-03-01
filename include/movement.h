@@ -25,6 +25,7 @@ void PlayerWallBump( int dr, int dc );
 
 int   PlayerIsMoving( void );
 int   PlayerFacingLeft( void );
+void  PlayerSetFacing( int left );
 int   RapidMoveActive( void );
 float PlayerBounceOY( void );
 float PlayerShakeOX( void );

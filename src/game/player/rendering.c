@@ -13,8 +13,9 @@ void PlayerDraw( aRectf_t vp_rect, GameCamera_t* cam, int gfx_mode )
   float py = player.world_y + PlayerBounceOY();
 
   /* Shadow — pinned to bottom of tile, doesn't bounce with player */
+  float shadow_oy = ( gfx_mode == GFX_IMAGE ) ? 8.0f : 7.0f;
   GV_DrawFilledRect( vp_rect, cam,
-                     player.world_x, player.world_y + 8.0f,
+                     player.world_x, player.world_y + shadow_oy,
                      10.0f, 3.0f,
                      (aColor_t){ 0, 0, 0, 80 } );
 
@@ -28,6 +29,16 @@ void PlayerDraw( aRectf_t vp_rect, GameCamera_t* cam, int gfx_mode )
                      player.world_x, py, 16.0f, 16.0f );
   }
   else
-    GV_DrawFilledRect( vp_rect, cam,
-                       player.world_x, py, 16.0f, 16.0f, white );
+  {
+    float sx, sy;
+    GV_WorldToScreen( vp_rect, cam,
+                      player.world_x - 8.0f, py - 8.0f,
+                      &sx, &sy );
+    float half_w = cam->half_h * ( vp_rect.w / vp_rect.h );
+    int dw = (int)( 16.0f * ( vp_rect.w / ( half_w * 2.0f ) ) );
+    int dh = (int)( 16.0f * ( vp_rect.h / ( cam->half_h * 2.0f ) ) );
+
+    a_DrawGlyph( player.glyph, (int)sx, (int)sy, dw, dh,
+                 player.color, (aColor_t){ 0, 0, 0, 0 }, FONT_CODE_PAGE_437 );
+  }
 }

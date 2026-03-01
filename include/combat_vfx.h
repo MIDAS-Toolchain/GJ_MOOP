@@ -13,6 +13,9 @@ void CombatVFXDraw( aRectf_t vp_rect, GameCamera_t* cam );
 /* Spawn a floating damage number at world position */
 void CombatVFXSpawnNumber( float wx, float wy, int amount, aColor_t color );
 
+/* Spawn floating text at world position (speech bubbles, etc.) */
+void CombatVFXSpawnText( float wx, float wy, const char* text, aColor_t color );
+
 /* Draw a health bar above an entity — only shows when hp < max_hp */
 void CombatVFXDrawHealthBar( aRectf_t vp_rect, GameCamera_t* cam,
                               float wx, float wy,

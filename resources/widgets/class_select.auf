@@ -12,7 +12,7 @@ spacing:50
 click_sound:"resources/soundeffects/menu_click.wav"
 hover_sound:"resources/soundeffects/menu_move.wav"
 fg:[255,255,0,255]
-bg:[0,0,0,200]
+bg:[9,10,20,200]
 [[WT_BUTTON.mercenary]]
 (x,y):(10,10)
 label:"Mercenary"
@@ -20,7 +20,7 @@ toggle_label:1
 boxed:1
 hidden:0
 padding-x:38
-padding-y: 8
+padding-y:8
 texture:1
 (w,h):(20,20)
 background:"resources/assets/UI/button/Red_Button.png"
@@ -37,7 +37,7 @@ label:"Rogue"
 toggle_label:1
 boxed:1
 padding-x:52
-padding-y: 8
+padding-y:8
 texture:1
 background:"resources/assets/UI/button/Green_Button.png"
 pressed:"resources/assets/UI/button/Green_Button_p.png"
@@ -54,7 +54,7 @@ toggle_label:1
 boxed:1
 hidden:0
 padding-x:52
-padding-y: 8
+padding-y:8
 texture:1
 background:"resources/assets/UI/button/Blue_Button.png"
 pressed:"resources/assets/UI/button/Blue_Button_p.png"
@@ -65,136 +65,41 @@ button_drop_offset:5
 fg:[0,0,0,255]
 bg:[164,221,219,0]
 [WT_CONTAINER.title_panel]
-(x,y):(
-    calc(class_select.x + THIS.w / 2),
-    calc( THIS.h / 2 )
-)
-label:""
-toggle_label:0
-boxed:1
-padding:5
-justify:1
-align:1
-flex:2
-spacing:0
-texture:0
 (w,h):(
     calc(class_select.w / 2),
     calc(class_select.h)
 )
-bg:[0,0,0,255]
-[[WT_OUTPUT.title_text]]
-label:"Choose Your Class"
-boxed:1
-hidden:0
-visible_length:32
-text_offset:0
-fg:[255,255,255,255]
-bg:[title_panel.bg]
+(x,y):(
+    calc(class_select.x + class_select.w / 2),
+    calc(class_select.h / 2)
+)
 [WT_CONTAINER.info_panel]
 (x,y):(
     200,
-    calc(
-    class_select.y + class_select.h * 2
-    )
+    calc(class_select.y + class_select.h * 3)
 )
-boxed:1
-hidden:0
-flex:2
-spacing:5
-fg:[255,255,0,255]
-bg:class_select.bg
-[[WT_OUTPUT.out_name]]
-label:"Name:"
-toggle_label:1
-boxed:1
-padding:10
-hidden:0
-visible_length:32
-text_offset:5
-fg:[255,255,255,255]
-bg:[50,50,50,200]
-[[WT_OUTPUT.out_stats]]
-label:"Stats:"
-toggle_label:1
-boxed:1
-hidden:0
-visible_length:32
-padding:calc(out_name.padding/2)
-text_offset:5
-fg:[255,255,255,255]
-bg:[50,50,50,200]
-[[WT_OUTPUT.out_uses]]
-label:"Uses:"
-toggle_label:1
-boxed:1
-padding:calc(out_stats.padding)
-visible_length:32
-text_offset:5
-fg:[255,255,255,255]
-bg:[50,50,50,200]
-[[WT_OUTPUT.out_desc]]
-label:"Desc:"
-toggle_label:1
-boxed:1
-padding:out_name.padding
-visible_length:48
-text_offset:5
-fg:[255,255,255,255]
-bg:[50,50,50,200]
+(w,h):(340, 130)
 [WT_CONTAINER.image_panel]
 (x,y):(
-    calc( info_panel.x + info_panel.w * 8),
-    calc( info_panel.y )
+    calc(info_panel.x + info_panel.w + 66),
+    calc(info_panel.y)
 )
-(w,h):(100,100)
-boxed:1
-hidden:0
-padding:0
-flex:0
-spacing:0
-bg:class_select.bg
+(w,h):(100, 100)
 [WT_CONTAINER.consumables_panel]
 (x,y):(
     calc(info_panel.x),
-    calc(info_panel.y + info_panel.h + 30)
+    calc(info_panel.y + info_panel.h + 70)
 )
-(w,h):(260,180)
-boxed:0
-hidden:0
-padding:0
-flex:2
-spacing:0
-fg:[255,255,0,255]
-bg:class_select.bg
-[[WT_OUTPUT.consumables_title]]
-label:"Can Use:"
-toggle_label:1
-boxed:1
-padding:out_name.padding
-visible_length:24
-text_offset:5
-fg:[255,255,255,255]
-bg:[50,50,50,200]
+(w,h):(260, 180)
 [WT_CONTAINER.doors_panel]
 (x,y):(
-    calc(image_panel.x),
-    calc(info_panel.y + info_panel.h + 30)
+    calc(consumables_panel.x + consumables_panel.w + 380),
+    calc(consumables_panel.y)
 )
-(w,h):(200,180)
-boxed:0
-hidden:0
-padding:0
-flex:2
-spacing:0
-fg:[255,255,0,255]
-bg:class_select.bg
-[[WT_OUTPUT.doors_title]]
-label:"Can Open:"
-toggle_label:1
-boxed:1
-padding:out_name.padding
-visible_length:24
-text_offset:5
-fg:[255,255,255,255]
-bg:[50,50,50,200]
+(w,h):(200, 180)
+[WT_CONTAINER.gear_panel]
+(x,y):(
+    calc(doors_panel.x - 57),
+    calc(info_panel.y)
+)
+(w,h):(260, 130)

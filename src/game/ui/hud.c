@@ -21,7 +21,7 @@ extern Player_t player;
 #define PANEL_BG  (aColor_t){ 0x09, 0x0a, 0x14, 200 }
 #define PANEL_FG  (aColor_t){ 0xc7, 0xcf, 0xcc, 255 }
 
-void HUDDrawTopBar( void )
+void HUDDrawTopBar( int in_combat )
 {
   aContainerWidget_t* tb = a_GetContainerFromWidget( "top_bar" );
   aRectf_t r = tb->rect;
@@ -93,6 +93,16 @@ void HUDDrawTopBar( void )
     snprintf( buf, sizeof( buf ), "%s(%d)", e->effect, e->effect_value );
     a_DrawText( buf, (int)sx, (int)( ty + 4 ), ts );
     sx += strlen( buf ) * 8.0f * TB_STAT_SCALE + TB_STAT_GAP;
+  }
+
+  /* Combat indicator — red */
+  if ( in_combat )
+  {
+    ts.fg = (aColor_t){ 0xa5, 0x30, 0x30, 255 };
+    ts.scale = TB_STAT_SCALE;
+    ts.align = TEXT_ALIGN_LEFT;
+    a_DrawText( "IN COMBAT", (int)sx, (int)( ty + 4 ), ts );
+    sx += 9 * 8.0f * TB_STAT_SCALE + TB_STAT_GAP;
   }
 
   /* Settings[ESC] — far right */

@@ -176,6 +176,7 @@ void PlayerWallBump( int dr, int dc )
 
 int   PlayerIsMoving( void )   { return moving; }
 int   PlayerFacingLeft( void ) { return facing_left; }
+void  PlayerSetFacing( int left ) { facing_left = left; }
 int   RapidMoveActive( void )  { return rapid_active; }
 float PlayerBounceOY( void )   { return bounce_oy; }
 float PlayerShakeOX( void )    { return shake_ox; }

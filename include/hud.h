@@ -1,6 +1,6 @@
 #ifndef __HUD_H__
 #define __HUD_H__
 
-void HUDDrawTopBar( void );
+void HUDDrawTopBar( int in_combat );
 
 #endif

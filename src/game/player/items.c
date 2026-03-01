@@ -110,6 +110,17 @@ static void LoadConsumableData( void )
     if ( bdmg )   c->bonus_damage = (int)bdmg->value_int;
     c->color = ParseDUFColor( color );
 
+    dDUFValue_t* v;
+    if ( ( v = d_DUFGetObjectItem( entry, "range" ) ) )        c->range        = (int)v->value_int;
+    if ( ( v = d_DUFGetObjectItem( entry, "requires_los" ) ) ) c->requires_los = (int)v->value_int;
+    if ( ( v = d_DUFGetObjectItem( entry, "heal" ) ) )         c->heal         = (int)v->value_int;
+    if ( ( v = d_DUFGetObjectItem( entry, "ticks" ) ) )        c->ticks        = (int)v->value_int;
+    if ( ( v = d_DUFGetObjectItem( entry, "tick_damage" ) ) )  c->tick_damage  = (int)v->value_int;
+    if ( ( v = d_DUFGetObjectItem( entry, "place_range" ) ) )  c->place_range  = (int)v->value_int;
+    if ( ( v = d_DUFGetObjectItem( entry, "radius" ) ) )       c->radius       = (int)v->value_int;
+    if ( ( v = d_DUFGetObjectItem( entry, "duration" ) ) )     c->duration     = (int)v->value_int;
+    if ( ( v = d_DUFGetObjectItem( entry, "aoe_radius" ) ) )   c->aoe_radius   = (int)v->value_int;
+
     if ( img_path && strlen( img_path->value_string ) > 0 )
       c->image = a_ImageLoad( img_path->value_string );
 

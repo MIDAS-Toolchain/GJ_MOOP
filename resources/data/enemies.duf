@@ -10,7 +10,7 @@
     ai: "basic"
     image_path: "resources/assets/enemies/rat.png"
     color: [150, 120, 80, 255]
-    description: "Walks toward you, bites. No tricks."
+    description: "A dusty, angry, murky rat."
 }
 
 @skeleton {
@@ -22,9 +22,9 @@
     ai: "ranged_telegraph"
     telegraph_turns: 1
     range: 5
-    image_path: ""
+    image_path: "resources/assets/enemies/skeleton.png"
     color: [220, 220, 200, 255]
-    description: "Telegraphs a line for 1 turn, then shoots. Move out of the line."
+    description: "A brittle skeleton archer."
 }
 
 @slime {

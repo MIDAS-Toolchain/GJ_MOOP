@@ -1,5 +1,7 @@
 #include <Archimedes.h>
 
+#include <stdio.h>
+
 #include "combat.h"
 #include "combat_vfx.h"
 #include "enemies.h"
@@ -7,11 +9,17 @@
 #include "console.h"
 #include "items.h"
 #include "tween.h"
+#include "dialogue.h"
+#include "movement.h"
 
 extern Player_t player;
 
 static Console_t* console = NULL;
 static aSoundEffect_t sfx_hit;
+
+/* Enemy list for buff effects (cleave, reach) */
+static Enemy_t* combat_enemies     = NULL;
+static int*     combat_enemy_count = NULL;
 
 /* Return total effect_value for all equipped items with the given effect name */
 static int equipped_effect( const char* name )
@@ -67,6 +75,12 @@ static void trigger_hit_effect( void )
   }
 }
 
+void CombatSetEnemies( Enemy_t* list, int* count )
+{
+  combat_enemies     = list;
+  combat_enemy_count = count;
+}
+
 void CombatInit( Console_t* con )
 {
   console = con;
@@ -86,29 +100,123 @@ float CombatFlashAlpha( void ) { return hit_flash_alpha; }
 float CombatShakeOX( void )    { return hit_shake_x; }
 float CombatShakeOY( void )    { return hit_shake_y; }
 
-int CombatAttack( Enemy_t* e )
+/* Helper: deal damage to an enemy, handle death + kill tracking.
+   Returns 1 if the enemy died. */
+static int deal_damage( Enemy_t* e, int dmg, aColor_t vfx_color )
 {
   EnemyType_t* t = &g_enemy_types[e->type_idx];
-  int pdmg = PlayerStat( "damage" );
-  if ( pdmg < 1 ) pdmg = 1;
-  e->hp -= pdmg;
+  e->hp -= dmg;
   e->turns_since_hit = 0;
 
-  CombatVFXSpawnNumber( e->world_x, e->world_y, pdmg,
-                        (aColor_t){ 0xeb, 0xed, 0xe9, 255 } );
-  a_AudioPlaySound( &sfx_hit, NULL );
-  ConsolePushF( console, (aColor_t){ 0xe8, 0xc1, 0x70, 255 },
-                "You hit %s for %d damage.", t->name, pdmg );
+  CombatVFXSpawnNumber( e->world_x, e->world_y, dmg, vfx_color );
 
   if ( e->hp <= 0 )
   {
     e->alive = 0;
     ConsolePushF( console, (aColor_t){ 0x75, 0xa7, 0x43, 255 },
                   "You defeated the %s!", t->name );
+    char kill_flag[MAX_NAME_LENGTH + 8];
+    snprintf( kill_flag, sizeof( kill_flag ), "%s_kills", t->key );
+    FlagIncr( kill_flag );
     return 1;
   }
-
   return 0;
+}
+
+/* Resolve food buff effects after primary hit */
+static void resolve_buff( Enemy_t* primary )
+{
+  if ( !player.buff.active ) return;
+
+  int pr, pc;
+  PlayerGetTile( &pr, &pc );
+
+  aColor_t buff_color = { 0xde, 0x9e, 0x41, 255 };
+
+  /* Cleave: hit all alive enemies adjacent to player (Manhattan dist 1),
+     excluding the primary target */
+  if ( strcmp( player.buff.effect, "cleave" ) == 0 && combat_enemies && combat_enemy_count )
+  {
+    for ( int i = 0; i < *combat_enemy_count; i++ )
+    {
+      Enemy_t* ce = &combat_enemies[i];
+      if ( !ce->alive || ce == primary ) continue;
+      int dr = abs( ce->row - pr );
+      int dc = abs( ce->col - pc );
+      if ( dr + dc == 1 )
+      {
+        EnemyType_t* ct = &g_enemy_types[ce->type_idx];
+        int cdmg = player.buff.bonus_damage > 0 ? player.buff.bonus_damage : 1;
+        ConsolePushF( console, buff_color,
+                      "Cleave hits %s for %d damage!", ct->name, cdmg );
+        deal_damage( ce, cdmg, buff_color );
+      }
+    }
+  }
+  /* Reach: hit enemy behind the primary target (same direction) */
+  else if ( strcmp( player.buff.effect, "reach" ) == 0 && combat_enemies && combat_enemy_count )
+  {
+    int dir_r = primary->row - pr;
+    int dir_c = primary->col - pc;
+    int behind_r = primary->row + dir_r;
+    int behind_c = primary->col + dir_c;
+
+    for ( int i = 0; i < *combat_enemy_count; i++ )
+    {
+      Enemy_t* ce = &combat_enemies[i];
+      if ( !ce->alive || ce == primary ) continue;
+      if ( ce->row == behind_r && ce->col == behind_c )
+      {
+        EnemyType_t* ct = &g_enemy_types[ce->type_idx];
+        int cdmg = player.buff.bonus_damage > 0 ? player.buff.bonus_damage : 1;
+        ConsolePushF( console, buff_color,
+                      "Reach hits %s for %d damage!", ct->name, cdmg );
+        deal_damage( ce, cdmg, buff_color );
+        break;
+      }
+    }
+  }
+  /* Lifesteal: heal player */
+  else if ( strcmp( player.buff.effect, "lifesteal" ) == 0 )
+  {
+    int heal = player.buff.heal;
+    if ( heal > 0 )
+    {
+      player.hp += heal;
+      if ( player.hp > player.max_hp ) player.hp = player.max_hp;
+      CombatVFXSpawnNumber( player.world_x, player.world_y, heal,
+                            (aColor_t){ 0x75, 0xa7, 0x43, 255 } );
+      ConsolePushF( console, (aColor_t){ 0x75, 0xa7, 0x43, 255 },
+                    "Lifesteal heals %d HP.", heal );
+    }
+  }
+  /* "none" or unknown — bonus damage was already applied, nothing extra */
+
+  memset( &player.buff, 0, sizeof( ConsumableBuff_t ) );
+}
+
+int CombatAttack( Enemy_t* e )
+{
+  EnemyType_t* t = &g_enemy_types[e->type_idx];
+  int pdmg = PlayerStat( "damage" );
+
+  /* Add food buff bonus damage */
+  if ( player.buff.active )
+    pdmg += player.buff.bonus_damage;
+
+  if ( pdmg < 1 ) pdmg = 1;
+
+  a_AudioPlaySound( &sfx_hit, NULL );
+  ConsolePushF( console, (aColor_t){ 0xe8, 0xc1, 0x70, 255 },
+                "You hit %s for %d damage.", t->name, pdmg );
+
+  int killed = deal_damage( e, pdmg, (aColor_t){ 0xeb, 0xed, 0xe9, 255 } );
+
+  /* Resolve buff effects after primary hit */
+  if ( player.buff.active )
+    resolve_buff( e );
+
+  return killed;
 }
 
 void CombatEnemyHit( Enemy_t* e )
@@ -148,6 +256,9 @@ void CombatEnemyHit( Enemy_t* e )
       e->alive = 0;
       ConsolePushF( console, (aColor_t){ 0x75, 0xa7, 0x43, 255 },
                     "You defeated the %s!", t->name );
+      char kill_flag[MAX_NAME_LENGTH + 8];
+      snprintf( kill_flag, sizeof( kill_flag ), "%s_kills", t->key );
+      FlagIncr( kill_flag );
     }
   }
 }

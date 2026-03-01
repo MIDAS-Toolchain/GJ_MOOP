@@ -30,6 +30,15 @@ typedef struct
   aColor_t color;
   int bonus_damage;
   char effect[MAX_NAME_LENGTH];
+  int range;
+  int requires_los;
+  int heal;
+  int ticks;
+  int tick_damage;
+  int place_range;
+  int radius;
+  int duration;
+  int aoe_radius;
   char description[256];
   aImage_t* image;
 } ConsumableInfo_t;
