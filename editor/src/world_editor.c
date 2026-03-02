@@ -32,7 +32,6 @@ int current_tileset = 0;
 
 static aPoint2f_t selected_pos;
 static aPoint2f_t highlighted_pos;
-char* pos_text;
 
 static int originx = 0;
 static int originy = 0;
@@ -53,11 +52,7 @@ void e_WorldEditorInit( void )
   float view_w = view_h * ratio;
   app.g_viewport = (aRectf_t){ 512.0f, 512.0f, view_h, view_w };
 
-  pos_text = malloc( sizeof(char) * 50 );
-
   selected_pos = ( aPoint2f_t ){ .x = 0, .y = 0 };
-
-  snprintf( pos_text, 50, "%f,%f\n", selected_pos.x, selected_pos.y );
 
   a_WidgetsInit( "resources/widgets/editor/world.auf" );
   app.active_widget = a_GetWidget( "tab_bar" );

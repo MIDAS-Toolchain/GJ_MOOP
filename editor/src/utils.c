@@ -196,3 +196,32 @@ void e_LoadColorPalette( aColor_t palette[MAX_COLOR_GROUPS][MAX_COLOR_PALETTE],
   fclose( file );
 }
 
+World_t* convert_mats_worlds( const char* filename )
+{
+  int file_size = 0;
+  int newline_count = 0;
+  char* file_string;
+  char** lines;
+  
+  int world_width  = 0;
+  int world_height = 0;
+
+  World_t* new_world = malloc( sizeof( World_t ) );
+  if ( new_world == NULL ) return NULL;
+
+  file_string = a_ReadFile( filename, &file_size );
+  
+  newline_count = a_CountNewLines( file_string, file_size );
+
+  lines = a_ParseLinesInFile( file_string, file_size, newline_count );
+   
+  char* string = lines[0];
+  if ( string != NULL && string[0] == '/' && string[1] == '/' )
+  {
+    
+  }
+
+
+  return new_world;
+}
+

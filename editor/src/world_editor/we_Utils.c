@@ -75,37 +75,21 @@ void we_DrawGlyphPalette( int originx, int originy, int glyph_index )
     {
       gx = 0;
       gy += GLYPH_HEIGHT;
-      if ( gy > ( height * GLYPH_HEIGHT ) )
-      {
-        //        printf( "color grid is too large!\n" );
-        //        return;
-      }
-
     }
-
+    
     aRectf_t glyph_palette_rect = (aRectf_t){
       .x = ( gx + originx ),
       .y = ( gy + originy ),
       .w = app.glyphs[app.font_type][i].w,
       .h = app.glyphs[app.font_type][i].h
     };
-    
-    a_BlitTextureRect( app.font_textures[app.font_type],
-                       &app.glyphs[app.font_type][i],
-                       gx + originx, gy + originy, 1, white );
-    
-    //a_DrawFilledRect( glyph_palette_rect, black );
-   
 
+    a_DrawGlyph_special( i, glyph_palette_rect,
+                        white, black, FONT_CODE_PAGE_437 );
+    
     if ( i == glyph_index )
     {
-      aRectf_t select_rect = {
-        .x = glyph_palette_rect.x-1,
-        .y = glyph_palette_rect.y-1,
-        .w = glyph_palette_rect.w+1,
-        .h = glyph_palette_rect.h+1
-      };
-      a_DrawRect( select_rect, magenta );
+      a_DrawRect( glyph_palette_rect, magenta );
     }
 
     gx += GLYPH_WIDTH;
