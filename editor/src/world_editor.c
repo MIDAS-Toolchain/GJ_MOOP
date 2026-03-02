@@ -17,6 +17,7 @@
 #include "editor.h"
 #include "entity_editor.h"
 #include "items_editor.h"
+#include "tile.h"
 #include "utils.h"
 #include "world.h"
 #include "world_editor.h"
@@ -24,7 +25,10 @@
 static void e_WorldEditorLogic( float );
 static void e_WorldEditorDraw( float );
 
-World_t* map = NULL;
+Tileset_t* tile_sets[MAX_TILESETS];
+World_t* map        = NULL;
+int toggle_ascii    = 0;
+int current_tileset = 0;
 
 static aPoint2f_t selected_pos;
 static aPoint2f_t highlighted_pos;
@@ -33,18 +37,11 @@ char* pos_text;
 static int originx = 0;
 static int originy = 0;
 
-static int toggle_ascii = 0;
-aTileset_t* tile_set = NULL;
-
 void e_WorldEditorInit( void )
 {
   app.delegate.logic = e_WorldEditorLogic;
   app.delegate.draw  = e_WorldEditorDraw;
   
-  tile_set = a_TilesetCreate( "resources/assets/level01tilemap.png", 16, 16 );
- 
-  //originx = EDITOR_WORLD_WIDTH /2;
-  //originy = EDITOR_WORLD_HEIGHT/2;
   if ( map != NULL )
   {
     originx = app.g_viewport.x - ( (float)( map->width  * map->tile_w ) / 2 );
@@ -118,10 +115,16 @@ static void e_WorldEditorLogic( float dt )
 {
   a_DoInput();
   
-  if ( app.keyboard[SDL_SCANCODE_ESCAPE] == 1 )
+  if ( app.keyboard[A_ESCAPE] == 1 )
   {
-    app.keyboard[SDL_SCANCODE_ESCAPE] = 0;
+    app.keyboard[A_ESCAPE] = 0;
     EditorInit();
+  }
+  
+  if ( app.keyboard[A_T] == 1 )
+  {
+    app.keyboard[A_T] = 0;
+    toggle_ascii = !toggle_ascii;
   }
   
   a_ViewportInput( &app.g_viewport, EDITOR_WORLD_WIDTH, EDITOR_WORLD_HEIGHT );
@@ -133,7 +136,7 @@ static void e_WorldEditorDraw( float dt )
 {
   if ( map != NULL )
   {
-    WorldDraw( originx, originy, map, tile_set, toggle_ascii );
+    WorldDraw( originx, originy, map, tile_sets[current_tileset], toggle_ascii );
   }
 
   a_DrawWidgets();

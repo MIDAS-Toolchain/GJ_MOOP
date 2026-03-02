@@ -14,7 +14,10 @@
 #include "ed_defines.h"
 #include "ed_structs.h"
 
-extern World_t* map;
+extern Tileset_t* tile_sets[MAX_TILESETS];
+extern World_t*   map;
+extern int        toggle_ascii;
+extern int        current_tileset;
 
 enum
 {
@@ -106,5 +109,9 @@ void wes_SaveYes( void );
 void wes_SaveNo( void );
 void wel_LoadYes( void );
 void wel_LoadNo( void );
+
+void we_DrawColorPalette( int originx, int originy, int fg_index, int bg_index );
+void we_DrawGlyphPalette( int originx, int originy, int glyph_index );
+void we_DrawTilePalette( int originx, int originy, int tile_index, int tileset );
 
 #endif

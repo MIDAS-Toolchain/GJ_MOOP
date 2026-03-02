@@ -18,7 +18,8 @@
 #include "ed_structs.h"
 #include "world.h"
 
-World_t* WorldCreate( int width, int height, int tile_w, int tile_h )
+World_t* WorldCreate( const int width, const int height,
+                      const int tile_w, const int tile_h )
 {
   World_t* new_world = malloc( sizeof( World_t ) );
   if ( new_world == NULL ) return NULL;
@@ -64,33 +65,36 @@ World_t* WorldCreate( int width, int height, int tile_w, int tile_h )
 
   for ( int i = 0; i < new_world->tile_count; i++ )
   {
-    new_world->room_ids[i]            = 0;
-    new_world->background[i].solid    = 0;
-    new_world->background[i].tile     = 0;
-    new_world->background[i].glyph    = ".";
-    new_world->background[i].glyph_fg = (aColor_t){ 0x39, 0x4a, 0x50, 255 };
-    new_world->background[i].glyph_bg = (aColor_t){ 0x09, 0x0a, 0x14, 255 };
+    new_world->room_ids[i]               = 0;
+    new_world->background[i].solid       = 0;
+    new_world->background[i].glyph_index = 0;
+    new_world->background[i].tile        = 0;
+    new_world->background[i].glyph       = ".";
+    new_world->background[i].glyph_fg    = (aColor_t){ 0x39, 0x4a, 0x50, 255 };
+    new_world->background[i].glyph_bg    = (aColor_t){ 0x09, 0x0a, 0x14, 255 };
 
-    new_world->midground[i].solid    = 0;
-    new_world->midground[i].tile     = TILE_EMPTY;
-    new_world->midground[i].glyph    = "";
-    new_world->midground[i].glyph_fg = (aColor_t){ 0xc7, 0xcf, 0xcc, 255 };
-    new_world->midground[i].glyph_bg = (aColor_t){ 0, 0, 0, 0 };
+    new_world->midground[i].solid       = 0;
+    new_world->midground[i].glyph_index = 0;
+    new_world->midground[i].tile        = TILE_EMPTY;
+    new_world->midground[i].glyph       = "";
+    new_world->midground[i].glyph_fg    = (aColor_t){ 0xc7, 0xcf, 0xcc, 255 };
+    new_world->midground[i].glyph_bg    = (aColor_t){ 0, 0, 0, 0 };
 
-    new_world->foreground[i].solid    = 0;
-    new_world->foreground[i].tile     = TILE_EMPTY;
-    new_world->foreground[i].glyph    = "";
-    new_world->foreground[i].glyph_fg = (aColor_t){ 0xc7, 0xcf, 0xcc, 255 };
-    new_world->foreground[i].glyph_bg = (aColor_t){ 0, 0, 0, 0 };
+    new_world->foreground[i].solid       = 0;
+    new_world->foreground[i].glyph_index = 0;
+    new_world->foreground[i].tile        = TILE_EMPTY;
+    new_world->foreground[i].glyph       = "";
+    new_world->foreground[i].glyph_fg    = (aColor_t){ 0xc7, 0xcf, 0xcc, 255 };
+    new_world->foreground[i].glyph_bg    = (aColor_t){ 0, 0, 0, 0 };
   }
 
   return new_world;
 }
 
 /* Legacy renderer — used by the editor. Game uses GV_DrawWorld instead. */
-void WorldDraw( int x_off, int y_off,
-                    World_t* world, aTileset_t* tile_set,
-                    uint8_t draw_ascii )
+void WorldDraw( const int x_off, const int y_off,
+                World_t* world, Tileset_t* tile_set,
+                const uint8_t draw_ascii )
 {
   int has_viewport = ( app.g_viewport.w != 0 && app.g_viewport.h != 0 );
   aRectf_t glyph_size = a_GetGlyphSize();
@@ -147,33 +151,43 @@ void WorldDraw( int x_off, int y_off,
 
       ts.fg = bg.glyph_fg;
       ts.bg = bg.glyph_bg;
-      a_DrawText( bg.glyph, x, y, ts );
+
+      a_ViewportBlitTextureRect( app.font_textures[app.font_type],
+                                 &app.glyphs[app.font_type][bg.glyph_index],
+                                 x, y, bg.glyph_bg );
+      //a_DrawText( bg.glyph, x, y, ts );
 
       if ( has_mg && mg.glyph[0] != '\0' )
       {
         ts.fg = mg.glyph_fg;
         ts.bg = mg.glyph_bg;
-        a_DrawText( mg.glyph, x, y, ts );
+        a_ViewportBlitTextureRect( app.font_textures[app.font_type],
+                                  &app.glyphs[app.font_type][mg.glyph_index],
+                                  x, y, mg.glyph_bg );
+        //a_DrawText( mg.glyph, x, y, ts );
       }
 
       if ( has_fg && fg.glyph[0] != '\0' )
       {
         ts.fg = fg.glyph_fg;
         ts.bg = fg.glyph_bg;
-        a_DrawText( fg.glyph, x, y, ts );
+        a_ViewportBlitTextureRect( app.font_textures[app.font_type],
+                                  &app.glyphs[app.font_type][fg.glyph_index],
+                                  x, y, fg.glyph_bg );
+        //a_DrawText( fg.glyph, x, y, ts );
       }
     }
     else if ( has_viewport )
     {
-      a_ViewportBlit( tile_set[bg.tile].img, draw_x, draw_y );
-      if ( has_mg ) a_ViewportBlit( tile_set[mg.tile].img, draw_x, draw_y );
-      if ( has_fg ) a_ViewportBlit( tile_set[fg.tile].img, draw_x, draw_y );
+      a_ViewportBlit( tile_set->img_array[bg.tile].img, draw_x, draw_y );
+      if ( has_mg ) a_ViewportBlit( tile_set->img_array[mg.tile].img, draw_x, draw_y );
+      if ( has_fg ) a_ViewportBlit( tile_set->img_array[fg.tile].img, draw_x, draw_y );
     }
     else
     {
-      a_Blit( tile_set[bg.tile].img, x, y );
-      if ( has_mg ) a_Blit( tile_set[mg.tile].img, x, y );
-      if ( has_fg ) a_Blit( tile_set[fg.tile].img, x, y );
+      a_Blit( tile_set->img_array[bg.tile].img, x, y );
+      if ( has_mg ) a_Blit( tile_set->img_array[mg.tile].img, x, y );
+      if ( has_fg ) a_Blit( tile_set->img_array[fg.tile].img, x, y );
     }
   }
 }

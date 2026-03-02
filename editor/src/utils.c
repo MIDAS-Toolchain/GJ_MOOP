@@ -8,14 +8,17 @@
 #include "ed_defines.h"
 #include "ed_structs.h"
 
+#include "world_editor.h"
+
 void e_GetOrigin( World_t* map, int* originx, int* originy )
 {
+  if ( !map ) return;
   *originx = app.g_viewport.x - ( (float)( map->width  * map->tile_w ) / 2 );
   *originy = app.g_viewport.y - ( (float)( map->height * map->tile_h ) / 2 );
 }
 
-void e_GetCellAtMouseInViewport( int width,   int height,
-                                 int originx, int originy,
+void e_GetCellAtMouseInViewport( const int width,   const int height,
+                                 const int originx, const int originy,
                                  int* grid_x, int* grid_y )
 {
   aPoint2f_t scale = a_ViewportCalculateScale();
@@ -42,10 +45,10 @@ void e_GetCellAtMouseInViewport( int width,   int height,
   }
 }
 
-void e_GetCellAtMouse( int width,      int height,
-                       int originx,    int originy,
-                       int cell_width, int cell_height,
-                       int* grid_x,    int* grid_y, int centered )
+void e_GetCellAtMouse( const int width,      const int height,
+                       const int originx,    const int originy,
+                       const int cell_width, const int cell_height,
+                       int* grid_x,    int* grid_y, const int centered )
 {
   int edge_x = 0;
   int edge_y = 0;
@@ -73,24 +76,25 @@ void e_GetCellAtMouse( int width,      int height,
   }
 }
 
-void e_ImgMouseCheck( int originx, int originy, int* index, int* grid_x,
-                      int* grid_y, int centered )
+void e_TilesetMouseCheck( const int originx, const int originy, int* index,
+                      int* grid_x, int* grid_y, const int centered )
 {
 
-  int img_grid_w = 16;
-  int img_grid_h = 16;
+  int row = tile_sets[current_tileset]->row;
+  int col = tile_sets[current_tileset]->col;
+  int tile_w = tile_sets[current_tileset]->tile_w;
+  int tile_h = tile_sets[current_tileset]->tile_h;
 
-  e_GetCellAtMouse( img_grid_w, img_grid_h,
+  e_GetCellAtMouse( col, row,
                     originx, originy,
-                    TILE_WIDTH, TILE_HEIGHT,
+                    tile_w, tile_h,
                     grid_x, grid_y, centered );
 
-  *index = *grid_y * img_grid_w + *grid_x;
-
+  *index = *grid_y * col + *grid_x;
 }
 
-void e_GlyphMouseCheck( int originx, int originy, int* index, int* grid_x,
-                        int* grid_y, int centered )
+void e_GlyphMouseCheck( const int originx, const int originy, int* index,
+                        int* grid_x, int* grid_y, const int centered )
 {
   int glyph_grid_w = 16;
   int glyph_grid_h = 16;
@@ -103,8 +107,8 @@ void e_GlyphMouseCheck( int originx, int originy, int* index, int* grid_x,
   *index = *grid_y * glyph_grid_w + *grid_x;
 }
 
-void e_ColorMouseCheck( int originx, int originy, int* index, int* grid_x,
-                        int* grid_y, int centered )
+void e_ColorMouseCheck( const int originx, const int originy, int* index,
+                        int* grid_x, int* grid_y, const int centered )
 {
   int color_grid_w = 6;
   int color_grid_h = 8;
@@ -115,6 +119,42 @@ void e_ColorMouseCheck( int originx, int originy, int* index, int* grid_x,
                     grid_x, grid_y, centered );
 
   *index = *grid_y * color_grid_w + *grid_x;
+}
+
+Tileset_t* e_TilesetCreate( const char* filename,
+                             const int tile_w, const int tile_h )
+{
+  aSpriteSheet_t* temp_sheet = a_SpriteSheetCreate( filename, tile_w, tile_h );
+  
+  Tileset_t* new_set = malloc( sizeof( Tileset_t ) );
+  if ( new_set == NULL ) return NULL;
+
+  new_set->img_array = malloc( sizeof( ImageArray_t ) * temp_sheet->img_count );
+  if ( new_set->img_array == NULL ) return NULL;
+  
+  new_set->glyph = malloc( sizeof( uint16_t ) * temp_sheet->img_count );
+  if ( new_set->glyph == NULL ) 
+  {
+    free( new_set->glyph );
+    free( new_set );
+    return NULL;
+  }
+
+  new_set->tile_count = temp_sheet->img_count;
+  new_set->row = temp_sheet->h_count;
+  new_set->col = temp_sheet->v_count;
+  new_set->tile_w = tile_w;
+  new_set->tile_h = tile_h;
+
+  for ( int i = 0; i < temp_sheet->img_count; i++ )
+  {
+    int row = i % temp_sheet->v_count;
+    int col = i / temp_sheet->v_count;
+    new_set->img_array[i].img = a_ImageFromSpriteSheet( temp_sheet, row, col );
+    new_set->glyph[i] = 0;
+  }
+
+  return new_set;
 }
 
 void e_LoadColorPalette( aColor_t palette[MAX_COLOR_GROUPS][MAX_COLOR_PALETTE],
@@ -156,63 +196,3 @@ void e_LoadColorPalette( aColor_t palette[MAX_COLOR_GROUPS][MAX_COLOR_PALETTE],
   fclose( file );
 }
 
-GlyphArray_t* e_InitGlyphs( const char* filename, int glyph_width,
-                            int glyph_height )
-{
-  SDL_Surface* surface, *glyph_surf;
-  SDL_Rect dest, rect;
-  
-  GlyphArray_t* new_glyphs = ( GlyphArray_t* )malloc( sizeof( GlyphArray_t ) );
-  if ( new_glyphs == NULL )
-  {
-    printf( "Failed to allocate memory for new_glyphs %s\n", filename );
-    return NULL;
-  }
-  new_glyphs->texture = NULL;
-  new_glyphs->count = 0;
-  
-  glyph_surf = a_Image( filename );
-  if( glyph_surf == NULL )
-  {
-    printf( "Failed to open font surface %s, %s", filename, SDL_GetError() );
-    return NULL;
-  }
-
-  surface = SDL_CreateRGBSurface( 0, FONT_TEXTURE_SIZE, FONT_TEXTURE_SIZE, 32,
-                                  0, 0, 0, 0xff );
-
-  SDL_SetColorKey( surface, SDL_TRUE, SDL_MapRGBA( surface->format, 0, 0, 0,
-                                                   0 ) );
-
-  dest.x = dest.y = 0;
-  rect.x = rect.y = 0;
-  rect.w = dest.w = glyph_width;
-  rect.h = dest.h = glyph_height;
-
-  while ( rect.x < glyph_surf->w )
-  {
-    if ( dest.x + dest.w >= GAME_GLYPH_TEXTURE_SIZE )
-    {
-      dest.x = 0;
-      dest.y += dest.h + 1;
-      if ( dest.y + dest.h >= GAME_GLYPH_TEXTURE_SIZE )
-      {
-        SDL_LogMessage( SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_CRITICAL,
-                        "Out of glyph space in %dx%d font atlas texture map.",
-                        FONT_TEXTURE_SIZE, FONT_TEXTURE_SIZE );
-        return NULL;
-      }
-    }
-
-    SDL_BlitSurface( glyph_surf, &rect, surface, &dest );
-    
-    new_glyphs->rects[new_glyphs->count++] = dest;
-
-    dest.x += dest.w;
-    rect.x += rect.w;
-  }
-
-  new_glyphs->texture = a_ToTexture( surface, 1 );
-  
-  return new_glyphs;
-}

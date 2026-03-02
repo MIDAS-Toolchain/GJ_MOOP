@@ -49,7 +49,22 @@ typedef struct
 
 typedef struct
 {
+  aImage_t* img;
+} ImageArray_t;
+
+typedef struct
+{
+  ImageArray_t* img_array;
+  uint16_t* glyph; //holds the index to the associated glyph
+  int tile_count;
+  int row, col;
+  int tile_w, tile_h;
+} Tileset_t;
+
+typedef struct
+{
   uint32_t tile;
+  uint16_t glyph_index;
   char* glyph;
   aColor_t glyph_fg;
   aColor_t glyph_bg;

@@ -41,12 +41,24 @@ void we_DrawColorPalette( int originx, int originy, int fg_index, int bg_index )
 
     if ( i == fg_index )
     {
-      a_DrawRect( color_palette_rect, magenta );
+      aRectf_t select_rect = {
+        .x = color_palette_rect.x-1,
+        .y = color_palette_rect.y-1,
+        .w = color_palette_rect.w+1,
+        .h = color_palette_rect.h+1
+      };
+      a_DrawRect( select_rect, magenta );
     }
 
     if ( i == bg_index )
     {
-      a_DrawRect( color_palette_rect, yellow );
+      aRectf_t select_rect = {
+        .x = color_palette_rect.x-1,
+        .y = color_palette_rect.y-1,
+        .w = color_palette_rect.w+1,
+        .h = color_palette_rect.h+1
+      };
+      a_DrawRect( select_rect, yellow );
     }
 
     cx += GLYPH_WIDTH;
@@ -57,7 +69,7 @@ void we_DrawGlyphPalette( int originx, int originy, int glyph_index )
 {
   int gx = 0, gy = 0;
   int width = 16, height = 20;
-  for ( int i = 0; i < game_glyphs->count; i++ )
+  for ( int i = 0; i < 254; i++ )
   {
     if ( gx + GLYPH_WIDTH > ( width * GLYPH_WIDTH ) )
     {
@@ -71,20 +83,64 @@ void we_DrawGlyphPalette( int originx, int originy, int glyph_index )
 
     }
 
-    aRectf_t glyph_palette_rect = (aRectf_t){ .x = ( gx + originx ), .y = ( gy + originy ),
-    .w = game_glyphs->rects[i].w, .h = game_glyphs->rects[i].h };
+    aRectf_t glyph_palette_rect = (aRectf_t){
+      .x = ( gx + originx ),
+      .y = ( gy + originy ),
+      .w = app.glyphs[app.font_type][i].w,
+      .h = app.glyphs[app.font_type][i].h
+    };
     
-    a_DrawFilledRect( glyph_palette_rect, black );
+    a_BlitTextureRect( app.font_textures[app.font_type],
+                       &app.glyphs[app.font_type][i],
+                       gx + originx, gy + originy, 1, white );
+    
+    //a_DrawFilledRect( glyph_palette_rect, black );
    
-    /*a_BlitTextureRect( game_glyphs->texture, game_glyphs->rects[i],
-                       gx + originx, gy + originy, 1, white );*/
 
     if ( i == glyph_index )
     {
-      a_DrawRect( glyph_palette_rect, magenta );
+      aRectf_t select_rect = {
+        .x = glyph_palette_rect.x-1,
+        .y = glyph_palette_rect.y-1,
+        .w = glyph_palette_rect.w+1,
+        .h = glyph_palette_rect.h+1
+      };
+      a_DrawRect( select_rect, magenta );
     }
 
     gx += GLYPH_WIDTH;
+  }
+}
+
+void we_DrawTilePalette( int originx, int originy, int tile_index, int tileset )
+{
+  for ( int i = 0; i < tile_sets[tileset]->tile_count; i++ )
+  {
+    int row = i % tile_sets[tileset]->col;
+    int col = i / tile_sets[tileset]->col;
+
+    int x = ( row * tile_sets[tileset]->tile_w ) + originx;
+    int y = ( col * tile_sets[tileset]->tile_h ) + originy;
+
+    a_Blit( tile_sets[tileset]->img_array[i].img, x, y );
+    aRectf_t dest = {
+      .x = x,
+      .y = y,
+      .w = tile_sets[tileset]->tile_w,
+      .h = tile_sets[tileset]->tile_h
+    };
+    //a_BlitRect( tile_sets[tileset]->img_array[i].img, NULL, &dest, 2 );
+    
+    if ( i == tile_index )
+    {
+      aRectf_t rect = {
+        .x = x,
+        .y = y,
+        .w = tile_sets[tileset]->tile_w,
+        .h = tile_sets[tileset]->tile_h,
+      };
+      a_DrawRect( rect, magenta );
+    }
   }
 }
 

@@ -5,10 +5,11 @@
 
 #define TILE_EMPTY ((uint32_t)-1)
 
-World_t* WorldCreate( int width, int height, int tile_w, int tile_h );
-void WorldDraw( int x_off, int y_off,
-                World_t* world, aTileset_t* tile_set,
-                uint8_t draw_ascii );
+World_t* WorldCreate( const int width, const int height,
+                      const int tile_w, const int tile_h );
+void WorldDraw( const int x_off, const int y_off,
+                World_t* world, Tileset_t* tile_set,
+                const uint8_t draw_ascii );
 
 #endif
 
