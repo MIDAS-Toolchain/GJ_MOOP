@@ -57,6 +57,9 @@ EMSCRIP_C_FLAGS = $(C_FLAGS) -I$(ARCHIMEDES_INC) -I$(DAEDALUS_INC) $(EFLAGS)
 
 SCENES_SRCS = main_menu.c \
 							game_scene.c \
+							game_camera.c \
+							game_turns.c \
+							game_input.c \
 							class_select.c \
 							settings.c \
 							lore_scene.c
@@ -71,7 +74,8 @@ UI_SRCS     = inventory_ui.c \
 						shop.c \
 						shop_ui.c \
 						target_mode.c \
-						pause_menu.c
+						pause_menu.c \
+						game_over.c
 UTILS_SRCS  = draw_utils.c \
 							context_menu.c
 PLAYER_SRCS = items.c \
@@ -112,7 +116,8 @@ DUNGEON_SRCS = dungeon_builder.c \
 							 dungeon_handler.c \
 							 doors.c \
 							 objects.c \
-							 room_enumerator.c
+							 room_enumerator.c \
+							 interactive_tile.c
 
 NATIVE_LIB_OBJS = $(patsubst %.c, $(OBJ_DIR_NATIVE)/%.o, $(GJ_MOOP_SRCS))
 SCENES_LIB_OBJS = $(patsubst %.c, $(OBJ_DIR_SCENES)/%.o, $(SCENES_SRCS))

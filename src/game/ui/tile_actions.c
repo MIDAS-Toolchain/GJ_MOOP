@@ -19,6 +19,7 @@
 #include "objects.h"
 #include "shop.h"
 #include "poison_pool.h"
+#include "interactive_tile.h"
 
 extern Player_t player;
 
@@ -79,7 +80,14 @@ static int build_labels( const char** labels, Enemy_t* enemies, int num_enemies 
     return 2;
   }
 
-  if ( tile_action_on_self || !adjacent )
+  if ( tile_action_on_self )
+  {
+    labels[0] = "Skip Turn";
+    labels[1] = "Look";
+    return 2;
+  }
+
+  if ( !adjacent )
   {
     labels[0] = "Look";
     return 1;
@@ -261,7 +269,14 @@ int TileActionsLogic( int mouse_moved, Enemy_t* enemies, int num_enemies )
     a_AudioPlaySound( sfx_click, NULL );
     const char* action = ta_labels[tile_action_cursor];
 
-    if ( strcmp( action, "Move" ) == 0 )
+    if ( strcmp( action, "Skip Turn" ) == 0 )
+    {
+      ConsolePush( console, "You skip your turn.",
+                   (aColor_t){ 0x81, 0x97, 0x96, 255 } );
+      tile_action_open = 0;
+      return 2;
+    }
+    else if ( strcmp( action, "Move" ) == 0 )
     {
       if ( TileWalkable( tile_action_row, tile_action_col ) )
         PlayerStartMove( tile_action_row, tile_action_col );
@@ -409,6 +424,12 @@ int TileActionsLogic( int mouse_moved, Enemy_t* enemies, int num_enemies )
                 icolor = g_maps[gi->item_idx].color;
                 idesc  = g_maps[gi->item_idx].description;
               }
+              else if ( gi->item_type == GROUND_EQUIPMENT )
+              {
+                iname  = g_equipment[gi->item_idx].name;
+                icolor = g_equipment[gi->item_idx].color;
+                idesc  = g_equipment[gi->item_idx].description;
+              }
               else
               {
                 iname  = g_consumables[gi->item_idx].name;
@@ -426,9 +447,13 @@ int TileActionsLogic( int mouse_moved, Enemy_t* enemies, int num_enemies )
             }
             else
             {
+              ITile_t* itile = ITileAt( tile_action_row, tile_action_col );
               int idx = tile_action_col * world->width + tile_action_row;
               Tile_t* t = &world->background[idx];
-              if ( ObjectIsObject( tile_action_row, tile_action_col ) )
+              if ( itile )
+                ConsolePushF( console, (aColor_t){ 0x81, 0x97, 0x96, 255 },
+                              "%s", ITileDescription( itile->type ) );
+              else if ( ObjectIsObject( tile_action_row, tile_action_col ) )
                 ObjectDescribe( tile_action_row, tile_action_col );
               else if ( t->solid )
                 ConsolePushF( console, (aColor_t){ 0x81, 0x97, 0x96, 255 },

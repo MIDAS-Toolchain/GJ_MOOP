@@ -10,8 +10,9 @@
     glyph: "%"
     bonus_damage: 1
     effect: "cleave"
+    range: 1
     image_path: "resources/assets/consumables/stale_bread.png"
-    description: "Your next attack cleaves, hitting all adjacent enemies too."
+    description: "Swing wide — cleaves all adjacent enemies at once."
     color: [200, 170, 80, 255]
 }
 @chicken_leg {
@@ -20,8 +21,9 @@
     glyph: "%"
     bonus_damage: 1
     effect: "reach"
+    range: 2
     image_path: "resources/assets/consumables/chicken_leg.png"
-    description: "Your next attack hits the target and the tile behind them."
+    description: "Thrust 2 tiles deep in a straight line, hitting everything in the way."
     color: [210, 170, 100, 255]
 }
 @stew {
@@ -108,7 +110,7 @@
     effect: "magic_bolt"
     range: 4
     requires_los: 0
-    image_path: ""
+    image_path: "resources/assets/consumables/scroll_spark.png"
     description: "Zap any enemy within 4 tiles. Ignores walls and line of sight."
     color: [255, 255, 150, 255]
 }
@@ -121,7 +123,7 @@
     range: 3
     requires_los: 0
     duration: 2
-    image_path: ""
+    image_path: "resources/assets/consumables/scroll_ice.png"
     description: "Deals 1 bonus damage and freezes target for 2 turns."
     color: [100, 180, 255, 255]
 }
@@ -134,7 +136,7 @@
     range: 3
     requires_los: 1
     aoe_radius: 1
-    image_path: ""
+    image_path: "resources/assets/consumables/scroll_fire.png"
     description: "Fireball hits target and all enemies within 1 tile of it."
     color: [255, 100, 30, 255]
 }
@@ -184,7 +186,21 @@
     bonus_damage: 0
     effect: "none"
     heal: 1
+    action: "Eat"
+    gives: "stinky_cheese"
+    use_message: "The cheese was far too stinky to eat!"
     image_path: ""
     description: "A three-week-old ham and cheese sandwich. It smells... assertive."
     color: [200, 180, 80, 255]
+}
+@stinky_cheese {
+    name: "Stinky Cheese"
+    type: "quest"
+    glyph: "%"
+    bonus_damage: 0
+    effect: "lure"
+    action: "Lure"
+    image_path: ""
+    description: "Pungent beyond belief. Something in the walls might find this irresistible."
+    color: [200, 200, 80, 255]
 }

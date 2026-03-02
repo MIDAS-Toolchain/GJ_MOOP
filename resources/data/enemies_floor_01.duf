@@ -14,6 +14,20 @@
     description: "A dusty, angry, murky rat."
 }
 
+@rat_king {
+    name: "Rat King"
+    glyph: "R"
+    hp: 10
+    damage: 2
+    defense: 1
+    ai: "basic"
+    description: "A bloated rat draped in filth. Its tangled crown of tails marks it as king."
+    gold_drop: 8
+    drop_item: ""
+    image_path: ""
+    color: [200, 170, 80, 255]
+}
+
 @skeleton {
     name: "Skeleton Archer"
     glyph: "s"
@@ -86,4 +100,47 @@
     image_path: "resources/assets/enemies/undead_miner.png"
     color: [180, 150, 100, 255]
     description: "The reanimated corpse of Miner Chris. Still clutching his pickaxe."
+}
+
+# ==============================
+# ELITE ENEMIES — one per class, drops class weapon
+# ==============================
+@elite_merc {
+    name: "Fallen Knight"
+    glyph: "K"
+    hp: 10
+    damage: 3
+    defense: 2
+    ai: "basic"
+    drop_item: "heavy_mace"
+    gold_drop: 3
+    image_path: "resources/assets/enemies/fallen_knight.png"
+    color: [200, 100, 100, 255]
+    description: "A once-proud knight, now a mindless husk."
+}
+@elite_rogue {
+    name: "Phantom Thief"
+    glyph: "T"
+    hp: 7
+    damage: 4
+    defense: 0
+    ai: "basic"
+    drop_item: "serrated_blade"
+    gold_drop: 3
+    image_path: "resources/assets/enemies/phantom_thief.png"
+
+    color: [100, 200, 100, 255]
+    description: "A ghostly rogue, still clutching stolen treasures."
+}
+@elite_mage {
+    name: "Corrupted Wizard"
+    glyph: "W"
+    hp: 6
+    damage: 3
+    defense: 1
+    ai: "basic"
+    drop_item: "arcane_rod"
+    gold_drop: 3
+    color: [100, 100, 200, 255]
+    description: "A wizard consumed by dungeon magic. His rod still glows."
 }

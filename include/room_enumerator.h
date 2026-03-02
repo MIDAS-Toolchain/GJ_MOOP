@@ -28,8 +28,8 @@ enum {
   ROOM_MERC_UPPER   = 20, /* '[' */
   ROOM_MERC_LOWER   = 21, /* ']' */
   ROOM_22           = 22, /* '{' */
-  ROOM_23           = 23, /* '}' */
-  ROOM_24           = 24, /* '-' */
+  ROOM_EXIT_CHAMBER = 23, /* '}' */
+  ROOM_RAT_HOLE     = 24, /* '-' */
   ROOM_25           = 25, /* '_' */
   ROOM_26           = 26, /* '+' */
   ROOM_27           = 27, /* '=' */

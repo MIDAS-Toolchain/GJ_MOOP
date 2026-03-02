@@ -92,16 +92,69 @@ int HUDDrawTopBar( int in_combat )
   a_DrawText( buf, (int)sx, (int)( ty + 4 ), ts );
   sx += strlen( buf ) * 8.0f * TB_STAT_SCALE + TB_STAT_GAP;
 
-  /* Equipment effects — gold */
+  /* Equipment effects — gold (skip conditional ones) */
   ts.fg = (aColor_t){ 0xde, 0x9e, 0x41, 255 };
   for ( int i = 0; i < EQUIP_SLOTS; i++ )
   {
     if ( player.equipment[i] < 0 ) continue;
     EquipmentInfo_t* e = &g_equipment[ player.equipment[i] ];
     if ( strcmp( e->effect, "none" ) == 0 ) continue;
+    if ( strcmp( e->effect, "first_strike" ) == 0 ) continue;
+    if ( strcmp( e->effect, "scroll_echo" ) == 0 ) continue;
+    if ( strcmp( e->effect, "berserk" ) == 0 ) continue;
+    if ( strcmp( e->effect, "poison" ) == 0 ) continue;
+    if ( strcmp( e->effect, "amplify" ) == 0 ) continue;
     snprintf( buf, sizeof( buf ), "%s(%d)", e->effect, e->effect_value );
     a_DrawText( buf, (int)sx, (int)( ty + 4 ), ts );
     sx += strlen( buf ) * 8.0f * TB_STAT_SCALE + TB_STAT_GAP;
+  }
+
+  /* first_strike — green, only when ready */
+  {
+    int fs = PlayerEquipEffect( "first_strike" );
+    if ( fs > 0 && player.first_strike_active )
+    {
+      ts.fg = (aColor_t){ 0x75, 0xa7, 0x43, 255 };
+      snprintf( buf, sizeof( buf ), "FIRST STRIKE(%d)", fs );
+      a_DrawText( buf, (int)sx, (int)( ty + 4 ), ts );
+      sx += strlen( buf ) * 8.0f * TB_STAT_SCALE + TB_STAT_GAP;
+    }
+  }
+
+  /* scroll_echo — blue, show progress toward free cast */
+  {
+    int echo = PlayerEquipEffect( "scroll_echo" );
+    if ( echo > 0 )
+    {
+      ts.fg = (aColor_t){ 0x73, 0xbe, 0xd3, 255 };
+      snprintf( buf, sizeof( buf ), "ECHO(%d/%d)", player.scroll_echo_counter, echo );
+      a_DrawText( buf, (int)sx, (int)( ty + 4 ), ts );
+      sx += strlen( buf ) * 8.0f * TB_STAT_SCALE + TB_STAT_GAP;
+    }
+  }
+
+  /* berserk — red, only when below half HP */
+  {
+    int bsk = PlayerEquipEffect( "berserk" );
+    if ( bsk > 0 && player.hp <= player.max_hp / 2 )
+    {
+      ts.fg = (aColor_t){ 0xa5, 0x30, 0x30, 255 };
+      snprintf( buf, sizeof( buf ), "BERSERK(%d)", bsk );
+      a_DrawText( buf, (int)sx, (int)( ty + 4 ), ts );
+      sx += strlen( buf ) * 8.0f * TB_STAT_SCALE + TB_STAT_GAP;
+    }
+  }
+
+  /* amplify — blue, always active when equipped */
+  {
+    int amp = PlayerEquipEffect( "amplify" );
+    if ( amp > 0 )
+    {
+      ts.fg = (aColor_t){ 0x73, 0xbe, 0xd3, 255 };
+      snprintf( buf, sizeof( buf ), "AMPLIFY(%d)", amp );
+      a_DrawText( buf, (int)sx, (int)( ty + 4 ), ts );
+      sx += strlen( buf ) * 8.0f * TB_STAT_SCALE + TB_STAT_GAP;
+    }
   }
 
   /* Combat indicator — red */

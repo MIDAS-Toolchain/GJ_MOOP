@@ -11,6 +11,8 @@
 #include "game_events.h"
 #include "inventory_ui.h"
 #include "target_mode.h"
+#include "ground_items.h"
+#include "movement.h"
 
 /* Panel colors */
 #define PANEL_FG  (aColor_t){ 0xc7, 0xcf, 0xcc, 255 }
@@ -44,6 +46,7 @@
 
 /* Equipment action menu */
 #define EQ_ACTION_COUNT   2
+#define INV_ACTION_COUNT  3
 
 static const char* eq_slot_labels[EQUIP_SLOTS] = { "WPN", "ARM", "TRK", "TRK" };
 static const char* eq_action_labels[EQ_ACTION_COUNT] = { "Unequip", "Look" };
@@ -53,6 +56,11 @@ static int eq_action_cursor = 0;
 
 static int inv_action_open   = 0;
 static int inv_action_cursor = 0;
+
+static GroundItem_t* inv_ground_items = NULL;
+static int*          inv_ground_count = NULL;
+static int           inv_tile_w = 16;
+static int           inv_tile_h = 16;
 
 static int ui_focus = 0;        /* 0 = game viewport, 1 = inventory panels */
 static int show_item_hover = 1; /* 0 = suppress cursor highlight + tooltip */
@@ -73,6 +81,14 @@ void InventoryUIInit( aSoundEffect_t* move, aSoundEffect_t* click )
   ui_focus  = 0;
   eq_action_open  = 0;
   inv_action_open = 0;
+}
+
+void InventoryUISetGroundItems( GroundItem_t* items, int* count, int tw, int th )
+{
+  inv_ground_items = items;
+  inv_ground_count = count;
+  inv_tile_w = tw;
+  inv_tile_h = th;
 }
 
 int InventoryUICloseMenus( void )
@@ -277,7 +293,7 @@ int InventoryUILogic( int mouse_moved )
       app.keyboard[SDL_SCANCODE_W] = 0;
       app.keyboard[SDL_SCANCODE_UP] = 0;
       inv_action_cursor--;
-      if ( inv_action_cursor < 0 ) inv_action_cursor = EQ_ACTION_COUNT - 1;
+      if ( inv_action_cursor < 0 ) inv_action_cursor = INV_ACTION_COUNT - 1;
       a_AudioPlaySound( sfx_move, NULL );
     }
     if ( app.keyboard[SDL_SCANCODE_S] == 1 || app.keyboard[SDL_SCANCODE_DOWN] == 1 )
@@ -285,7 +301,7 @@ int InventoryUILogic( int mouse_moved )
       app.keyboard[SDL_SCANCODE_S] = 0;
       app.keyboard[SDL_SCANCODE_DOWN] = 0;
       inv_action_cursor++;
-      if ( inv_action_cursor >= EQ_ACTION_COUNT ) inv_action_cursor = 0;
+      if ( inv_action_cursor >= INV_ACTION_COUNT ) inv_action_cursor = 0;
       a_AudioPlaySound( sfx_move, NULL );
     }
 
@@ -293,8 +309,8 @@ int InventoryUILogic( int mouse_moved )
     if ( app.mouse.wheel != 0 )
     {
       inv_action_cursor += ( app.mouse.wheel < 0 ) ? 1 : -1;
-      if ( inv_action_cursor < 0 ) inv_action_cursor = EQ_ACTION_COUNT - 1;
-      if ( inv_action_cursor >= EQ_ACTION_COUNT ) inv_action_cursor = 0;
+      if ( inv_action_cursor < 0 ) inv_action_cursor = INV_ACTION_COUNT - 1;
+      if ( inv_action_cursor >= INV_ACTION_COUNT ) inv_action_cursor = 0;
       a_AudioPlaySound( sfx_move, NULL );
       app.mouse.wheel = 0;
     }
@@ -327,7 +343,7 @@ int InventoryUILogic( int mouse_moved )
       if ( amx < 0 ) amx = ip->rect.x + ip->rect.w + 4;
       float amy = modal_y;
 
-      for ( int i = 0; i < EQ_ACTION_COUNT; i++ )
+      for ( int i = 0; i < INV_ACTION_COUNT; i++ )
       {
         float ry = amy + i * ( CTX_MENU_ROW_H + CTX_MENU_PAD );
         if ( PointInRect( mx, my, amx, ry, CTX_MENU_W, CTX_MENU_ROW_H ) )
@@ -376,7 +392,7 @@ int InventoryUILogic( int mouse_moved )
       float amx = modal_x - CTX_MENU_W - 4;
       if ( amx < 0 ) amx = ip->rect.x + ip->rect.w + 4;
       float amy = modal_y;
-      float action_h = EQ_ACTION_COUNT * ( CTX_MENU_ROW_H + CTX_MENU_PAD );
+      float action_h = INV_ACTION_COUNT * ( CTX_MENU_ROW_H + CTX_MENU_PAD );
 
       if ( PointInRect( mx, my, amx, amy, CTX_MENU_W, action_h ) )
       {
@@ -424,14 +440,14 @@ int InventoryUILogic( int mouse_moved )
             {
               int old = player.equipment[eq_slot];
               int new_idx = slot->index;
-              player.equipment[eq_slot] = new_idx;
+              PlayerEquip( eq_slot, new_idx );
               slot->type = INV_EQUIPMENT;
               slot->index = old;
               GameEventSwap( new_idx, old );
             }
             else
             {
-              player.equipment[eq_slot] = slot->index;
+              PlayerEquip( eq_slot, slot->index );
               slot->type = INV_EMPTY;
               slot->index = 0;
               GameEvent( EVT_EQUIP, player.equipment[eq_slot] );
@@ -442,8 +458,10 @@ int InventoryUILogic( int mouse_moved )
         {
           ConsumableInfo_t* ci = &g_consumables[slot->index];
 
-          /* Gadgets/scrolls need targeting */
-          if ( strcmp( ci->type, "gadget" ) == 0 || strcmp( ci->type, "scroll" ) == 0 )
+          /* Gadgets/scrolls/targeted food need targeting */
+          if ( strcmp( ci->type, "gadget" ) == 0
+               || strcmp( ci->type, "scroll" ) == 0
+               || ( strcmp( ci->type, "food" ) == 0 && ci->range > 0 ) )
           {
             if ( GameEventsConsumableUsed() )
             {
@@ -467,7 +485,30 @@ int InventoryUILogic( int mouse_moved )
           GameEventUseMap( slot->index );
         }
       }
-      else if ( inv_action_cursor == 1 ) /* Look */
+      else if ( inv_action_cursor == 1 ) /* Drop */
+      {
+        if ( inv_ground_items && inv_ground_count )
+        {
+          int pr, pc;
+          PlayerGetTile( &pr, &pc );
+          GroundItem_t* spawned = NULL;
+          if ( slot->type == INV_EQUIPMENT )
+            spawned = GroundItemSpawnEquipment( inv_ground_items, inv_ground_count,
+                                                slot->index, pr, pc, inv_tile_w, inv_tile_h );
+          else if ( slot->type == INV_CONSUMABLE )
+            spawned = GroundItemSpawn( inv_ground_items, inv_ground_count,
+                                       slot->index, pr, pc, inv_tile_w, inv_tile_h );
+          else if ( slot->type == INV_MAP )
+            spawned = GroundItemSpawnMap( inv_ground_items, inv_ground_count,
+                                          slot->index, pr, pc, inv_tile_w, inv_tile_h );
+          if ( spawned )
+          {
+            slot->type = INV_EMPTY;
+            slot->index = 0;
+          }
+        }
+      }
+      else if ( inv_action_cursor == 2 ) /* Look */
       {
         if ( slot->type == INV_EQUIPMENT )
           GameEvent( EVT_LOOK_EQUIPMENT, slot->index );
@@ -1049,8 +1090,22 @@ void InventoryUIDraw( void )
       ConsumableInfo_t* c = &g_consumables[slot->index];
       item_name = c->name;
 
-      a_DrawFilledRect( (aRectf_t){ mx, my, mw, EQ_MODAL_H }, (aColor_t){ 0x09, 0x0a, 0x14, 255 } );
-      a_DrawRect( (aRectf_t){ mx, my, mw, EQ_MODAL_H }, c->color );
+      /* Compute header height before description */
+      float header_h = EQ_MODAL_PAD_Y + EQ_MODAL_LINE_LG;
+      if ( c->bonus_damage > 0 ) header_h += EQ_MODAL_LINE_SM;
+      if ( strcmp( c->effect, "none" ) != 0 && strlen( c->effect ) > 0 )
+        header_h += EQ_MODAL_LINE_MD;
+      else
+        header_h += EQ_MODAL_LINE_SM;
+
+      int wrap_w = (int)( mw - EQ_MODAL_PAD_X * 2 );
+      int desc_h = a_GetWrappedTextHeight( c->description,
+                                            a_default_text_style.type, wrap_w );
+      float mh = header_h + desc_h + EQ_MODAL_PAD_Y;
+      if ( mh < EQ_MODAL_H ) mh = EQ_MODAL_H;
+
+      a_DrawFilledRect( (aRectf_t){ mx, my, mw, mh }, (aColor_t){ 0x09, 0x0a, 0x14, 255 } );
+      a_DrawRect( (aRectf_t){ mx, my, mw, mh }, c->color );
 
       float ty = my + EQ_MODAL_PAD_Y;
       float tx = mx + EQ_MODAL_PAD_X;
@@ -1084,7 +1139,7 @@ void InventoryUIDraw( void )
 
       ts.fg = (aColor_t){ 0xa8, 0xb5, 0xb2, 255 };
       ts.scale = EQ_MODAL_DESC_S;
-      ts.wrap_width = (int)( mw - EQ_MODAL_PAD_X * 2 );
+      ts.wrap_width = wrap_w;
       a_DrawText( c->description, (int)tx, (int)ty, ts );
     }
     else if ( slot->type == INV_MAP && slot->index < g_num_maps )
@@ -1123,12 +1178,18 @@ void InventoryUIDraw( void )
       if ( ax < 0 ) ax = ip->rect.x + ip->rect.w + 4;
       float ay = my;
 
-      const char* inv_labels[EQ_ACTION_COUNT];
-      inv_labels[0] = ( slot->type == INV_EQUIPMENT ) ? "Equip" : "Use";
-      inv_labels[1] = "Look";
+      const char* inv_labels[INV_ACTION_COUNT];
+      if ( slot->type == INV_EQUIPMENT )
+        inv_labels[0] = "Equip";
+      else if ( slot->type == INV_CONSUMABLE && g_consumables[slot->index].action[0] != '\0' )
+        inv_labels[0] = g_consumables[slot->index].action;
+      else
+        inv_labels[0] = "Use";
+      inv_labels[1] = "Drop";
+      inv_labels[2] = "Look";
 
       DrawContextMenu( ax, ay,
-                       inv_labels, EQ_ACTION_COUNT,
+                       inv_labels, INV_ACTION_COUNT,
                        inv_action_cursor );
     }
   }

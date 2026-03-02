@@ -430,7 +430,7 @@ static void execute_actions( DialogueEntry_t* de )
     LoreUnlock( de->set_lore );
 
   if ( de->give_gold > 0 )
-    player.gold += de->give_gold;
+    PlayerAddGold( de->give_gold );
 }
 
 /* ---- Build filtered options for current speech node ---- */

@@ -16,15 +16,28 @@
 #include "enemies.h"
 #include "placed_traps.h"
 #include "spell_vfx.h"
+#include "interactive_tile.h"
+#include "room_enumerator.h"
 
 extern Player_t player;
 
 static Console_t* con;
 static int consumable_used = 0;
 
+static World_t*  ge_world       = NULL;
+static Enemy_t*  ge_enemies     = NULL;
+static int*      ge_enemy_count = NULL;
+
 void GameEventsInit( Console_t* c )
 {
   con = c;
+}
+
+void GameEventsSetWorld( World_t* world, Enemy_t* enemies, int* enemy_count )
+{
+  ge_world       = world;
+  ge_enemies     = enemies;
+  ge_enemy_count = enemy_count;
 }
 
 void GameEventsNewTurn( void )        { consumable_used = 0; }
@@ -101,8 +114,8 @@ int GameEventUseConsumable( int consumable_index )
 
   ConsumableInfo_t* c = &g_consumables[consumable_index];
 
-  /* One consumable per turn */
-  if ( consumable_used )
+  /* One consumable per turn (quest items bypass) */
+  if ( consumable_used && strcmp( c->type, "quest" ) != 0 )
   {
     ConsolePushF( con, (aColor_t){ 0xcf, 0x57, 0x3c, 255 },
                   "You can only use one consumable per turn." );
@@ -122,7 +135,7 @@ int GameEventUseConsumable( int consumable_index )
       return 0;
     }
 
-    player.hp += healed;
+    PlayerHeal( healed );
     CombatVFXSpawnNumber( player.world_x, player.world_y, healed,
                           (aColor_t){ 0x75, 0xa7, 0x43, 255 } );
     ConsolePushF( con, (aColor_t){ 0x75, 0xa7, 0x43, 255 },
@@ -135,10 +148,7 @@ int GameEventUseConsumable( int consumable_index )
   /* Food — buff next attack */
   if ( strcmp( c->type, "food" ) == 0 )
   {
-    player.buff.active = 1;
-    player.buff.bonus_damage = c->bonus_damage;
-    strncpy( player.buff.effect, c->effect, MAX_NAME_LENGTH - 1 );
-    player.buff.heal = c->heal;
+    PlayerApplyBuff( c->bonus_damage, c->effect, c->heal );
 
     if ( strcmp( c->effect, "none" ) != 0 && strlen( c->effect ) > 0 )
       ConsolePushF( con, c->color, "%s eats %s. Next attack: %s (+%d dmg).",
@@ -147,6 +157,71 @@ int GameEventUseConsumable( int consumable_index )
       ConsolePushF( con, c->color, "%s eats %s. Next attack: +%d dmg.",
                     player.name, c->name, c->bonus_damage );
 
+    consumable_used = 1;
+    return 1;
+  }
+
+  /* Quest items — generic handler with optional heal/message/give */
+  if ( strcmp( c->type, "quest" ) == 0 )
+  {
+    /* Lure — requires specific location, handled in Phase 4 */
+    if ( strcmp( c->effect, "lure" ) == 0 )
+    {
+      int pr, pc;
+      PlayerGetTile( &pr, &pc );
+      if ( RoomAt( pr, pc ) != ROOM_RAT_HOLE )
+      {
+        ConsolePushF( con, (aColor_t){ 0x81, 0x97, 0x96, 255 },
+                      "The smell wafts away. Nothing to lure here." );
+        return 0;
+      }
+
+      ITileBreak( ge_world, 5, 2 );
+
+      int rat_king_idx = EnemyTypeByKey( "rat_king" );
+      int rat_idx      = EnemyTypeByKey( "rat" );
+      if ( rat_king_idx >= 0 )
+        EnemySpawn( ge_enemies, ge_enemy_count, rat_king_idx, 5, 2,
+                    ge_world->tile_w, ge_world->tile_h );
+      if ( rat_idx >= 0 )
+      {
+        /* Candidate spots inside Room 24 — skip the player's tile */
+        static const int rat_pos[][2] = { {2,1}, {4,1}, {1,2}, {3,2} };
+        int spawned = 0;
+        for ( int i = 0; i < 4 && spawned < 2; i++ )
+        {
+          if ( rat_pos[i][0] == pr && rat_pos[i][1] == pc ) continue;
+          EnemySpawn( ge_enemies, ge_enemy_count, rat_idx,
+                      rat_pos[i][0], rat_pos[i][1],
+                      ge_world->tile_w, ge_world->tile_h );
+          spawned++;
+        }
+      }
+
+      ConsolePushF( con, (aColor_t){ 0xde, 0x9e, 0x41, 255 },
+                    "You hold out the stinky cheese..." );
+      ConsolePushF( con, (aColor_t){ 0xcf, 0x57, 0x3c, 255 },
+                    "The wall EXPLODES! The Rat King emerges!" );
+
+      consumable_used = 1;
+      return 1;
+    }
+
+    /* Generic quest item: heal + message + give item */
+    if ( c->heal > 0 )
+    {
+      PlayerHeal( c->heal );
+      CombatVFXSpawnNumber( player.world_x, player.world_y, c->heal,
+                            (aColor_t){ 0x75, 0xa7, 0x43, 255 } );
+    }
+    if ( c->use_message[0] )
+      ConsolePushF( con, c->color, "%s", c->use_message );
+    if ( c->gives[0] )
+    {
+      int gi = ConsumableByKey( c->gives );
+      if ( gi >= 0 )
+        InventoryAdd( INV_CONSUMABLE, gi );
+    }
     consumable_used = 1;
     return 1;
   }
@@ -193,6 +268,23 @@ void GameEventSwap( int new_idx, int old_idx )
 
 /* ---- Targeted consumable effect resolution ---- */
 
+static void consume_scroll( int inv_slot )
+{
+  int echo = PlayerEquipEffect( "scroll_echo" );
+  if ( echo > 0 )
+  {
+    player.scroll_echo_counter++;
+    if ( player.scroll_echo_counter >= echo )
+    {
+      player.scroll_echo_counter = 0;
+      ConsolePushF( con, (aColor_t){ 0x73, 0xbe, 0xd3, 255 },
+                    "Scroll Echo! Free cast!" );
+      return;
+    }
+  }
+  InventoryRemove( inv_slot );
+}
+
 int GameEventResolveTarget( int consumable_idx, int inv_slot,
                             int target_row, int target_col,
                             Enemy_t* enemies, int num_enemies )
@@ -213,6 +305,7 @@ int GameEventResolveTarget( int consumable_idx, int inv_slot,
   int pr, pc;
   PlayerGetTile( &pr, &pc );
   int dmg = PlayerStat( "damage" ) + c->bonus_damage;
+  dmg += PlayerEquipEffect( "amplify" );
   if ( dmg < 1 ) dmg = 1;
 
   aColor_t hit_color = c->color;
@@ -259,7 +352,7 @@ int GameEventResolveTarget( int consumable_idx, int inv_slot,
                     "The arrow flies into the darkness..." );
     }
 
-    InventoryRemove( inv_slot );
+    consume_scroll( inv_slot );
     consumable_used = 1;
     return 1;
   }
@@ -314,7 +407,7 @@ int GameEventResolveTarget( int consumable_idx, int inv_slot,
                     "The arrow flies past..." );
     }
 
-    InventoryRemove( inv_slot );
+    consume_scroll( inv_slot );
     consumable_used = 1;
     return 1;
   }
@@ -332,7 +425,7 @@ int GameEventResolveTarget( int consumable_idx, int inv_slot,
     PlacedTrapSpawn( target_row, target_col, c->bonus_damage, 1 );
     ConsolePushF( con, hit_color, "%s sets a bear trap.", player.name );
 
-    InventoryRemove( inv_slot );
+    consume_scroll( inv_slot );
     consumable_used = 1;
     return 1;
   }
@@ -364,7 +457,7 @@ int GameEventResolveTarget( int consumable_idx, int inv_slot,
                     "%s throws a smoke bomb! The smoke dissipates harmlessly.",
                     player.name );
 
-    InventoryRemove( inv_slot );
+    consume_scroll( inv_slot );
     consumable_used = 1;
     return 1;
   }
@@ -393,7 +486,7 @@ int GameEventResolveTarget( int consumable_idx, int inv_slot,
     if ( hit->hp <= 0 )
       CombatHandleEnemyDeath( hit );
 
-    InventoryRemove( inv_slot );
+    consume_scroll( inv_slot );
     consumable_used = 1;
     return 1;
   }
@@ -425,7 +518,7 @@ int GameEventResolveTarget( int consumable_idx, int inv_slot,
     if ( hit->hp <= 0 )
       CombatHandleEnemyDeath( hit );
 
-    InventoryRemove( inv_slot );
+    consume_scroll( inv_slot );
     consumable_used = 1;
     return 1;
   }
@@ -464,7 +557,7 @@ int GameEventResolveTarget( int consumable_idx, int inv_slot,
                     "%s hurls a fireball! It explodes harmlessly.",
                     player.name );
 
-    InventoryRemove( inv_slot );
+    consume_scroll( inv_slot );
     consumable_used = 1;
     return 1;
   }
@@ -495,8 +588,7 @@ int GameEventResolveTarget( int consumable_idx, int inv_slot,
     /* Swap world positions */
     float tmp_wx = player.world_x;
     float tmp_wy = player.world_y;
-    player.world_x = hit->world_x;
-    player.world_y = hit->world_y;
+    PlayerSetWorldPos( hit->world_x, hit->world_y );
     hit->world_x = tmp_wx;
     hit->world_y = tmp_wy;
 
@@ -507,6 +599,87 @@ int GameEventResolveTarget( int consumable_idx, int inv_slot,
     ConsolePushF( con, hit_color,
                   "%s teleports, swapping places with %s!",
                   player.name, t->name );
+
+    consume_scroll( inv_slot );
+    consumable_used = 1;
+    return 1;
+  }
+
+  /* ---- REACH: 2-tile cardinal thrust, hits both tiles ---- */
+  if ( strcmp( c->effect, "reach" ) == 0 )
+  {
+    int dr = ( target_row > pr ) ? 1 : ( target_row < pr ) ? -1 : 0;
+    int dc = ( target_col > pc ) ? 1 : ( target_col < pc ) ? -1 : 0;
+
+    int hits = 0;
+    int cr = pr, cc = pc;
+    int end_r = pr, end_c = pc;
+    for ( int step = 0; step < 2; step++ )
+    {
+      cr += dr;
+      cc += dc;
+      if ( !TileWalkable( cr, cc ) ) break;
+      end_r = cr;
+      end_c = cc;
+
+      Enemy_t* hit = EnemyAt( enemies, num_enemies, cr, cc );
+      if ( hit )
+      {
+        EnemyType_t* t = &g_enemy_types[hit->type_idx];
+        hit->hp -= dmg;
+        hit->turns_since_hit = 0;
+        CombatVFXSpawnNumber( hit->world_x, hit->world_y, dmg, hit_color );
+        ConsolePushF( con, hit_color, "%s thrusts through %s for %d damage!",
+                      player.name, t->name, dmg );
+        if ( hit->hp <= 0 )
+          CombatHandleEnemyDeath( hit );
+        hits++;
+      }
+    }
+
+    float tw = 16.0f, th = 16.0f;
+    EnemyProjectileSpawn( pr * tw + tw / 2.0f, pc * th + th / 2.0f,
+                          end_r * tw + tw / 2.0f, end_c * th + th / 2.0f,
+                          dr, dc );
+
+    if ( hits == 0 )
+      ConsolePushF( con, (aColor_t){ 0x81, 0x97, 0x96, 255 },
+                    "%s thrusts at the air.", player.name );
+
+    InventoryRemove( inv_slot );
+    consumable_used = 1;
+    return 1;
+  }
+
+  /* ---- CLEAVE: hit all adjacent enemies ---- */
+  if ( strcmp( c->effect, "cleave" ) == 0 )
+  {
+    int hits = 0;
+    static const int dirs[8][2] = {
+      {1,0}, {-1,0}, {0,1}, {0,-1}, {1,1}, {1,-1}, {-1,1}, {-1,-1}
+    };
+    for ( int d = 0; d < 8; d++ )
+    {
+      int ar = pr + dirs[d][0];
+      int ac = pc + dirs[d][1];
+      Enemy_t* hit = EnemyAt( enemies, num_enemies, ar, ac );
+      if ( hit )
+      {
+        EnemyType_t* t = &g_enemy_types[hit->type_idx];
+        hit->hp -= dmg;
+        hit->turns_since_hit = 0;
+        CombatVFXSpawnNumber( hit->world_x, hit->world_y, dmg, hit_color );
+        ConsolePushF( con, hit_color, "%s cleaves %s for %d damage!",
+                      player.name, t->name, dmg );
+        if ( hit->hp <= 0 )
+          CombatHandleEnemyDeath( hit );
+        hits++;
+      }
+    }
+
+    if ( hits == 0 )
+      ConsolePushF( con, (aColor_t){ 0x81, 0x97, 0x96, 255 },
+                    "%s cleaves the air.", player.name );
 
     InventoryRemove( inv_slot );
     consumable_used = 1;

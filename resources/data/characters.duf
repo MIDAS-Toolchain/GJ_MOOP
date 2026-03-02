@@ -4,8 +4,8 @@
 @mercenary {
     name: "Mercenary"
     glyph: "@"
-    hp: 12
-    base_damage: 2
+    hp: 18
+    base_damage: 1
     defense: 1
     consumable_type: "food"
     image_path: "resources/assets/player_classes/red.png"
@@ -16,7 +16,7 @@
 @rogue {
     name: "Rogue"
     glyph: "@"
-    hp: 8
+    hp: 16
     base_damage: 1
     defense: 0
     consumable_type: "gadgets"
@@ -28,7 +28,7 @@
 @mage {
     name: "Mage"
     glyph: "@"
-    hp: 6
+    hp: 12
     base_damage: 1
     defense: 0
     consumable_type: "scrolls"

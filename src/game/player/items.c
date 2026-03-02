@@ -113,6 +113,14 @@ static void ParseConsumableEntry( dDUFValue_t* entry )
   if ( ( v = d_DUFGetObjectItem( entry, "duration" ) ) )     c->duration     = (int)v->value_int;
   if ( ( v = d_DUFGetObjectItem( entry, "aoe_radius" ) ) )   c->aoe_radius   = (int)v->value_int;
 
+  dDUFValue_t* action      = d_DUFGetObjectItem( entry, "action" );
+  dDUFValue_t* gives       = d_DUFGetObjectItem( entry, "gives" );
+  dDUFValue_t* use_message = d_DUFGetObjectItem( entry, "use_message" );
+
+  if ( action )      strncpy( c->action, action->value_string, MAX_NAME_LENGTH - 1 );
+  if ( gives )       strncpy( c->gives, gives->value_string, MAX_NAME_LENGTH - 1 );
+  if ( use_message ) strncpy( c->use_message, use_message->value_string, 255 );
+
   if ( img_path && strlen( img_path->value_string ) > 0 )
     c->image = a_ImageLoad( img_path->value_string );
 
@@ -238,11 +246,15 @@ static void LoadEquipmentDUF( const char* path )
   d_DUFFree( root );
 }
 
+static int g_num_starters = 0;
+
 static void LoadEquipmentData( void )
 {
   g_num_equipment = 0;
   LoadEquipmentDUF( "resources/data/equipment_starters.duf" );
+  g_num_starters = g_num_equipment;
   LoadEquipmentDUF( "resources/data/equipment_shop.duf" );
+  LoadEquipmentDUF( "resources/data/equipment_drops.duf" );
 }
 
 void ItemsLoadAll( void )
@@ -341,6 +353,19 @@ int PlayerStat( const char* key )
   return v ? *v : 0;
 }
 
+int PlayerEquipEffect( const char* name )
+{
+  int total = 0;
+  for ( int i = 0; i < EQUIP_SLOTS; i++ )
+  {
+    if ( player.equipment[i] < 0 ) continue;
+    EquipmentInfo_t* eq = &g_equipment[player.equipment[i]];
+    if ( strcmp( eq->effect, name ) == 0 )
+      total += eq->effect_value;
+  }
+  return total;
+}
+
 int EquipSlotForKind( const char* kind )
 {
   if ( strcmp( kind, "weapon" ) == 0 ) return EQUIP_WEAPON;
@@ -355,7 +380,7 @@ int EquipSlotForKind( const char* kind )
 
 void EquipStarterGear( const char* class_key )
 {
-  for ( int i = 0; i < g_num_equipment; i++ )
+  for ( int i = 0; i < g_num_starters; i++ )
   {
     if ( strcmp( g_equipment[i].class_name, class_key ) != 0 ) continue;
 
@@ -398,4 +423,129 @@ int EquipmentByKey( const char* key )
   for ( int i = 0; i < g_num_equipment; i++ )
     if ( strcmp( g_equipment[i].key, key ) == 0 ) return i;
   return -1;
+}
+
+const char* PlayerClassKey( void )
+{
+  for ( int i = 0; i < 3; i++ )
+  {
+    if ( strcmp( player.name, g_classes[i].name ) == 0 )
+      return g_class_keys[i];
+  }
+  return "";
+}
+
+int EquipmentClassMatch( int eq_idx )
+{
+  if ( eq_idx < 0 || eq_idx >= g_num_equipment ) return 0;
+  if ( g_equipment[eq_idx].class_name[0] == '\0' ) return 1;
+  return strcmp( g_equipment[eq_idx].class_name, PlayerClassKey() ) == 0;
+}
+
+/* ---- Player state wrappers ---- */
+
+void PlayerFullReset( int class_index )
+{
+  ClassInfo_t* c = &g_classes[class_index];
+  strncpy( player.name, c->name, MAX_NAME_LENGTH - 1 );
+  player.hp = c->hp;
+  player.max_hp = c->hp;
+  player.turns_since_hit = 99;
+  player.class_damage = c->base_damage;
+  player.class_defense = c->defense;
+  strncpy( player.consumable_type, c->consumable_type, MAX_NAME_LENGTH - 1 );
+  strncpy( player.description, c->description, 255 );
+  strncpy( player.glyph, c->glyph, 7 );
+  player.color = c->color;
+  player.image = c->image;
+  player.world_x = 64.0f;
+  player.world_y = 64.0f;
+  memset( player.inventory, 0, sizeof( player.inventory ) );
+  memset( &player.buff, 0, sizeof( ConsumableBuff_t ) );
+  player.inv_cursor = 0;
+  player.selected_consumable = 0;
+  player.equip_cursor = 0;
+  player.inv_focused = 1;
+  player.gold = 3;
+  player.first_strike_active = 1;
+  player.fs_visited = 0;
+  player.scroll_echo_counter = 0;
+  player.last_room_id = -1;
+  for ( int i = 0; i < EQUIP_SLOTS; i++ )
+    player.equipment[i] = -1;
+}
+
+void PlayerTakeDamage( int amount )
+{
+  player.hp -= amount;
+  player.turns_since_hit = 0;
+  if ( player.hp <= 0 ) player.hp = 0;
+}
+
+void PlayerHeal( int amount )
+{
+  player.hp += amount;
+  if ( player.hp > player.max_hp ) player.hp = player.max_hp;
+}
+
+void PlayerAddGold( int amount )
+{
+  player.gold += amount;
+}
+
+int PlayerSpendGold( int amount )
+{
+  if ( player.gold < amount ) return 0;
+  player.gold -= amount;
+  return 1;
+}
+
+void PlayerApplyBuff( int bonus_dmg, const char* effect, int heal )
+{
+  player.buff.active = 1;
+  player.buff.bonus_damage = bonus_dmg;
+  strncpy( player.buff.effect, effect, MAX_NAME_LENGTH - 1 );
+  player.buff.heal = heal;
+}
+
+void PlayerClearBuff( void )
+{
+  memset( &player.buff, 0, sizeof( ConsumableBuff_t ) );
+}
+
+void PlayerSetWorldPos( float x, float y )
+{
+  player.world_x = x;
+  player.world_y = y;
+}
+
+void PlayerResetFirstStrike( void )
+{
+  player.first_strike_active = 1;
+}
+
+void PlayerConsumeFirstStrike( void )
+{
+  player.first_strike_active = 0;
+}
+
+void PlayerTickTurnsSinceHit( void )
+{
+  player.turns_since_hit++;
+}
+
+void PlayerSetRoom( int room_id )
+{
+  player.last_room_id = room_id;
+  if ( room_id >= 0 && room_id < 32 && !( player.fs_visited & ( 1u << room_id ) ) )
+  {
+    player.fs_visited |= ( 1u << room_id );
+    player.first_strike_active = 1;
+  }
+}
+
+void PlayerEquip( int slot, int index )
+{
+  if ( slot >= 0 && slot < EQUIP_SLOTS )
+    player.equipment[slot] = index;
 }

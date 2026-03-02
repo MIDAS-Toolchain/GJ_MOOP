@@ -78,28 +78,7 @@ static void cs_RebuildFiltered( void )
 
 static void cs_SelectClass( int index )
 {
-  strncpy( player.name, g_classes[index].name, MAX_NAME_LENGTH - 1 );
-  player.hp = g_classes[index].hp;
-  player.max_hp = g_classes[index].hp;
-  player.turns_since_hit = 99;
-  player.class_damage = g_classes[index].base_damage;
-  player.class_defense = g_classes[index].defense;
-  strncpy( player.consumable_type, g_classes[index].consumable_type, MAX_NAME_LENGTH - 1 );
-  strncpy( player.description, g_classes[index].description, 255 );
-  strncpy( player.glyph, g_classes[index].glyph, 7 );
-  player.color = g_classes[index].color;
-  player.image = g_classes[index].image;
-  player.world_x = 64.0f;
-  player.world_y = 64.0f;
-  memset( player.inventory, 0, sizeof( player.inventory ) );
-  memset( &player.buff, 0, sizeof( ConsumableBuff_t ) );
-  player.inv_cursor = 0;
-  player.selected_consumable = 0;
-  player.equip_cursor = 0;
-  player.inv_focused = 1;
-  player.gold = 3;
-  for ( int i = 0; i < EQUIP_SLOTS; i++ )
-    player.equipment[i] = -1;
+  PlayerFullReset( index );
   EquipStarterGear( g_class_keys[index] );
   PlayerInitStats();
   PlayerRecalcStats();

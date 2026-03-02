@@ -56,7 +56,7 @@
 # ==============================
 @opt_why_skeleton {
     label: "Why are you... a skeleton?"
-    color: "lore"
+    color: "quest"
     goto: "why_skeleton_reply"
 }
 @why_skeleton_reply {
@@ -273,7 +273,7 @@
 # ==============================
 @opt_millhaven {
     label: "You said you're from Millhaven?"
-    color: "lore"
+    color: "quest"
     goto: "millhaven_reply"
 }
 @millhaven_reply {
@@ -322,7 +322,7 @@
 }
 @note_please_reply {
     text: "Hmm. Tell you what. The hostile skeletons down here... they are giving me a bad reputation. Kill three of them for me and I'll hand it over. Call it a favour for the non-violent skeleton community."
-    options: ["opt_accept_skeleton_quest", "opt_leave"]
+    options: ["opt_accept_skeleton_quest", "opt_claim_note", "opt_leave"]
 }
 @opt_accept_skeleton_quest {
     label: "Deal. Three skeletons."

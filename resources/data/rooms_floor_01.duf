@@ -66,9 +66,9 @@
   room_id: "&"
   name: "Green Chamber"
 }
-@white_chamber {
+@elite_room {
   room_id: "*"
-  name: "White Chamber"
+  name: "Elite Room"
 }
 @rogue_annex {
   room_id: "("
@@ -85,4 +85,16 @@
 @merc_lower {
   room_id: "]"
   name: "Merc Lower Barracks"
+}
+@white_side_room {
+  room_id: "{"
+  name: "Side Room"
+}
+@rat_hole_room {
+  room_id: "-"
+  name: "Rat Hole Room"
+}
+@exit_chamber {
+  room_id: "}"
+  name: "Exit Chamber"
 }

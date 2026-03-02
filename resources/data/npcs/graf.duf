@@ -426,6 +426,7 @@
 }
 @opt_show_note {
     label: "A letter from Mayor Greta. Says the bearer can leave."
+    color:"quest"
     goto: "show_note_reply"
 }
 @show_note_reply {

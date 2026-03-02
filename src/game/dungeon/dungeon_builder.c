@@ -4,6 +4,7 @@
 #include "doors.h"
 #include "objects.h"
 #include "room_enumerator.h"
+#include "interactive_tile.h"
 
 static int char_to_room_id( char c )
 {
@@ -24,17 +25,17 @@ static const char* dungeon[DUNGEON_H] = {
   /*         1111111111222222222233333333 */
   /* 01234567890123456789012345678901234 56 */
   "#####################################",  /*  0 */
-  "#####################################",  /*  1 */
-  "##########################.#[[[[[####",  /*  2  corridor + merc upper      */
-  "##########################.R[[[[[####",  /*  3  R door into merc upper     */
-  "######################111#.#[[[[[####",  /*  4  jonathon + merc upper      */
-  "######.########~~~~~##111#.###R######",  /*  5  jake's + jonathon + bridge */
+  "#----#}}#############################",  /*  1  rat hole room + exit chamber */
+  "#----H}}##################.#[[[[[####",  /*  2  rat hole H at (5,2) + merc  */
+  "#----#####################.R[[[[[####",  /*  3  room 24 bottom + R door     */
+  "##.....###############111#.#[[[[[####",  /*  4  corridor (cols 2-6)         */
+  "#####..########~~~~~##111#.###.######",  /*  5  col 5-6 joins corridor     */
   "######.########~~~~~##111#.###R######",  /*  6  jake's + jonathon + bridge */
   "#@@@@#........G~~~~~###....W]]]]]####",  /*  7  mat's + jake's + merc lwr  */
   "#@@@@#.##########G#####.####]]]]]####",  /*  8  mat's + G door + merc lwr  */
   "#@@@@#.####22222#.#####W####]]]]]####",  /*  9  mat's + north + merc lwr   */
   "##R###.####22222B.###33333###########",  /* 10  R door + north + gallery   */
-  "#4444#.######.###...G33333###########",  /* 11  merc room + gallery       */
+  "#4444#.#######.##...G33333###########",  /* 11  merc room + gallery       */
   "#4444W.#######.####.#33333B(((((#####",  /* 12  merc room + B to annex     */
   "#4444#########.###..####.##(((((#####",  /* 13  merc room + rogue annex    */
   "#W############B####....B.G.(((((#####",  /* 14  G door -> rogue annex      */
@@ -64,8 +65,8 @@ static const char* dungeon[DUNGEON_H] = {
   "##......##.#########......###.#######",  /* 38  White/Blue turn left           */
   "##.#######......####.########......##",  /* 39  Red/Green turn right           */
   "##.############.####.#############.##",  /* 40  all corridors south            */
-  "##....#########.####....##########.##",  /* 41  White/Blue turn right          */
-  "#####.#######...#######.#######....##",  /* 42  Red/Green turn left            */
+  "##.....{{{{{###.####....##########.##",  /* 41  White/Blue turn right + room   */
+  "#####.#{{{{{#...#######.#######....##",  /* 42  Red/Green turn left + room     */
   "#####W#######.#########.#######.#####",  /* 43  W door + floor to chambers     */
   "###*****###%%%%%#####^^^^^####&&&&&##",  /* 44  chambers row 1                 */
   "###*****###%%%%%#####^^^^^####&&&&&##",  /* 45  chambers row 2                 */
@@ -78,6 +79,7 @@ static const char* dungeon[DUNGEON_H] = {
 void DungeonBuild( World_t* world )
 {
   RoomEnumeratorInit( DUNGEON_W, DUNGEON_H );
+  ITileInit();
 
   /* Parse the character map into tiles */
   for ( int y = 0; y < DUNGEON_H; y++ )
@@ -94,12 +96,19 @@ void DungeonBuild( World_t* world )
         world->background[idx].glyph_fg = (aColor_t){ 0x81, 0x97, 0x96, 255 };
         world->background[idx].solid    = 1;
       }
+      else if ( c == 'H' )
+      {
+        ITilePlace( world, x, y, ITILE_RAT_HOLE );
+      }
       else if ( c == 'B' || c == 'G' || c == 'R' || c == 'W' )
       {
         int type = ( c == 'B' ) ? DOOR_BLUE  :
                    ( c == 'G' ) ? DOOR_GREEN :
                    ( c == 'R' ) ? DOOR_RED   : DOOR_WHITE;
-        DoorPlace( world, x, y, type );
+        /* Walls above & below = vertical door; walls left & right = horizontal */
+        int vert = ( y > 0 && y < DUNGEON_H - 1
+                     && dungeon[y-1][x] == '#' && dungeon[y+1][x] == '#' );
+        DoorPlace( world, x, y, type, vert );
       }
       else
       {

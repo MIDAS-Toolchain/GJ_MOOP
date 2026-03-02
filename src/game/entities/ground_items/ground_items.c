@@ -55,6 +55,26 @@ GroundItem_t* GroundItemSpawnMap( GroundItem_t* list, int* count,
   return g;
 }
 
+GroundItem_t* GroundItemSpawnEquipment( GroundItem_t* list, int* count,
+                                        int equip_idx, int row, int col,
+                                        int tile_w, int tile_h )
+{
+  if ( *count >= MAX_GROUND_ITEMS || equip_idx < 0
+       || equip_idx >= g_num_equipment )
+    return NULL;
+
+  GroundItem_t* g = &list[*count];
+  g->item_type = GROUND_EQUIPMENT;
+  g->item_idx  = equip_idx;
+  g->row     = row;
+  g->col     = col;
+  g->world_x = row * tile_w + tile_w / 2.0f;
+  g->world_y = col * tile_h + tile_h / 2.0f;
+  g->alive   = 1;
+  ( *count )++;
+  return g;
+}
+
 GroundItem_t* GroundItemAt( GroundItem_t* list, int count, int row, int col )
 {
   for ( int i = 0; i < count; i++ )
@@ -87,6 +107,12 @@ void GroundItemsDrawAll( aRectf_t vp_rect, GameCamera_t* cam,
       glyph = mi->glyph;
       color = mi->color;
       image = mi->image;
+    }
+    else if ( list[i].item_type == GROUND_EQUIPMENT )
+    {
+      EquipmentInfo_t* ei = &g_equipment[list[i].item_idx];
+      glyph = ei->glyph;
+      color = ei->color;
     }
     else
     {

@@ -23,9 +23,10 @@ static const int rug_tiles[6][2] = {
   {21, 29}, {22, 29}, {23, 29},
   {21, 30}, {22, 30}, {23, 30}
 };
+static const int rug_tile_ids[6] = { 6, 7, 8, 15, 16, 17 };
 #define NUM_RUG_TILES 6
 
-#define RUG_COLOR (aColor_t){ 140, 60, 60, 255 }
+#define RUG_COLOR (aColor_t){ 0x60, 0x2c, 0x2c, 255 }
 
 void ShopLoadPool( const char* path )
 {
@@ -83,12 +84,16 @@ void ShopLoadPool( const char* path )
 
 void ShopSpawn( World_t* world )
 {
-  g_num_shop_items = 0;
-  if ( pool_count == 0 ) return;
+  /* Stamp carpet tiles onto the background layer */
+  for ( int i = 0; i < NUM_RUG_TILES; i++ )
+  {
+    int r = rug_tiles[i][0];
+    int c = rug_tiles[i][1];
+    int idx = c * world->width + r;
+    world->background[idx].tile = rug_tile_ids[i];
+  }
 
-  int count = spawn_min + rand() % ( spawn_max - spawn_min + 1 );
-  if ( count > MAX_SHOP_ITEMS ) count = MAX_SHOP_ITEMS;
-  if ( count > NUM_RUG_TILES )  count = NUM_RUG_TILES;
+  g_num_shop_items = 0;
 
   /* Shuffle rug tile positions (Fisher-Yates) */
   int tiles[NUM_RUG_TILES][2];
@@ -105,12 +110,66 @@ void ShopSpawn( World_t* world )
     tiles[j][0] = tr;          tiles[j][1] = tc;
   }
 
-  /* Build class-filtered pool indices + total weight */
+  int slot = 0;
+
+  /* --- Guaranteed class armor + trinket (slots 0-1) --- */
+  static const struct { const char* cls;
+                        const char* armor;   int armor_cost;
+                        const char* trinket; int trinket_cost; } class_equip[] = {
+    { "Mercenary", "chainmail",    12, "blood_medal",  10 },
+    { "Rogue",     "shadow_vest",  10, "viper_fang",   10 },
+    { "Mage",      "warded_robes", 10, "surge_stone",  10 },
+  };
+
+  for ( int c = 0; c < 3; c++ )
+  {
+    if ( strcmp( player.name, class_equip[c].cls ) != 0 ) continue;
+
+    int ai = EquipmentByKey( class_equip[c].armor );
+    if ( ai >= 0 )
+    {
+      ShopItem_t* si = &g_shop_items[g_num_shop_items];
+      memset( si, 0, sizeof( ShopItem_t ) );
+      si->item_type  = INV_EQUIPMENT;
+      si->item_index = ai;
+      si->cost       = class_equip[c].armor_cost;
+      si->row        = tiles[slot][0];
+      si->col        = tiles[slot][1];
+      si->world_x    = si->row * world->tile_w + world->tile_w / 2.0f;
+      si->world_y    = si->col * world->tile_h + world->tile_h / 2.0f;
+      si->alive      = 1;
+      g_num_shop_items++;
+      slot++;
+    }
+
+    int ti = EquipmentByKey( class_equip[c].trinket );
+    if ( ti >= 0 )
+    {
+      ShopItem_t* si = &g_shop_items[g_num_shop_items];
+      memset( si, 0, sizeof( ShopItem_t ) );
+      si->item_type  = INV_EQUIPMENT;
+      si->item_index = ti;
+      si->cost       = class_equip[c].trinket_cost;
+      si->row        = tiles[slot][0];
+      si->col        = tiles[slot][1];
+      si->world_x    = si->row * world->tile_w + world->tile_w / 2.0f;
+      si->world_y    = si->col * world->tile_h + world->tile_h / 2.0f;
+      si->alive      = 1;
+      g_num_shop_items++;
+      slot++;
+    }
+    break;
+  }
+
+  /* --- 4 random consumables from pool (slots 2-5) --- */
+  if ( pool_count == 0 ) return;
+
   int filtered[MAX_SHOP_POOL];
   int num_filtered = 0;
   int total_weight = 0;
   for ( int i = 0; i < pool_count; i++ )
   {
+    if ( strcmp( pool[i].type, "consumable" ) != 0 ) continue;
     if ( pool[i].class_name[0] == '\0'
          || strcmp( pool[i].class_name, player.name ) == 0 )
     {
@@ -120,8 +179,7 @@ void ShopSpawn( World_t* world )
   }
   if ( total_weight == 0 ) return;
 
-  /* Weighted random selection from filtered pool — duplicates allowed */
-  for ( int s = 0; s < count; s++ )
+  while ( slot < NUM_RUG_TILES )
   {
     int roll = rand() % total_weight;
     int accum = 0;
@@ -135,28 +193,18 @@ void ShopSpawn( World_t* world )
     ShopPoolEntry_t* pe = &pool[pick];
     ShopItem_t* si = &g_shop_items[g_num_shop_items];
     memset( si, 0, sizeof( ShopItem_t ) );
-
-    if ( strcmp( pe->type, "consumable" ) == 0 )
-    {
-      si->item_type  = INV_CONSUMABLE;
-      si->item_index = ConsumableByKey( pe->item_key );
-      if ( si->item_index < 0 ) continue;
-    }
-    else if ( strcmp( pe->type, "equipment" ) == 0 )
-    {
-      si->item_type  = INV_EQUIPMENT;
-      si->item_index = EquipmentByKey( pe->item_key );
-      if ( si->item_index < 0 ) continue;
-    }
-    else continue;
+    si->item_type  = INV_CONSUMABLE;
+    si->item_index = ConsumableByKey( pe->item_key );
+    if ( si->item_index < 0 ) { slot++; continue; }
 
     si->cost    = pe->cost;
-    si->row     = tiles[s][0];
-    si->col     = tiles[s][1];
+    si->row     = tiles[slot][0];
+    si->col     = tiles[slot][1];
     si->world_x = si->row * world->tile_w + world->tile_w / 2.0f;
     si->world_y = si->col * world->tile_h + world->tile_h / 2.0f;
     si->alive   = 1;
     g_num_shop_items++;
+    slot++;
   }
 }
 
@@ -185,8 +233,10 @@ int ShopIsRugTile( int row, int col )
 void ShopDrawRug( aRectf_t vp_rect, GameCamera_t* cam,
                   World_t* world, int gfx_mode )
 {
-  (void)gfx_mode;
+  /* Image mode: carpet tiles are baked into the background layer */
+  if ( gfx_mode == GFX_IMAGE ) return;
 
+  /* ASCII mode: draw colored rectangles as fallback */
   for ( int i = 0; i < NUM_RUG_TILES; i++ )
   {
     int r = rug_tiles[i][0];

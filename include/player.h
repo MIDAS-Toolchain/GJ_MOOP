@@ -56,10 +56,31 @@ typedef struct
   int turns_since_hit;
   int gold;
   ConsumableBuff_t buff;
+
+  int first_strike_active;              /* 1 = ready, 0 = used this room */
+  uint32_t fs_visited;                  /* bitfield: rooms that already gave first strike */
+  int scroll_echo_counter;              /* scrolls used toward next free cast */
+  int last_room_id;                     /* detect room changes */
 } Player_t;
 
 void PlayerInitStats( void );
 void PlayerRecalcStats( void );
 int  PlayerStat( const char* key );
+int  PlayerEquipEffect( const char* name );
+
+/* Gameplay state wrappers — funnel all mutations through these */
+void PlayerFullReset( int class_index );
+void PlayerTakeDamage( int amount );
+void PlayerHeal( int amount );
+void PlayerAddGold( int amount );
+int  PlayerSpendGold( int amount );
+void PlayerApplyBuff( int bonus_dmg, const char* effect, int heal );
+void PlayerClearBuff( void );
+void PlayerSetWorldPos( float x, float y );
+void PlayerResetFirstStrike( void );
+void PlayerConsumeFirstStrike( void );
+void PlayerTickTurnsSinceHit( void );
+void PlayerSetRoom( int room_id );
+void PlayerEquip( int slot, int index );
 
 #endif

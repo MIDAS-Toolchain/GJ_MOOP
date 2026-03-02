@@ -111,10 +111,3 @@
     weight: 2
     class: ""
 }
-@iron_shield {
-    item_key: "iron_shield"
-    type: "equipment"
-    cost: 8
-    weight: 1
-    class: ""
-}

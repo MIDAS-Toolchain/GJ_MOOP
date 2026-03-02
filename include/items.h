@@ -41,6 +41,9 @@ typedef struct
   int duration;
   int aoe_radius;
   char description[256];
+  char action[MAX_NAME_LENGTH];      /* UI label: "Lure", "Eat", etc. (empty = "Use") */
+  char gives[MAX_NAME_LENGTH];       /* consumable key to add on use (empty = none) */
+  char use_message[256];             /* custom console message on use (empty = none) */
   aImage_t* image;
 } ConsumableInfo_t;
 
@@ -55,7 +58,7 @@ typedef struct
   aImage_t* image;
 } OpenableInfo_t;
 
-#define MAX_EQUIPMENT     16
+#define MAX_EQUIPMENT     32
 
 typedef struct
 {
@@ -94,5 +97,8 @@ void InventoryRemove( int slot );
 
 int  ConsumableByKey( const char* key );
 int  EquipmentByKey( const char* key );
+
+const char* PlayerClassKey( void );
+int         EquipmentClassMatch( int eq_idx );
 
 #endif

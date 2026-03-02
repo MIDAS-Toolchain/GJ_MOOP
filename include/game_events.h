@@ -4,6 +4,7 @@
 #include "console.h"
 #include "items.h"
 #include "enemies.h"
+#include "world.h"
 
 typedef enum
 {
@@ -17,6 +18,7 @@ typedef enum
 } GameEventType_t;
 
 void GameEventsInit( Console_t* c );
+void GameEventsSetWorld( World_t* world, Enemy_t* enemies, int* enemy_count );
 void GameEventsNewTurn( void );
 int  GameEventsConsumableUsed( void );
 void GameEvent( GameEventType_t type, int index );

@@ -63,6 +63,10 @@ static int style_from_consumable( ConsumableInfo_t* c )
     return TGT_ADJACENT;
   if ( strcmp( c->effect, "shoot" ) == 0 || strcmp( c->effect, "poison" ) == 0 )
     return TGT_CARDINAL;
+  if ( strcmp( c->effect, "reach" ) == 0 )
+    return TGT_CARDINAL;
+  if ( strcmp( c->effect, "cleave" ) == 0 )
+    return TGT_ADJACENT;
   return TGT_FREE;
 }
 
@@ -139,8 +143,11 @@ static int valid_tile( int r, int c )
       return 1;
 
     case TGT_ADJACENT:
-      if ( dist != 1 ) return 0;
+    {
+      int maxd = ( dr > dc ) ? dr : dc;
+      if ( maxd != 1 ) return 0;
       return TileWalkable( r, c );
+    }
   }
   return 0;
 }
@@ -152,10 +159,12 @@ int TargetModeLogic( Enemy_t* enemies, int num_enemies )
 
   if ( !active ) return 0;
 
-  /* ESC cancels */
-  if ( app.keyboard[SDL_SCANCODE_ESCAPE] == 1 )
+  /* ESC or right-click cancels */
+  if ( app.keyboard[SDL_SCANCODE_ESCAPE] == 1
+       || ( app.mouse.pressed && app.mouse.button == SDL_BUTTON_RIGHT ) )
   {
     app.keyboard[SDL_SCANCODE_ESCAPE] = 0;
+    app.mouse.pressed = 0;
     ConsolePush( console, "Targeting cancelled.",
                  (aColor_t){ 0x81, 0x97, 0x96, 255 } );
     active = 0;
@@ -368,9 +377,11 @@ void TargetModeDraw( aRectf_t vp_rect, GameCamera_t* cam, World_t* w )
   }
   else if ( tgt_style == TGT_ADJACENT )
   {
-    /* Highlight 4 adjacent tiles */
-    static const int dirs[4][2] = { {1,0}, {-1,0}, {0,1}, {0,-1} };
-    for ( int d = 0; d < 4; d++ )
+    /* Highlight all 8 surrounding tiles */
+    static const int dirs[8][2] = {
+      {1,0}, {-1,0}, {0,1}, {0,-1}, {1,1}, {1,-1}, {-1,1}, {-1,-1}
+    };
+    for ( int d = 0; d < 8; d++ )
     {
       int r = player_row + dirs[d][0];
       int c = player_col + dirs[d][1];
@@ -399,6 +410,27 @@ void TargetModeDraw( aRectf_t vp_rect, GameCamera_t* cam, World_t* w )
         float wy = c * th + th / 2.0f;
         GV_DrawFilledRect( vp_rect, cam, wx, wy, (float)tw, (float)th, AOE_COLOR );
       }
+    }
+  }
+
+  /* Cleave splash preview — highlight all adjacent tiles that will be hit */
+  if ( cons_idx >= 0 && strcmp( g_consumables[cons_idx].effect, "cleave" ) == 0
+       && ( cursor_row != player_row || cursor_col != player_col ) )
+  {
+    static const int dirs[8][2] = {
+      {1,0}, {-1,0}, {0,1}, {0,-1}, {1,1}, {1,-1}, {-1,1}, {-1,-1}
+    };
+    for ( int d = 0; d < 8; d++ )
+    {
+      int r = player_row + dirs[d][0];
+      int c = player_col + dirs[d][1];
+      if ( r == cursor_row && c == cursor_col ) continue;
+      if ( r < 0 || r >= w->width || c < 0 || c >= w->height ) continue;
+      if ( !TileWalkable( r, c ) ) continue;
+
+      float wx = r * tw + tw / 2.0f;
+      float wy = c * th + th / 2.0f;
+      GV_DrawFilledRect( vp_rect, cam, wx, wy, (float)tw, (float)th, AOE_COLOR );
     }
   }
 

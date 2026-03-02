@@ -27,20 +27,6 @@ static int*     combat_enemy_count = NULL;
 static GroundItem_t* combat_ground_items = NULL;
 static int*          combat_ground_count = NULL;
 
-/* Return total effect_value for all equipped items with the given effect name */
-static int equipped_effect( const char* name )
-{
-  int total = 0;
-  for ( int i = 0; i < EQUIP_SLOTS; i++ )
-  {
-    if ( player.equipment[i] < 0 ) continue;
-    EquipmentInfo_t* eq = &g_equipment[player.equipment[i]];
-    if ( strcmp( eq->effect, name ) == 0 )
-      total += eq->effect_value;
-  }
-  return total;
-}
-
 /* Screen shake + red flash on hit */
 static TweenManager_t hit_tweens;
 static float hit_shake_x = 0;
@@ -127,7 +113,7 @@ void CombatHandleEnemyDeath( Enemy_t* e )
   /* Gold drop */
   if ( t->gold_drop > 0 )
   {
-    player.gold += t->gold_drop;
+    PlayerAddGold( t->gold_drop );
     ConsolePushF( console, (aColor_t){ 0xda, 0xaf, 0x20, 255 },
                   "Picked up %d gold.", t->gold_drop );
   }
@@ -152,6 +138,17 @@ void CombatHandleEnemyDeath( Enemy_t* e )
                          ci, e->row, e->col, 16, 16 );
         ConsolePushF( console, g_consumables[ci].color,
                       "The %s dropped %s!", t->name, g_consumables[ci].name );
+      }
+      else
+      {
+        int ei = EquipmentByKey( t->drop_item );
+        if ( ei >= 0 )
+        {
+          GroundItemSpawnEquipment( combat_ground_items, combat_ground_count,
+                                    ei, e->row, e->col, 16, 16 );
+          ConsolePushF( console, g_equipment[ei].color,
+                        "The %s dropped %s!", t->name, g_equipment[ei].name );
+        }
       }
     }
   }
@@ -186,66 +183,16 @@ static int deal_damage( Enemy_t* e, int dmg, aColor_t vfx_color )
 /* Resolve food buff effects after primary hit */
 static void resolve_buff( Enemy_t* primary )
 {
+  (void)primary;
   if ( !player.buff.active ) return;
 
-  int pr, pc;
-  PlayerGetTile( &pr, &pc );
-
-  aColor_t buff_color = { 0xde, 0x9e, 0x41, 255 };
-
-  /* Cleave: hit all alive enemies adjacent to player (Manhattan dist 1),
-     excluding the primary target */
-  if ( strcmp( player.buff.effect, "cleave" ) == 0 && combat_enemies && combat_enemy_count )
-  {
-    for ( int i = 0; i < *combat_enemy_count; i++ )
-    {
-      Enemy_t* ce = &combat_enemies[i];
-      if ( !ce->alive || ce == primary ) continue;
-      int dr = abs( ce->row - pr );
-      int dc = abs( ce->col - pc );
-      if ( dr + dc == 1 )
-      {
-        EnemyType_t* ct = &g_enemy_types[ce->type_idx];
-        int cdmg = PlayerStat( "damage" ) + player.buff.bonus_damage;
-        if ( cdmg < 1 ) cdmg = 1;
-        ConsolePushF( console, buff_color,
-                      "Cleave hits %s for %d damage!", ct->name, cdmg );
-        deal_damage( ce, cdmg, buff_color );
-      }
-    }
-  }
-  /* Reach: hit enemy behind the primary target (same direction) */
-  else if ( strcmp( player.buff.effect, "reach" ) == 0 && combat_enemies && combat_enemy_count )
-  {
-    int dir_r = primary->row - pr;
-    int dir_c = primary->col - pc;
-    int behind_r = primary->row + dir_r;
-    int behind_c = primary->col + dir_c;
-
-    for ( int i = 0; i < *combat_enemy_count; i++ )
-    {
-      Enemy_t* ce = &combat_enemies[i];
-      if ( !ce->alive || ce == primary ) continue;
-      if ( ce->row == behind_r && ce->col == behind_c )
-      {
-        EnemyType_t* ct = &g_enemy_types[ce->type_idx];
-        int cdmg = PlayerStat( "damage" ) + player.buff.bonus_damage;
-        if ( cdmg < 1 ) cdmg = 1;
-        ConsolePushF( console, buff_color,
-                      "Reach hits %s for %d damage!", ct->name, cdmg );
-        deal_damage( ce, cdmg, buff_color );
-        break;
-      }
-    }
-  }
   /* Lifesteal: heal player */
-  else if ( strcmp( player.buff.effect, "lifesteal" ) == 0 )
+  if ( strcmp( player.buff.effect, "lifesteal" ) == 0 )
   {
     int heal = player.buff.heal;
     if ( heal > 0 )
     {
-      player.hp += heal;
-      if ( player.hp > player.max_hp ) player.hp = player.max_hp;
+      PlayerHeal( heal );
       CombatVFXSpawnNumber( player.world_x, player.world_y, heal,
                             (aColor_t){ 0x75, 0xa7, 0x43, 255 } );
       ConsolePushF( console, (aColor_t){ 0x75, 0xa7, 0x43, 255 },
@@ -254,7 +201,7 @@ static void resolve_buff( Enemy_t* primary )
   }
   /* "none" or unknown — bonus damage was already applied, nothing extra */
 
-  memset( &player.buff, 0, sizeof( ConsumableBuff_t ) );
+  PlayerClearBuff();
 }
 
 int CombatAttack( Enemy_t* e )
@@ -266,6 +213,25 @@ int CombatAttack( Enemy_t* e )
   if ( player.buff.active )
     pdmg += player.buff.bonus_damage;
 
+  /* Passive: first_strike — bonus damage on first attack per room */
+  int fs = PlayerEquipEffect( "first_strike" );
+  if ( fs > 0 && player.first_strike_active )
+  {
+    pdmg += fs;
+    PlayerConsumeFirstStrike();
+    ConsolePushF( console, (aColor_t){ 0x75, 0xa7, 0x43, 255 },
+                  "First Strike! +%d bonus damage!", fs );
+  }
+
+  /* Passive: berserk — bonus damage when below half HP */
+  int berserk = PlayerEquipEffect( "berserk" );
+  if ( berserk > 0 && player.hp <= player.max_hp / 2 )
+  {
+    pdmg += berserk;
+    ConsolePushF( console, (aColor_t){ 0xa5, 0x30, 0x30, 255 },
+                  "Berserk! +%d damage!", berserk );
+  }
+
   if ( pdmg < 1 ) pdmg = 1;
 
   a_AudioPlaySound( &sfx_hit, NULL );
@@ -273,6 +239,17 @@ int CombatAttack( Enemy_t* e )
                 "You hit %s for %d damage.", t->name, pdmg );
 
   int killed = deal_damage( e, pdmg, (aColor_t){ 0xeb, 0xed, 0xe9, 255 } );
+
+  /* Passive: poison — apply DOT on melee hit */
+  int psn = PlayerEquipEffect( "poison" );
+  if ( psn > 0 && e->alive )
+  {
+    e->poison_ticks = 3;
+    e->poison_dmg   = psn;
+    ConsolePushF( console, (aColor_t){ 0x75, 0xa7, 0x43, 255 },
+                  "Poisoned %s! (%d dmg for 3 turns)",
+                  g_enemy_types[e->type_idx].name, psn );
+  }
 
   /* Resolve buff effects after primary hit */
   if ( player.buff.active )
@@ -286,8 +263,7 @@ void CombatEnemyHit( Enemy_t* e )
   EnemyType_t* t = &g_enemy_types[e->type_idx];
   int edmg = t->damage - PlayerStat( "defense" );
   if ( edmg < 1 ) edmg = 1;
-  player.hp -= edmg;
-  player.turns_since_hit = 0;
+  PlayerTakeDamage( edmg );
 
   CombatVFXSpawnNumber( player.world_x, player.world_y, edmg,
                         (aColor_t){ 0xcf, 0x57, 0x3c, 255 } );
@@ -298,17 +274,19 @@ void CombatEnemyHit( Enemy_t* e )
 
   if ( player.hp <= 0 )
   {
-    player.hp = 0;
     ConsolePush( console, "You have fallen...",
                  (aColor_t){ 0xa5, 0x30, 0x30, 255 } );
   }
 
-  /* Passive: thorns — reflect damage back */
-  int thorns = equipped_effect( "thorns" );
-  if ( thorns > 0 && e->alive )
+  /* Passive: thorns — reflect damage back (not if dead) */
+  if ( player.hp > 0 )
   {
-    ConsolePushF( console, (aColor_t){ 0xde, 0x9e, 0x41, 255 },
-                  "Thorns deals %d damage to %s.", thorns, t->name );
-    deal_damage( e, thorns, (aColor_t){ 0xde, 0x9e, 0x41, 255 } );
+    int thorns = PlayerEquipEffect( "thorns" );
+    if ( thorns > 0 && e->alive )
+    {
+      ConsolePushF( console, (aColor_t){ 0xde, 0x9e, 0x41, 255 },
+                    "Thorns deals %d damage to %s.", thorns, t->name );
+      deal_damage( e, thorns, (aColor_t){ 0xde, 0x9e, 0x41, 255 } );
+    }
   }
 }

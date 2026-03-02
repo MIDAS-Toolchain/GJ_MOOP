@@ -1,0 +1,124 @@
+# Equipment — droppable / spawnable upgrades (non-starter)
+
+# ==============================
+# MERCENARY
+# ==============================
+@heavy_mace {
+    name: "Heavy Mace"
+    kind: "weapon"
+    slot: "weapon"
+    glyph: "/"
+    damage: 2
+    defense: 0
+    effect: "none"
+    class: "mercenary"
+    description: "Blunt and brutal. Hits harder than a rusty blade."
+    color: [200, 100, 100, 255]
+}
+@chainmail {
+    name: "Chainmail"
+    kind: "armor"
+    slot: "armor"
+    glyph: "["
+    damage: 0
+    defense: 3
+    effect: "none"
+    class: "mercenary"
+    description: "Heavy but protective. Absorbs most blows."
+    color: [200, 100, 100, 255]
+}
+@blood_medal {
+    name: "Blood Medal"
+    kind: "trinket"
+    slot: "trinket"
+    glyph: "o"
+    damage: 0
+    defense: 0
+    effect: "berserk"
+    effect_value: 1
+    class: "mercenary"
+    description: "+1 damage when below half HP."
+    color: [200, 100, 100, 255]
+}
+
+# ==============================
+# ROGUE
+# ==============================
+@serrated_blade {
+    name: "Serrated Blade"
+    kind: "weapon"
+    slot: "weapon"
+    glyph: "/"
+    damage: 2
+    defense: 0
+    effect: "none"
+    class: "rogue"
+    description: "Jagged edge cuts deep. A clean upgrade."
+    color: [100, 200, 100, 255]
+}
+@shadow_vest {
+    name: "Shadow Vest"
+    kind: "armor"
+    slot: "armor"
+    glyph: "["
+    damage: 0
+    defense: 2
+    effect: "none"
+    class: "rogue"
+    description: "Dark leather, hard to spot. Tougher than a cloak."
+    color: [100, 200, 100, 255]
+}
+@viper_fang {
+    name: "Viper Fang"
+    kind: "trinket"
+    slot: "trinket"
+    glyph: "o"
+    damage: 0
+    defense: 0
+    effect: "poison"
+    effect_value: 1
+    class: "rogue"
+    description: "Coated in something foul. Melee attacks poison enemies."
+    color: [100, 200, 100, 255]
+}
+
+# ==============================
+# MAGE
+# ==============================
+@arcane_rod {
+    name: "Arcane Rod"
+    kind: "weapon"
+    slot: "weapon"
+    glyph: "/"
+    damage: 2
+    defense: 0
+    effect: "none"
+    class: "mage"
+    description: "Hums with stored energy. Stronger than gnarled wood."
+    color: [100, 100, 200, 255]
+}
+@warded_robes {
+    name: "Warded Robes"
+    kind: "armor"
+    slot: "armor"
+    glyph: "["
+    damage: 0
+    defense: 2
+    effect: "none"
+    class: "mage"
+    description: "Stitched with runes. Better than tattered cloth."
+    color: [100, 100, 200, 255]
+}
+@surge_stone {
+    name: "Surge Stone"
+    kind: "trinket"
+    slot: "trinket"
+    glyph: "o"
+    damage: 0
+    defense: 0
+    effect: "amplify"
+    effect_value: 1
+    class: "mage"
+    description: "Scrolls crackle with extra force. +1 scroll damage."
+    color: [100, 100, 200, 255]
+}

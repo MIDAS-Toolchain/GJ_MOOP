@@ -41,6 +41,25 @@ static void spawn_random_enemy( Enemy_t* enemies, int* num_enemies,
               EnemyTypeByKey( types[rand() % 3] ), x, y, tw, th );
 }
 
+/* Spawn the class-matching elite enemy at (x, y) */
+static void spawn_class_elite( Enemy_t* enemies, int* num_enemies,
+                               int x, int y, int tw, int th )
+{
+  const char* cls = PlayerClassKey();
+  const char* key;
+
+  if ( strcmp( cls, "mercenary" ) == 0 )      key = "elite_merc";
+  else if ( strcmp( cls, "rogue" ) == 0 )     key = "elite_rogue";
+  else if ( strcmp( cls, "mage" ) == 0 )      key = "elite_mage";
+  else return;
+
+  int ti = EnemyTypeByKey( key );
+  if ( ti >= 0 )
+    EnemySpawn( enemies, num_enemies, ti, x, y, tw, th );
+}
+
+
+
 void DungeonSpawn( NPC_t* npcs, int* num_npcs,
                    Enemy_t* enemies, int* num_enemies,
                    GroundItem_t* items, int* num_items,
@@ -234,13 +253,19 @@ void DungeonSpawn( NPC_t* npcs, int* num_npcs,
   spawn_random_consumable( items, num_items, 31, 7,
                            world->tile_w, world->tile_h );
 
-  /* Class-favored potions (reachable by all, shortcut for one) */
-  spawn_random_consumable( items, num_items, 26, 5,
-                           world->tile_w, world->tile_h );  /* merc barracks corridor */
-  spawn_random_consumable( items, num_items, 22, 11,
-                           world->tile_w, world->tile_h );  /* gallery (rogue shortcut) */
-  spawn_random_consumable( items, num_items, 30, 24,
-                           world->tile_w, world->tile_h );  /* east corridor (mage shortcut) */
+  /* Class-favored health potions (reachable by all, shortcut for one) */
+  {
+    int hp_idx = ConsumableByKey( "small_health_potion" );
+    if ( hp_idx >= 0 )
+    {
+      GroundItemSpawn( items, num_items, hp_idx, 26, 5,
+                       world->tile_w, world->tile_h );   /* merc barracks corridor */
+      GroundItemSpawn( items, num_items, hp_idx, 22, 11,
+                       world->tile_w, world->tile_h );   /* gallery (rogue shortcut) */
+      GroundItemSpawn( items, num_items, hp_idx, 30, 24,
+                       world->tile_w, world->tile_h );   /* east corridor (mage shortcut) */
+    }
+  }
 
   /* Hallway encounters */
   spawn_random_enemy( enemies, num_enemies,
@@ -248,8 +273,8 @@ void DungeonSpawn( NPC_t* npcs, int* num_npcs,
   spawn_random_consumable( items, num_items, 1, 8,
                            world->tile_w, world->tile_h );
 
-  spawn_random_enemy( enemies, num_enemies,
-                      6, 23, world->tile_w, world->tile_h );   /* junction corridor */
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "slime" ),
+              5, 23, world->tile_w, world->tile_h );           /* junction corridor */
   spawn_random_consumable( items, num_items, 9, 23,
                            world->tile_w, world->tile_h );
 
@@ -262,4 +287,12 @@ void DungeonSpawn( NPC_t* npcs, int* num_npcs,
   NPCSpawn( npcs, num_npcs, NPCTypeByKey( "dungeonbargains" ),
             22, 28, world->tile_w, world->tile_h );
   ShopSpawn( world );
+
+  /* Side room off white corridor */
+  spawn_random_enemy( enemies, num_enemies,
+                      9, 42, world->tile_w, world->tile_h );
+
+  /* Class elite — guards elite room, drops class weapon */
+  spawn_class_elite( enemies, num_enemies,
+                     4, 44, world->tile_w, world->tile_h );
 }

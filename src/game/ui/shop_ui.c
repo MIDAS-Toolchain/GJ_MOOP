@@ -140,7 +140,7 @@ static void do_buy( void )
     return;
   }
 
-  player.gold -= si->cost;
+  PlayerSpendGold( si->cost );
   InventoryAdd( si->item_type, si->item_index );
   si->alive = 0;
 

@@ -5,10 +5,11 @@
 #include "world.h"
 #include "game_viewport.h"
 
-#define MAX_GROUND_ITEMS 16
+#define MAX_GROUND_ITEMS 32
 
 #define GROUND_CONSUMABLE 0
 #define GROUND_MAP        1
+#define GROUND_EQUIPMENT  2
 
 typedef struct
 {
@@ -26,6 +27,9 @@ GroundItem_t* GroundItemSpawn( GroundItem_t* list, int* count,
 GroundItem_t* GroundItemSpawnMap( GroundItem_t* list, int* count,
                                   int map_idx, int row, int col,
                                   int tile_w, int tile_h );
+GroundItem_t* GroundItemSpawnEquipment( GroundItem_t* list, int* count,
+                                        int equip_idx, int row, int col,
+                                        int tile_w, int tile_h );
 GroundItem_t* GroundItemAt( GroundItem_t* list, int count, int row, int col );
 
 void GroundItemsDrawAll( aRectf_t vp_rect, GameCamera_t* cam,

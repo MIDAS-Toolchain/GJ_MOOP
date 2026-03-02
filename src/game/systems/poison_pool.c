@@ -63,8 +63,7 @@ void PoisonPoolTick( int player_row, int player_col )
     /* Damage player if standing on pool */
     if ( pools[i].row == player_row && pools[i].col == player_col )
     {
-      player.hp -= pools[i].damage;
-      player.turns_since_hit = 0;
+      PlayerTakeDamage( pools[i].damage );
       CombatVFXSpawnNumber( player.world_x, player.world_y,
                             pools[i].damage, POOL_DMG_COLOR );
       ConsolePushF( console, POOL_DMG_COLOR,
@@ -72,7 +71,6 @@ void PoisonPoolTick( int player_row, int player_col )
                     pools[i].damage );
       if ( player.hp <= 0 )
       {
-        player.hp = 0;
         ConsolePush( console, "You have fallen...",
                      (aColor_t){ 0xa5, 0x30, 0x30, 255 } );
       }
