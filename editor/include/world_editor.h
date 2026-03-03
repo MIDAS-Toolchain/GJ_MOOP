@@ -14,10 +14,12 @@
 #include "ed_defines.h"
 #include "ed_structs.h"
 
-extern Tileset_t* tile_sets[MAX_TILESETS];
-extern World_t*   map;
-extern int        toggle_ascii;
-extern int        current_tileset;
+extern Tileset_t*  tile_sets[MAX_TILESETS];
+extern World_t*    map;
+extern int         toggle_ascii;
+extern int         toggle_room;
+extern int         current_tileset;
+extern const char* current_filename;
 
 enum
 {

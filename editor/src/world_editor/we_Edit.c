@@ -15,6 +15,7 @@
 #include "ed_structs.h"
 
 #include "editor.h"
+#include "tile.h"
 #include "utils.h"
 #include "world.h"
 #include "world_editor.h"
@@ -34,7 +35,6 @@ static Tile_t* clipboard = NULL;
 
 static int originx = 0;
 static int originy = 0;
-
 
 static int edit_menu_x = 1120;
 static int edit_menu_y = 100;
@@ -114,6 +114,43 @@ static void we_EditLogic( float dt )
                       &glyph_index, &selected_glyph.x, &selected_glyph.y, 0 );
     e_TilesetMouseCheck( tile_x, tile_y,
                       &tile_index, &selected_tile.x, &selected_tile.y, 0 );
+    
+    if ( map != NULL )
+    {
+      int grid_x = 0, grid_y = 0;
+      e_GetCellAtMouseInViewport( map->width, map->height,
+                                  map->tile_w, map->tile_h,
+                                  originx, originy, &grid_x, &grid_y );
+      if ( editor_mode == WEM_SELECT )
+      {
+
+      }
+
+      if ( editor_mode == WEM_NONE )
+      {
+        int index = grid_y * map->width + grid_x;
+        if ( !toggle_room )
+        {
+          if ( tile_index >= TILE_BLUE_DOOR_EW && tile_index <= TILE_WHITE_DOOR_NS )
+          {
+            map->background[index].tile = TILE_LVL1_FLOOR;
+            map->midground[index].tile = tile_index;
+          }
+
+          else
+          {
+            map->background[index].tile = tile_index;
+            map->midground[index].tile  = TILE_EMPTY;
+            map->foreground[index].tile = TILE_EMPTY;
+          }
+        }
+
+        else
+        {
+          map->room_ids[index] = glyph_index;
+        }
+      }
+    }
   }
   
   if ( app.mouse.button == 3 && app.mouse.state == 1 )
@@ -121,31 +158,6 @@ static void we_EditLogic( float dt )
     app.mouse.button = 0, app.mouse.state = 0;
     e_ColorMouseCheck( color_x, color_y,
                       &fg_index, &selected_fg.x, &selected_fg.y, 0 );
-  }
-
-  if ( map != NULL )
-  {
-    int grid_x = 0, grid_y = 0;
-    e_GetCellAtMouseInViewport( map->width, map->height,
-                     originx, originy, &grid_x, &grid_y );
-    if ( editor_mode == WEM_SELECT )
-    {
-
-    }
-
-    if ( app.mouse.button == 1 )
-    {
-      app.mouse.button = 0;
-      int index = grid_y * map->width + grid_x;
-      map->background[index].tile = 1;
-    }
-    
-    if ( app.mouse.button == 3 )
-    {
-      app.mouse.button = 0;
-      int index = grid_y * map->width + grid_x;
-      map->background[index].tile = 0;
-    }
   }
   
   if ( app.keyboard[A_S] == 1 )
@@ -189,6 +201,12 @@ static void we_EditLogic( float dt )
     toggle_ascii = !toggle_ascii;
   }
   
+  if ( app.keyboard[A_R] == 1 )
+  {
+    app.keyboard[A_R] = 0;
+    toggle_room = !toggle_room;
+  }
+  
   a_ViewportInput( &app.g_viewport, EDITOR_WORLD_WIDTH, EDITOR_WORLD_HEIGHT );
   
   a_DoWidget();
@@ -198,7 +216,7 @@ static void we_EditDraw( float dt )
 {
   if ( map != NULL )
   {
-    WorldDraw( originx, originy, map, tile_sets[current_tileset], toggle_ascii );
+    WorldDraw( originx, originy, map, tile_sets[current_tileset], toggle_room, toggle_ascii );
   }
   
   aRectf_t rect = {

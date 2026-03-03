@@ -25,9 +25,11 @@
 static void e_WorldEditorLogic( float );
 static void e_WorldEditorDraw( float );
 
+const char* current_filename = NULL;
 Tileset_t* tile_sets[MAX_TILESETS];
 World_t* map        = NULL;
 int toggle_ascii    = 0;
+int toggle_room     = 0;
 int current_tileset = 0;
 
 static aPoint2f_t selected_pos;
@@ -40,18 +42,13 @@ void e_WorldEditorInit( void )
 {
   app.delegate.logic = e_WorldEditorLogic;
   app.delegate.draw  = e_WorldEditorDraw;
-  
-  if ( map != NULL )
-  {
-    originx = app.g_viewport.x - ( (float)( map->width  * map->tile_w ) / 2 );
-    originy = app.g_viewport.y - ( (float)( map->height * map->tile_h ) / 2 );
-  }
  
   float ratio = SCREEN_WIDTH/SCREEN_HEIGHT;
   float view_h = 50.0f;
   float view_w = view_h * ratio;
-  app.g_viewport = (aRectf_t){ 512.0f, 512.0f, view_h, view_w };
-
+  app.g_viewport = (aRectf_t){ 1024.0f, 1024.0f, view_h, view_w };
+  
+  e_GetOrigin( map, &originx, &originy );
   selected_pos = ( aPoint2f_t ){ .x = 0, .y = 0 };
 
   a_WidgetsInit( "resources/widgets/editor/world.auf" );
@@ -122,6 +119,12 @@ static void e_WorldEditorLogic( float dt )
     toggle_ascii = !toggle_ascii;
   }
   
+  if ( app.keyboard[A_R] == 1 )
+  {
+    app.keyboard[A_R] = 0;
+    toggle_room = !toggle_room;
+  }
+  
   a_ViewportInput( &app.g_viewport, EDITOR_WORLD_WIDTH, EDITOR_WORLD_HEIGHT );
   
   a_DoWidget();
@@ -131,7 +134,7 @@ static void e_WorldEditorDraw( float dt )
 {
   if ( map != NULL )
   {
-    WorldDraw( originx, originy, map, tile_sets[current_tileset], toggle_ascii );
+    WorldDraw( originx, originy, map, tile_sets[current_tileset],toggle_room, toggle_ascii );
   }
 
   a_DrawWidgets();

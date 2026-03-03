@@ -22,8 +22,20 @@
 #define MAX_TILESETS 8
 #define MAX_TILES 256
 
-#define EDITOR_WORLD_WIDTH  1024
-#define EDITOR_WORLD_HEIGHT 1024
+#define EDITOR_WORLD_WIDTH  2048
+#define EDITOR_WORLD_HEIGHT 2048
+
+#define TILE_EMPTY ((uint16_t)-1)
+
+enum
+{
+  TILE_GLYPH_WALL       = '#',
+  TILE_GLYPH_FLOOR      = '.',
+  TILE_GLYPH_RED_DOOR   = 'R',
+  TILE_GLYPH_GREEN_DOOR = 'G',
+  TILE_GLYPH_BLUE_DOOR  = 'B',
+  TILE_GLYPH_WHITE_DOOR = 'W'
+};
 
 #endif
 

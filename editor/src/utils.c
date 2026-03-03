@@ -8,16 +8,20 @@
 #include "ed_defines.h"
 #include "ed_structs.h"
 
+#include "tile.h"
 #include "world_editor.h"
 
-void e_GetOrigin( World_t* map, int* originx, int* originy )
+static int string_width( dString_t* string, int start );
+
+void e_GetOrigin( World_t* world, int* originx, int* originy )
 {
-  if ( !map ) return;
-  *originx = app.g_viewport.x - ( (float)( map->width  * map->tile_w ) / 2 );
-  *originy = app.g_viewport.y - ( (float)( map->height * map->tile_h ) / 2 );
+  if ( !world ) return;
+  *originx = app.g_viewport.x - ( (float)( world->width  * world->tile_w ) / 2 );
+  *originy = app.g_viewport.y - ( (float)( world->height * world->tile_h ) / 2 );
 }
 
 void e_GetCellAtMouseInViewport( const int width,   const int height,
+                                 const int tile_w,  const int tile_h,
                                  const int originx, const int originy,
                                  int* grid_x, int* grid_y )
 {
@@ -34,8 +38,8 @@ void e_GetCellAtMouseInViewport( const int width,   const int height,
   int cell_x = (int)( relative_x / 16 );
   int cell_y = (int)( relative_y / 16 );
   
-  int extreme_w = ( EDITOR_WORLD_WIDTH  / width );
-  int extreme_h = ( EDITOR_WORLD_HEIGHT / height );
+  int extreme_w = ( width * tile_w );
+  int extreme_h = ( height * tile_h );
 
   if ( cell_x >= 0 && cell_x < extreme_w &&
        cell_y >= 0 && cell_y < extreme_h )
@@ -196,6 +200,65 @@ void e_LoadColorPalette( aColor_t palette[MAX_COLOR_GROUPS][MAX_COLOR_PALETTE],
   fclose( file );
 }
 
+uint16_t GlyphTileConverter( int glyph_index, int rotated )
+{
+  switch ( glyph_index )
+  {
+    case TILE_GLYPH_WALL:
+      return TILE_LVL1_WALL;
+    
+    case TILE_GLYPH_FLOOR:
+      return TILE_LVL1_FLOOR;
+    
+    case TILE_GLYPH_RED_DOOR:
+      if ( rotated )
+      {
+        return TILE_RED_DOOR_EW;
+      }
+      return TILE_RED_DOOR_NS;
+    
+    case TILE_GLYPH_GREEN_DOOR:
+      if ( rotated )
+      {
+        return TILE_GREEN_DOOR_EW;
+      }
+      return TILE_GREEN_DOOR_NS;
+    
+    case TILE_GLYPH_BLUE_DOOR:
+      if ( rotated )
+      {
+        return TILE_BLUE_DOOR_EW;
+      }
+      return TILE_BLUE_DOOR_NS;
+    
+    case TILE_GLYPH_WHITE_DOOR:
+      if ( rotated )
+      {
+        return TILE_WHITE_DOOR_EW;
+      }
+      return TILE_WHITE_DOOR_NS;
+  }
+
+  return TILE_EMPTY;
+}
+
+static int string_width( dString_t* string, int start )
+{
+  int width_count = 0;
+  const char* raw_str = d_StringPeek(string);
+  for ( size_t i = start; i < string->len; i++ )
+  {
+    if ( raw_str[i] == ' ' )
+    {
+      break;
+    }
+
+    width_count++;
+  }
+
+  return width_count;
+}
+
 World_t* convert_mats_worlds( const char* filename )
 {
   int file_size = 0;
@@ -205,6 +268,8 @@ World_t* convert_mats_worlds( const char* filename )
   
   int world_width  = 0;
   int world_height = 0;
+  
+  dArray_t* door_positions = d_ArrayInit( 10, sizeof( dVec2_t ) );
 
   World_t* new_world = malloc( sizeof( World_t ) );
   if ( new_world == NULL ) return NULL;
@@ -216,11 +281,141 @@ World_t* convert_mats_worlds( const char* filename )
   lines = a_ParseLinesInFile( file_string, file_size, newline_count );
    
   char* string = lines[0];
-  if ( string != NULL && string[0] == '/' && string[1] == '/' )
+  if ( string != NULL )
   {
+    if ( string[0] == '/' && string[1] == '/' )
+    {
+      dString_t* line   = d_StringInit();
+      dString_t* width  = d_StringInit();
+      dString_t* height = d_StringInit();
+      d_StringSet( line, string );
+      int num_start = 3;
+      int first_num_w  = string_width( line, num_start );
+      first_num_w += num_start;
+      int second_num_w = string_width( line, first_num_w+1 );
+      second_num_w += first_num_w+1;
+
+      d_StringSlice( width,  d_StringPeek( line ), 3, num_start+first_num_w );
+      d_StringSlice( height, d_StringPeek( line ), first_num_w+1, second_num_w );
+      world_width  = atoi( d_StringPeek( width ) );
+      world_height = atoi( d_StringPeek( height ) );
+    }
+
+    new_world->width  = world_width;
+    new_world->height = world_height;
+
+    new_world->tile_w = 16;
+    new_world->tile_h = 16;
+
+    new_world->tile_count = world_width * world_height;
+
+    new_world->background = malloc( sizeof(Tile_t) * new_world->tile_count );
+    if ( new_world->background == NULL ) return NULL;
+    memset( new_world->background, 0, sizeof(Tile_t) * new_world->tile_count );
     
+    new_world->midground = malloc( sizeof(Tile_t) * new_world->tile_count );
+    if ( new_world->midground == NULL ) return NULL;
+    memset( new_world->midground, 0, sizeof(Tile_t) * new_world->tile_count );
+    
+    new_world->foreground = malloc( sizeof(Tile_t) *  new_world->tile_count );
+    if ( new_world->foreground == NULL ) return NULL;
+    memset( new_world->foreground, 0, sizeof(Tile_t) * new_world->tile_count );
+    
+    new_world->room_ids = malloc( sizeof(uint16_t) * new_world->tile_count );
+    if ( new_world->room_ids == NULL ) return NULL;
+    memset( new_world->room_ids, 0, sizeof(uint16_t) * new_world->tile_count );
+    
+    int line_pos = 1;
+    for ( int j = 0; j < world_height; j++ )
+    {
+      for ( int i = 0; i < world_width; i++ )
+      {
+        char* current_line = lines[line_pos];
+        int tile = current_line[i];
+        int index = j * world_width + i;
+        
+        new_world->background[index].solid       = 0;
+        new_world->background[index].tile        = 0;
+        new_world->background[index].glyph_index = 20;
+        new_world->background[index].glyph       = ".";
+        new_world->background[index].glyph_fg    = (aColor_t){ 0x39, 0x4a, 0x50, 255 };
+        new_world->background[index].glyph_bg    = (aColor_t){ 0x09, 0x0a, 0x14, 255 };
+
+        new_world->midground[index].solid       = 0;
+        new_world->midground[index].tile = TILE_EMPTY;
+        new_world->midground[index].glyph_index = 20;
+        new_world->midground[index].glyph       = "";
+        new_world->midground[index].glyph_fg    = (aColor_t){ 0xc7, 0xcf, 0xcc, 255 };
+        new_world->midground[index].glyph_bg    = (aColor_t){ 0, 0, 0, 0 };
+
+        new_world->foreground[index].solid       = 0;
+        new_world->foreground[index].tile = TILE_EMPTY;
+        new_world->foreground[index].glyph_index = 20;
+        new_world->foreground[index].glyph       = "";
+        new_world->foreground[index].glyph_fg    = (aColor_t){ 0xc7, 0xcf, 0xcc, 255 };
+        new_world->foreground[index].glyph_bg    = (aColor_t){ 0, 0, 0, 0 };
+        
+        new_world->room_ids[index] = TILE_EMPTY;
+
+        if ( tile == TILE_GLYPH_WALL || tile == TILE_GLYPH_FLOOR )
+        {
+          new_world->background[index].tile = GlyphTileConverter( tile, 0 );
+          new_world->background[index].glyph_index = tile;
+        }
+
+        else if ( tile == TILE_GLYPH_RED_DOOR ||
+                  tile == TILE_GLYPH_GREEN_DOOR ||
+                  tile == TILE_GLYPH_BLUE_DOOR ||
+                  tile == TILE_GLYPH_WHITE_DOOR )
+        {
+          new_world->background[index].tile        = TILE_LVL1_FLOOR;
+          new_world->background[index].glyph_index = TILE_GLYPH_FLOOR;
+          new_world->midground[index].tile = GlyphTileConverter( tile, 0 );
+          new_world->midground[index].glyph_index = tile;
+          dVec2_t pos = { .x = i, .y = j };
+          d_ArrayAppend( door_positions, &pos );
+        }
+
+        else
+        {
+          new_world->background[index].tile = TILE_LVL1_FLOOR;
+          new_world->background[index].glyph_index = TILE_GLYPH_FLOOR;
+          new_world->room_ids[index] = tile;
+        }
+      }
+
+      line_pos++;
+    }
   }
 
+  for ( size_t i = 0; i < door_positions->count; i++ )
+  {
+    dVec2_t* pos = d_ArrayGet( door_positions, i );
+    int door_index = pos->y * world_width + pos->x;
+    int glyph_index = new_world->midground[door_index].glyph_index;
+    
+    dVec2_t n = { .x = pos->x ,    .y = pos->y + 1 };
+    dVec2_t e = { .x = pos->x + 1, .y = pos->y };
+    dVec2_t s = { .x = pos->x,     .y = pos->y - 1 };
+    dVec2_t w = { .x = pos->x - 1, .y = pos->y };
+    
+    int index_n = n.y * world_width + n.x;
+    int index_e = e.y * world_width + e.x;
+    int index_s = s.y * world_width + s.x;
+    int index_w = w.y * world_width + w.x;
+    
+    if ( new_world->background[index_n].tile == TILE_LVL1_WALL &&
+         new_world->background[index_s].tile == TILE_LVL1_WALL )
+    {
+      new_world->midground[door_index].tile = GlyphTileConverter( glyph_index, 0 );
+    }
+    
+    else if ( new_world->background[index_e].tile == TILE_LVL1_WALL &&
+              new_world->background[index_w].tile == TILE_LVL1_WALL )
+    {
+      new_world->midground[door_index].tile = GlyphTileConverter( glyph_index, 1 );
+    }
+  }
 
   return new_world;
 }

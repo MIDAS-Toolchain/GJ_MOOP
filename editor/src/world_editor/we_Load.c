@@ -15,6 +15,8 @@
 #include "ed_structs.h"
 
 #include "editor.h"
+#include "utils.h"
+#include "world.h"
 #include "world_editor.h"
 
 static void wel_LoadLogic( float dt );
@@ -80,7 +82,31 @@ static void wel_LoadDraw( float dt )
 
 void wel_LoadYes( void )
 {
-  EditorInit();
+  aContainerWidget_t* container =
+    a_GetContainerFromWidget( "load_menu" );
+  
+  for ( int i = 0; i < container->num_components; i++ )
+  {
+    aWidget_t* current = &container->components[i];
+
+    if ( strcmp( current->name, "filename" ) == 0 )
+    {
+      aInputWidget_t* inp = (aInputWidget_t*)current->data;
+      current_filename = inp->text;
+    }
+  }
+
+  if ( current_filename != NULL )
+  {
+    if ( map != NULL )
+    {
+      WorldDestroy( map );
+    }
+
+    map = convert_mats_worlds( current_filename );
+  }
+  
+  e_WorldEditorInit();
 }
 
 void wel_LoadNo( void )

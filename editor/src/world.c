@@ -17,6 +17,7 @@
 #include "ed_defines.h"
 #include "ed_structs.h"
 #include "world.h"
+#include "world_editor.h"
 
 World_t* WorldCreate( const int width, const int height,
                       const int tile_w, const int tile_h )
@@ -91,9 +92,22 @@ World_t* WorldCreate( const int width, const int height,
   return new_world;
 }
 
+void WorldDestroy( World_t* world )
+{
+  if ( world == NULL ) return;
+  
+  free( world->background );
+  free( world->midground );
+  free( world->foreground );
+  free( world->room_ids );
+  
+  free( world );
+}
+
 /* Legacy renderer - used by the editor. Game uses GV_DrawWorld instead. */
 void WorldDraw( const int x_off, const int y_off,
                 World_t* world, Tileset_t* tile_set,
+                const uint8_t draw_room_des,
                 const uint8_t draw_ascii )
 {
   int has_viewport = ( app.g_viewport.w != 0 && app.g_viewport.h != 0 );
@@ -104,6 +118,7 @@ void WorldDraw( const int x_off, const int y_off,
     int x_tile = i % world->width;
     int y_tile = i / world->width;
     int x, y;
+    int room_x, room_y;
 
     if ( draw_ascii )
     {
@@ -114,6 +129,12 @@ void WorldDraw( const int x_off, const int y_off,
     {
       x = ( x_tile * world->tile_w ) + x_off;
       y = ( y_tile * world->tile_h ) + y_off;
+    }
+    
+    if ( draw_room_des )
+    {
+      room_x = ( x_tile * glyph_size.w ) + x_off;
+      room_y = ( y_tile * glyph_size.h ) + y_off;
     }
 
     float draw_x = x;
@@ -138,6 +159,7 @@ void WorldDraw( const int x_off, const int y_off,
     Tile_t fg = world->foreground[i];
     int has_mg = ( mg.tile != TILE_EMPTY );
     int has_fg = ( fg.tile != TILE_EMPTY );
+    int room_id = world->room_ids[i];
 
     if ( draw_ascii )
     {
@@ -188,6 +210,14 @@ void WorldDraw( const int x_off, const int y_off,
       a_Blit( tile_set->img_array[bg.tile].img, x, y );
       if ( has_mg ) a_Blit( tile_set->img_array[mg.tile].img, x, y );
       if ( has_fg ) a_Blit( tile_set->img_array[fg.tile].img, x, y );
+    }
+    
+    if ( draw_room_des && room_id != TILE_EMPTY && room_id < MAX_GLYPHS )
+    {
+      a_ViewportBlitTextureRect( app.font_textures[FONT_CODE_PAGE_437],
+                                 &app.glyphs[FONT_CODE_PAGE_437][room_id],
+                                 draw_x, draw_y, white );
+
     }
   }
 }

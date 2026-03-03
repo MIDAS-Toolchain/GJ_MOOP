@@ -8,6 +8,7 @@
 
 void e_GetOrigin( World_t* map, int* originx, int* originy );
 void e_GetCellAtMouseInViewport( const int width,   const int height,
+                                 const int tile_w,  const int tile_h,
                                  const int originx, const int originy,
                                  int* grid_x, int* grid_y );
 void e_GetCellAtMouse( const int width,      const int height,
@@ -29,6 +30,9 @@ void e_ColorMouseCheck( const int originx, const int originy, int* index,
 
 void e_LoadColorPalette( aColor_t palette[MAX_COLOR_GROUPS][MAX_COLOR_PALETTE],
                          const char * filename );
+
+uint16_t GlyphTileConverter( int glyph_index );
+World_t* convert_mats_worlds( const char* filename );
 
 #endif
 
