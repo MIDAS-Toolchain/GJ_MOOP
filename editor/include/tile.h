@@ -30,5 +30,16 @@ enum
   TILE_LVL1_RAT_HOLE,
 };
 
+enum
+{
+  TILE_GLYPH_WALL       = '#',
+  TILE_GLYPH_FLOOR      = '.',
+  TILE_GLYPH_RED_DOOR   = 'R',
+  TILE_GLYPH_GREEN_DOOR = 'G',
+  TILE_GLYPH_BLUE_DOOR  = 'B',
+  TILE_GLYPH_WHITE_DOOR = 'W'
+};
+
+
 #endif
 

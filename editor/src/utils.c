@@ -336,21 +336,21 @@ World_t* convert_mats_worlds( const char* filename )
         
         new_world->background[index].solid       = 0;
         new_world->background[index].tile        = 0;
-        new_world->background[index].glyph_index = 20;
+        new_world->background[index].glyph_index = TILE_EMPTY;
         new_world->background[index].glyph       = ".";
         new_world->background[index].glyph_fg    = (aColor_t){ 0x39, 0x4a, 0x50, 255 };
         new_world->background[index].glyph_bg    = (aColor_t){ 0x09, 0x0a, 0x14, 255 };
 
         new_world->midground[index].solid       = 0;
         new_world->midground[index].tile = TILE_EMPTY;
-        new_world->midground[index].glyph_index = 20;
+        new_world->midground[index].glyph_index = TILE_EMPTY;
         new_world->midground[index].glyph       = "";
         new_world->midground[index].glyph_fg    = (aColor_t){ 0xc7, 0xcf, 0xcc, 255 };
         new_world->midground[index].glyph_bg    = (aColor_t){ 0, 0, 0, 0 };
 
         new_world->foreground[index].solid       = 0;
         new_world->foreground[index].tile = TILE_EMPTY;
-        new_world->foreground[index].glyph_index = 20;
+        new_world->foreground[index].glyph_index = TILE_EMPTY;
         new_world->foreground[index].glyph       = "";
         new_world->foreground[index].glyph_fg    = (aColor_t){ 0xc7, 0xcf, 0xcc, 255 };
         new_world->foreground[index].glyph_bg    = (aColor_t){ 0, 0, 0, 0 };
@@ -360,7 +360,7 @@ World_t* convert_mats_worlds( const char* filename )
         if ( tile == TILE_GLYPH_WALL || tile == TILE_GLYPH_FLOOR )
         {
           new_world->background[index].tile = GlyphTileConverter( tile, 0 );
-          new_world->background[index].glyph_index = tile;
+          new_world->background[index].glyph_index = tile-1;
         }
 
         else if ( tile == TILE_GLYPH_RED_DOOR ||
@@ -369,7 +369,7 @@ World_t* convert_mats_worlds( const char* filename )
                   tile == TILE_GLYPH_WHITE_DOOR )
         {
           new_world->background[index].tile        = TILE_LVL1_FLOOR;
-          new_world->background[index].glyph_index = TILE_GLYPH_FLOOR;
+          new_world->background[index].glyph_index = tile-1;
           new_world->midground[index].tile = GlyphTileConverter( tile, 0 );
           new_world->midground[index].glyph_index = tile;
           dVec2_t pos = { .x = i, .y = j };
@@ -379,8 +379,10 @@ World_t* convert_mats_worlds( const char* filename )
         else
         {
           new_world->background[index].tile = TILE_LVL1_FLOOR;
-          new_world->background[index].glyph_index = TILE_GLYPH_FLOOR;
-          new_world->room_ids[index] = tile;
+          new_world->background[index].glyph_index = TILE_GLYPH_FLOOR-1;
+          new_world->midground[index].tile = TILE_EMPTY;
+          new_world->midground[index].glyph_index = TILE_EMPTY;
+          new_world->room_ids[index] = tile-1;
         }
       }
 
@@ -392,7 +394,7 @@ World_t* convert_mats_worlds( const char* filename )
   {
     dVec2_t* pos = d_ArrayGet( door_positions, i );
     int door_index = pos->y * world_width + pos->x;
-    int glyph_index = new_world->midground[door_index].glyph_index;
+    int tile_index = new_world->midground[door_index].glyph_index;
     
     dVec2_t n = { .x = pos->x ,    .y = pos->y + 1 };
     dVec2_t e = { .x = pos->x + 1, .y = pos->y };
@@ -407,16 +409,52 @@ World_t* convert_mats_worlds( const char* filename )
     if ( new_world->background[index_n].tile == TILE_LVL1_WALL &&
          new_world->background[index_s].tile == TILE_LVL1_WALL )
     {
-      new_world->midground[door_index].tile = GlyphTileConverter( glyph_index, 0 );
+      new_world->midground[door_index].tile = GlyphTileConverter( tile_index, 0 );
     }
     
     else if ( new_world->background[index_e].tile == TILE_LVL1_WALL &&
               new_world->background[index_w].tile == TILE_LVL1_WALL )
     {
-      new_world->midground[door_index].tile = GlyphTileConverter( glyph_index, 1 );
+      new_world->midground[door_index].tile = GlyphTileConverter( tile_index, 1 );
     }
+    
+    new_world->midground[door_index].glyph_index = tile_index-1;
   }
 
   return new_world;
+}
+
+void e_SaveWorld( World_t* world, const char* filename )
+{
+  if ( world == NULL ) return;
+  FILE* file;
+
+  file = fopen( filename, "w" );
+  dString_t* size_string = d_StringInit();
+  d_StringFormat( size_string, "// %d %d", world->width, world->height );
+  fwrite( d_StringPeek( size_string ), sizeof(char), size_string->len, file );
+
+  dString_t* line_string = d_StringInit();
+  for ( int j = 0; j < world->height; j++ )
+  {
+    for ( int i = 0; i < world->width; i++ )
+    {
+      int index = j * world->width + i;
+      char current_char;
+      if ( world->room_ids[index] != TILE_EMPTY )
+      {
+        current_char = world->room_ids[index];
+        d_StringAppendChar( line_string, current_char );
+        continue;
+      }
+      
+      else if ( world->midground[index].glyph_index != TILE_EMPTY )
+      {
+
+      }
+    }
+  }
+
+  fclose(file);
 }
 

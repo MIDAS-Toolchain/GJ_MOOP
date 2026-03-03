@@ -33,6 +33,7 @@ void e_LoadColorPalette( aColor_t palette[MAX_COLOR_GROUPS][MAX_COLOR_PALETTE],
 
 uint16_t GlyphTileConverter( int glyph_index );
 World_t* convert_mats_worlds( const char* filename );
+void e_SaveWorld( World_t* world, const char* filename );
 
 #endif
 

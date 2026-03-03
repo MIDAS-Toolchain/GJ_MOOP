@@ -110,6 +110,11 @@ static void e_WorldEditorLogic( float dt )
   if ( app.keyboard[A_ESCAPE] == 1 )
   {
     app.keyboard[A_ESCAPE] = 0;
+    if ( map )
+    {
+      e_SaveWorld( map, "test.map");
+    }
+
     EditorInit();
   }
   
