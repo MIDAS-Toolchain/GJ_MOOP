@@ -15,6 +15,10 @@ static NPC_t*   npc_list  = NULL;
 static int*     npc_count = NULL;
 static TweenManager_t tweens;
 
+/* Stored enemy list for mid-turn spawning (shaman totem) */
+static Enemy_t* stored_list  = NULL;
+static int*     stored_count = NULL;
+
 /* Turn state machine */
 #define TURN_IDLE     0
 #define TURN_MOVING   1   /* one enemy moving at a time */
@@ -42,6 +46,43 @@ void EnemiesSetNPCs( void* npcs, int* num )
 {
   npc_list  = (NPC_t*)npcs;
   npc_count = num;
+}
+
+void EnemiesSetList( Enemy_t* list, int* count )
+{
+  stored_list  = list;
+  stored_count = count;
+}
+
+int EnemyShamanSpawnTotem( int row, int col, int (*walkable)(int,int),
+                           Enemy_t* all, int count )
+{
+  if ( !stored_list || !stored_count || !world ) return -1;
+
+  int ti = EnemyTypeByKey( "war_totem" );
+  if ( ti < 0 ) return -1;
+
+  /* Find an adjacent walkable, unoccupied tile for the totem */
+  static const int dx[] = { 0, 1, -1, 0, 0 };
+  static const int dy[] = { 0, 0, 0, 1, -1 };
+  for ( int d = 0; d < 5; d++ )
+  {
+    int nr = row + dx[d];
+    int nc = col + dy[d];
+    if ( d > 0 && !walkable( nr, nc ) ) continue;
+    if ( EnemyAt( all, count, nr, nc ) ) continue;
+    if ( EnemyBlockedByNPC( nr, nc ) ) continue;
+
+    Enemy_t* totem = EnemySpawn( stored_list, stored_count, ti,
+                                  nr, nc, world->tile_w, world->tile_h );
+    if ( totem )
+    {
+      CombatVFXSpawnText( totem->world_x, totem->world_y,
+                          "Totem!", (aColor_t){ 160, 120, 60, 255 } );
+      return (int)( totem - stored_list );
+    }
+  }
+  return -1;
 }
 
 int EnemyBlockedByNPC( int row, int col )
@@ -74,8 +115,9 @@ static void start_next_attack( void );
 
 static void tick_and_move( int i )
 {
-  /* Stunned enemies skip their turn */
+  /* Stunned or rooted enemies can't move */
   if ( turn_list[i].stun_turns > 0 ) return;
+  if ( turn_list[i].root_turns > 0 ) return;
 
   EnemyType_t* t = &g_enemy_types[turn_list[i].type_idx];
 
@@ -83,12 +125,18 @@ static void tick_and_move( int i )
   int old_col = turn_list[i].col;
   int old_ai  = turn_list[i].ai_state;
 
+  /* Static enemies (totems) never move */
+  if ( strcmp( t->ai, "static" ) == 0 ) return;
+
   if ( strcmp( t->ai, "basic" ) == 0 )
     EnemyBasicAITick( &turn_list[i], turn_pr, turn_pc,
                   turn_walkable, turn_list, turn_count );
   else if ( strcmp( t->ai, "ranged_telegraph" ) == 0 )
     EnemySkeletonTick( &turn_list[i], turn_pr, turn_pc,
                        turn_walkable, turn_list, turn_count );
+  else if ( strcmp( t->ai, "shaman" ) == 0 )
+    EnemyShamanTick( &turn_list[i], turn_pr, turn_pc,
+                     turn_walkable, turn_list, turn_count );
 
   /* Skeleton just fired - spawn arrow projectile */
   if ( old_ai == 1 && turn_list[i].ai_state == 3 )
@@ -130,7 +178,7 @@ static void tick_and_move( int i )
       float wy = turn_list[i].col * world->tile_h + world->tile_h / 2.0f;
 
       turn_list[i].hp -= trap->damage;
-      turn_list[i].stun_turns = trap->stun_turns;
+      turn_list[i].root_turns = trap->stun_turns;
 
       CombatVFXSpawnNumber( wx, wy, trap->damage,
                             (aColor_t){ 0xde, 0x9e, 0x41, 255 } );
@@ -211,6 +259,7 @@ static void start_next_attack( void )
          && turn_list[move_idx].stun_turns <= 0 )
     {
       EnemyType_t* at = &g_enemy_types[turn_list[move_idx].type_idx];
+      if ( strcmp( at->ai, "static" ) == 0 ) { move_idx++; continue; }
       if ( at->range > 0 ) { move_idx++; continue; } /* ranged - no melee */
       int dr = abs( turn_pr - turn_list[move_idx].row );
       int dc = abs( turn_pc - turn_list[move_idx].col );
@@ -225,11 +274,13 @@ static void start_next_attack( void )
     move_idx++;
   }
 
-  /* No more attackers - decrement stun at end of turn */
+  /* No more attackers - decrement stun/root at end of turn */
   for ( int i = 0; i < turn_count; i++ )
   {
     if ( turn_list[i].alive && turn_list[i].stun_turns > 0 )
       turn_list[i].stun_turns--;
+    if ( turn_list[i].alive && turn_list[i].root_turns > 0 )
+      turn_list[i].root_turns--;
   }
   turn_state = TURN_IDLE;
 }
@@ -297,6 +348,11 @@ void EnemiesStartTurn( Enemy_t* list, int count,
     {
       CombatVFXSpawnText( list[i].world_x, list[i].world_y,
                           "Stunned!", (aColor_t){ 0x64, 0xb4, 0xff, 255 } );
+    }
+    if ( list[i].alive && list[i].root_turns > 0 )
+    {
+      CombatVFXSpawnText( list[i].world_x, list[i].world_y,
+                          "Trapped!", (aColor_t){ 0xde, 0x9e, 0x41, 255 } );
     }
   }
 

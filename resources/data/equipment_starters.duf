@@ -14,6 +14,7 @@
     class: "mercenary"
     description: "A dull blade. Better than fists."
     color: [180, 80, 80, 255]
+    image_path: "resources/assets/equipment/rusty_sword.png"
 }
 @tiny_dagger {
     name: "Tiny Dagger"
@@ -26,6 +27,7 @@
     class: "rogue"
     description: "Comically small. Still sharp enough."
     color: [80, 180, 80, 255]
+    image_path: "resources/assets/equipment/tiny_dagger.png"
 }
 @gnarled_staff {
     name: "Gnarled Staff"
@@ -38,6 +40,7 @@
     class: "mage"
     description: "Channeling focus. Barely held together."
     color: [80, 80, 180, 255]
+    image_path: "resources/assets/equipment/gnarled_staff.png"
 }
 
 # ==============================
@@ -54,6 +57,7 @@
     class: "mercenary"
     description: "Tough hide. Stops a scratch."
     color: [180, 80, 80, 255]
+    image_path: "resources/assets/equipment/leather_vest.png"
 }
 @cloak {
     name: "Cloak"
@@ -66,6 +70,8 @@
     class: "rogue"
     description: "Light and quiet."
     color: [80, 180, 80, 255]
+    image_path: "resources/assets/equipment/cloak.png"
+
 }
 @robes {
     name: "Tattered Robes"
@@ -78,6 +84,7 @@
     class: "mage"
     description: "Thin cloth. Barely counts as protection."
     color: [80, 80, 180, 255]
+    image_path: "resources/assets/equipment/tattered_robes.png"
 }
 
 # ==============================
@@ -95,6 +102,7 @@
     class: "mercenary"
     description: "Enemies that hit you take 1 damage back."
     color: [180, 80, 80, 255]
+    image_path: "resources/assets/equipment/iron_ring.png"
 }
 @shadow_charm {
     name: "Shadow Charm"

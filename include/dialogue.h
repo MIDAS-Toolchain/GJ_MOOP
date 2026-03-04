@@ -51,6 +51,7 @@ typedef struct
   dString_t* take_item;
   dString_t* set_lore;
   int  give_gold;
+  dString_t* action;
 } DialogueEntry_t;
 
 /* NPC type - loaded from one DUF file */
@@ -65,6 +66,7 @@ typedef struct
   dString_t*  idle_bark;
   dString_t*  idle_log;         /* console message when idle bark fires */
   int         idle_cooldown;    /* turns between idle barks (0 = disabled) */
+  dString_t*  action_label;     /* tile action label: "Talk", "Walk", "Open"... */
   int         combat;           /* 1 = fights enemies in room */
   int         damage;           /* melee damage dealt to enemies */
   aImage_t*   image;
@@ -98,6 +100,9 @@ void DialogueStart( int npc_type_idx );
 void DialogueSelectOption( int index );
 void DialogueEnd( void );
 int  DialogueActive( void );
+
+/* Override next speech node text (used by actions like bank_check) */
+void DialogueOverrideText( const char* text );
 
 /* Current dialogue state (for UI) */
 const char* DialogueGetNPCName( void );

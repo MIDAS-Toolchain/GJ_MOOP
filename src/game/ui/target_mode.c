@@ -15,7 +15,7 @@ extern Player_t player;
 /* Targeting styles */
 #define TGT_CARDINAL  0   /* shoot/poison - cursor on cardinal lines */
 #define TGT_FREE      1   /* magic_bolt/freeze/aoe/swap - free move in range */
-#define TGT_ADJACENT  2   /* trap_stun - adjacent tiles only */
+#define TGT_ADJACENT  2   /* trap_root - adjacent tiles only */
 #define TGT_SELF      3   /* smoke - instant at player's feet */
 
 #define RANGE_COLOR     (aColor_t){ 0xde, 0x9e, 0x41, 40 }
@@ -133,9 +133,10 @@ static int valid_tile( int r, int c )
   switch ( tgt_style )
   {
     case TGT_CARDINAL:
-      /* Must be on a cardinal line (same row or same col) and within range */
-      if ( r != player_row && c != player_col ) return 0;
-      if ( dist > tgt_range || dist == 0 ) return 0;
+      /* Must be on a cardinal or diagonal line and within Chebyshev range */
+      if ( r != player_row && c != player_col && dr != dc ) return 0;
+      { int cheb = ( dr > dc ) ? dr : dc;
+        if ( cheb > tgt_range || cheb == 0 ) return 0; }
       if ( tgt_los && !los_clear( player_row, player_col, r, c ) ) return 0;
       return 1;
 
@@ -221,13 +222,13 @@ int TargetModeLogic( Enemy_t* enemies, int num_enemies )
     }
   }
 
-  /* Keyboard movement */
+  /* Keyboard movement (check vertical + horizontal separately for diagonals) */
   int dr = 0, dc = 0;
   if ( app.keyboard[SDL_SCANCODE_UP] == 1 || app.keyboard[SDL_SCANCODE_W] == 1 )
   { app.keyboard[SDL_SCANCODE_UP] = 0; app.keyboard[SDL_SCANCODE_W] = 0; dc = -1; }
   else if ( app.keyboard[SDL_SCANCODE_DOWN] == 1 || app.keyboard[SDL_SCANCODE_S] == 1 )
   { app.keyboard[SDL_SCANCODE_DOWN] = 0; app.keyboard[SDL_SCANCODE_S] = 0; dc = 1; }
-  else if ( app.keyboard[SDL_SCANCODE_LEFT] == 1 || app.keyboard[SDL_SCANCODE_A] == 1 )
+  if ( app.keyboard[SDL_SCANCODE_LEFT] == 1 || app.keyboard[SDL_SCANCODE_A] == 1 )
   { app.keyboard[SDL_SCANCODE_LEFT] = 0; app.keyboard[SDL_SCANCODE_A] = 0; dr = -1; }
   else if ( app.keyboard[SDL_SCANCODE_RIGHT] == 1 || app.keyboard[SDL_SCANCODE_D] == 1 )
   { app.keyboard[SDL_SCANCODE_RIGHT] = 0; app.keyboard[SDL_SCANCODE_D] = 0; dr = 1; }
@@ -340,9 +341,11 @@ void TargetModeDraw( aRectf_t vp_rect, GameCamera_t* cam, World_t* w )
   /* Draw valid range tiles */
   if ( tgt_style == TGT_CARDINAL )
   {
-    /* Highlight the 4 cardinal rays */
-    static const int dirs[4][2] = { {1,0}, {-1,0}, {0,1}, {0,-1} };
-    for ( int d = 0; d < 4; d++ )
+    /* Highlight the 4 cardinal + 4 diagonal rays */
+    static const int dirs[8][2] = {
+      {1,0}, {-1,0}, {0,1}, {0,-1}, {1,1}, {1,-1}, {-1,1}, {-1,-1}
+    };
+    for ( int d = 0; d < 8; d++ )
     {
       for ( int step = 1; step <= tgt_range; step++ )
       {

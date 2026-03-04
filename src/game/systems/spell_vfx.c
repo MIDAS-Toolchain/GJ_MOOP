@@ -12,8 +12,10 @@
 
 #define MAX_PROJS      4
 #define MAX_ZAPS       2
+#define MAX_HEALS      2
 #define MAX_FLASHES   16
 #define ZAP_SEGMENTS   6
+#define HEAL_SEGMENTS  8
 
 typedef struct
 {
@@ -40,6 +42,16 @@ typedef struct
 
 typedef struct
 {
+  float start_wx, start_wy;
+  float end_wx, end_wy;
+  float progress;           /* 0 → 1 : beam extends to target */
+  float alpha;              /* 255 → 0 : fade after arrival */
+  int   seed;
+  int   active;
+} HealBeam_t;
+
+typedef struct
+{
   float    wx, wy;
   float    alpha;
   aColor_t color;
@@ -51,6 +63,7 @@ static TweenManager_t spell_tweens;
 
 static SpellProj_t  projs[MAX_PROJS];
 static SpellZap_t   zaps[MAX_ZAPS];
+static HealBeam_t   heals[MAX_HEALS];
 static TileFlash_t  flashes[MAX_FLASHES];
 
 static float    screen_flash_alpha = 0;
@@ -74,6 +87,13 @@ static int find_zap( void )
 {
   for ( int i = 0; i < MAX_ZAPS; i++ )
     if ( !zaps[i].active ) return i;
+  return -1;
+}
+
+static int find_heal( void )
+{
+  for ( int i = 0; i < MAX_HEALS; i++ )
+    if ( !heals[i].active ) return i;
   return -1;
 }
 
@@ -160,6 +180,15 @@ static void spark_arrive_cb( void* data )
   TweenFloat( &spell_tweens, &z->alpha, 0.0f, 0.12f, TWEEN_EASE_OUT_QUAD );
 }
 
+/* Heal beam reached target → green tile flash, begin fade */
+static void heal_arrive_cb( void* data )
+{
+  HealBeam_t* h = (HealBeam_t*)data;
+  spawn_flash( h->end_wx, h->end_wy,
+               (aColor_t){ 0x75, 0xa7, 0x43, 255 }, 100.0f, 0.25f );
+  TweenFloat( &spell_tweens, &h->alpha, 0.0f, 0.15f, TWEEN_EASE_OUT_QUAD );
+}
+
 /* Frost: diamond arrived → tile flash + blue screen tint */
 static void frost_arrive_cb( void* data )
 {
@@ -215,6 +244,7 @@ void SpellVFXInit( World_t* w )
   InitTweenManager( &spell_tweens );
   memset( projs, 0, sizeof( projs ) );
   memset( zaps, 0, sizeof( zaps ) );
+  memset( heals, 0, sizeof( heals ) );
   memset( flashes, 0, sizeof( flashes ) );
   screen_flash_alpha = 0;
   shake_x = 0;
@@ -232,6 +262,13 @@ void SpellVFXUpdate( float dt )
       zaps[i].active = 0;
   }
 
+  /* Deactivate spent heal beams */
+  for ( int i = 0; i < MAX_HEALS; i++ )
+  {
+    if ( heals[i].active && heals[i].progress >= 1.0f && heals[i].alpha < 1.0f )
+      heals[i].active = 0;
+  }
+
   /* Deactivate spent flashes */
   for ( int i = 0; i < MAX_FLASHES; i++ )
   {
@@ -246,9 +283,11 @@ void SpellVFXUpdate( float dt )
       projs[i].active = 0;
   }
 
-  /* Increment zap seeds for frame-varying jitter */
+  /* Increment seeds for frame-varying jitter */
   for ( int i = 0; i < MAX_ZAPS; i++ )
     if ( zaps[i].active ) zaps[i].seed++;
+  for ( int i = 0; i < MAX_HEALS; i++ )
+    if ( heals[i].active ) heals[i].seed++;
 }
 
 /* ---- Spark (lightning zap) ---- */
@@ -271,6 +310,27 @@ void SpellVFXSpark( float px, float py, float tx, float ty )
   /* Bolt extends over 0.12s, callback triggers impact */
   TweenFloatWithCallback( &spell_tweens, &z->progress, 1.0f, 0.12f,
                            TWEEN_LINEAR, spark_arrive_cb, z );
+}
+
+/* ---- Heal beam (wavy green line) ---- */
+
+void SpellVFXHeal( float px, float py, float tx, float ty )
+{
+  int s = find_heal();
+  if ( s < 0 ) return;
+
+  HealBeam_t* h = &heals[s];
+  h->start_wx = px;
+  h->start_wy = py;
+  h->end_wx   = tx;
+  h->end_wy   = ty;
+  h->progress = 0.0f;
+  h->alpha    = 255.0f;
+  h->seed     = rand();
+  h->active   = 1;
+
+  TweenFloatWithCallback( &spell_tweens, &h->progress, 1.0f, 0.18f,
+                           TWEEN_LINEAR, heal_arrive_cb, h );
 }
 
 /* ---- Frost (diamond projectile) ---- */
@@ -318,6 +378,51 @@ void SpellVFXFireball( float px, float py, int tgt_r, int tgt_c, int radius )
 
   TweenFloatWithCallback( &spell_tweens, &p->progress, 1.0f, 0.25f,
                            TWEEN_EASE_IN_QUAD, fireball_arrive_cb, p );
+}
+
+/* ---- Sweep (cleave ring around player) ---- */
+
+void SpellVFXSweep( int player_row, int player_col, aColor_t color )
+{
+  int tw = world->tile_w;
+  int th = world->tile_h;
+  static const int dirs[8][2] = {
+    {1,0}, {-1,0}, {0,1}, {0,-1}, {1,1}, {1,-1}, {-1,1}, {-1,-1}
+  };
+
+  for ( int d = 0; d < 8; d++ )
+  {
+    int r = player_row + dirs[d][0];
+    int c = player_col + dirs[d][1];
+    float fx = r * tw + tw / 2.0f;
+    float fy = c * th + th / 2.0f;
+    spawn_flash( fx, fy, color, 140.0f, 0.25f );
+  }
+
+  trigger_shake( 2.0f, 1.5f, 0.03f, 0.08f );
+}
+
+/* ---- Thrust (line of tile flashes in a direction) ---- */
+
+void SpellVFXThrust( int player_row, int player_col, int dr, int dc,
+                     int range, aColor_t color )
+{
+  int tw = world->tile_w;
+  int th = world->tile_h;
+
+  for ( int step = 1; step <= range; step++ )
+  {
+    int r = player_row + dr * step;
+    int c = player_col + dc * step;
+    float fx = r * tw + tw / 2.0f;
+    float fy = c * th + th / 2.0f;
+    /* Tiles further out are slightly dimmer */
+    float a = 160.0f - step * 20.0f;
+    if ( a < 80.0f ) a = 80.0f;
+    spawn_flash( fx, fy, color, a, 0.2f );
+  }
+
+  trigger_shake( 1.5f * (float)abs(dr), 1.5f * (float)abs(dc), 0.03f, 0.08f );
 }
 
 /* ---- Swap (dual tile flash) ---- */
@@ -416,7 +521,70 @@ void SpellVFXDraw( aRectf_t vp_rect, GameCamera_t* cam )
                   (int)g_pts_x[j + 1], (int)g_pts_y[j + 1], glow_color );
   }
 
-  /* 3. Projectiles (frost diamond, fireball) */
+  /* 3. Heal beams (wavy green line) */
+  for ( int hi = 0; hi < MAX_HEALS; hi++ )
+  {
+    if ( !heals[hi].active ) continue;
+    HealBeam_t* h = &heals[hi];
+
+    float cur_ex = h->start_wx + ( h->end_wx - h->start_wx ) * h->progress;
+    float cur_ey = h->start_wy + ( h->end_wy - h->start_wy ) * h->progress;
+
+    float s_sx, s_sy, s_ex, s_ey;
+    GV_WorldToScreen( vp_rect, cam, h->start_wx, h->start_wy, &s_sx, &s_sy );
+    GV_WorldToScreen( vp_rect, cam, cur_ex, cur_ey, &s_ex, &s_ey );
+
+    float dx = s_ex - s_sx;
+    float dy = s_ey - s_sy;
+    float len = sqrtf( dx * dx + dy * dy );
+    if ( len < 1.0f ) continue;
+
+    float px = -dy / len;
+    float py =  dx / len;
+
+    /* Sine-wave beam points */
+    float pts_x[HEAL_SEGMENTS + 1];
+    float pts_y[HEAL_SEGMENTS + 1];
+    pts_x[0] = s_sx;  pts_y[0] = s_sy;
+    pts_x[HEAL_SEGMENTS] = s_ex;  pts_y[HEAL_SEGMENTS] = s_ey;
+
+    float phase = h->seed * 0.4f;
+    for ( int j = 1; j < HEAL_SEGMENTS; j++ )
+    {
+      float t = (float)j / HEAL_SEGMENTS;
+      float wave = sinf( t * 3.14159f * 3.0f + phase ) * 3.0f;
+      pts_x[j] = s_sx + dx * t + px * wave;
+      pts_y[j] = s_sy + dy * t + py * wave;
+    }
+
+    int alpha = (int)h->alpha;
+
+    /* Main beam */
+    aColor_t beam = { 0x75, 0xa7, 0x43, alpha };
+    for ( int j = 0; j < HEAL_SEGMENTS; j++ )
+      a_DrawLine( (int)pts_x[j], (int)pts_y[j],
+                  (int)pts_x[j + 1], (int)pts_y[j + 1], beam );
+
+    /* Glow pass - wider wave, half alpha */
+    aColor_t glow = { 0xa0, 0xd0, 0x70, alpha / 2 };
+    float g_pts_x[HEAL_SEGMENTS + 1];
+    float g_pts_y[HEAL_SEGMENTS + 1];
+    g_pts_x[0] = s_sx;  g_pts_y[0] = s_sy;
+    g_pts_x[HEAL_SEGMENTS] = s_ex;  g_pts_y[HEAL_SEGMENTS] = s_ey;
+    float gphase = phase + 1.5f;
+    for ( int j = 1; j < HEAL_SEGMENTS; j++ )
+    {
+      float t = (float)j / HEAL_SEGMENTS;
+      float wave = sinf( t * 3.14159f * 3.0f + gphase ) * 4.5f;
+      g_pts_x[j] = s_sx + dx * t + px * wave;
+      g_pts_y[j] = s_sy + dy * t + py * wave;
+    }
+    for ( int j = 0; j < HEAL_SEGMENTS; j++ )
+      a_DrawLine( (int)g_pts_x[j], (int)g_pts_y[j],
+                  (int)g_pts_x[j + 1], (int)g_pts_y[j + 1], glow );
+  }
+
+  /* 4. Projectiles (frost diamond, fireball) */
   for ( int i = 0; i < MAX_PROJS; i++ )
   {
     if ( !projs[i].active ) continue;
@@ -478,6 +646,8 @@ int SpellVFXActive( void )
     if ( projs[i].active ) return 1;
   for ( int i = 0; i < MAX_ZAPS; i++ )
     if ( zaps[i].active ) return 1;
+  for ( int i = 0; i < MAX_HEALS; i++ )
+    if ( heals[i].active ) return 1;
   for ( int i = 0; i < MAX_FLASHES; i++ )
     if ( flashes[i].active ) return 1;
   if ( screen_flash_alpha > 1.0f ) return 1;

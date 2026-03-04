@@ -459,8 +459,15 @@ int InventoryUILogic( int mouse_moved )
         {
           ConsumableInfo_t* ci = &g_consumables[slot->index];
 
+          /* Quest items with no action — just look */
+          if ( strcmp( ci->type, "quest" ) == 0
+               && strcmp( ci->effect, "none" ) == 0
+               && ci->action[0] == '\0' )
+          {
+            GameEvent( EVT_LOOK_CONSUMABLE, slot->index );
+          }
           /* Gadgets/scrolls/targeted food need targeting */
-          if ( strcmp( ci->type, "gadget" ) == 0
+          else if ( strcmp( ci->type, "gadget" ) == 0
                || strcmp( ci->type, "scroll" ) == 0
                || ( strcmp( ci->type, "food" ) == 0 && ci->range > 0 ) )
           {
@@ -816,7 +823,7 @@ static void DrawInventoryGrid( void )
         float isz = cell * 0.6f;
         float ix = cx + ( cell - 1 - isz ) / 2.0f;
         float iy = cy + ( cell - 1 - isz ) / 2.0f;
-        DrawImageOrGlyph( NULL, e->glyph, e->color, ix, iy, isz );
+        DrawImageOrGlyph( e->image, e->glyph, e->color, ix, iy, isz );
       }
       else if ( slot->type == INV_MAP && slot->index < g_num_maps )
       {
@@ -864,7 +871,7 @@ static void DrawEquipmentRows( void )
 
       float ix = row_rect.x + 40;
       float iy = row_y + ( EQ_ROW_H - EQ_ICON_SIZE ) / 2.0f;
-      DrawImageOrGlyph( NULL, e->glyph, e->color, ix, iy, EQ_ICON_SIZE );
+      DrawImageOrGlyph( e->image, e->glyph, e->color, ix, iy, EQ_ICON_SIZE );
 
       ts.fg = (aColor_t){ 0xeb, 0xed, 0xe9, 255 };
       a_DrawText( e->name, (int)( ix + EQ_ICON_SIZE + 6 ), (int)( row_y + 8 ), ts );
@@ -1225,6 +1232,11 @@ void InventoryUIDraw( void )
       const char* inv_labels[INV_ACTION_COUNT];
       if ( slot->type == INV_EQUIPMENT )
         inv_labels[0] = "Equip";
+      else if ( slot->type == INV_CONSUMABLE
+                && strcmp( g_consumables[slot->index].type, "quest" ) == 0
+                && strcmp( g_consumables[slot->index].effect, "none" ) == 0
+                && g_consumables[slot->index].action[0] == '\0' )
+        inv_labels[0] = "Inspect";
       else if ( slot->type == INV_CONSUMABLE && g_consumables[slot->index].action[0] != '\0' )
         inv_labels[0] = g_consumables[slot->index].action;
       else

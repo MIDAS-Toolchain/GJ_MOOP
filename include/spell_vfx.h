@@ -15,6 +15,9 @@ void SpellVFXSpark( float px, float py, float tx, float ty );
 void SpellVFXFrost( float px, float py, float tx, float ty );
 void SpellVFXFireball( float px, float py, int tgt_r, int tgt_c, int radius );
 void SpellVFXSwap( float p1x, float p1y, float p2x, float p2y );
+void SpellVFXHeal( float px, float py, float tx, float ty );
+void SpellVFXSweep( int player_row, int player_col, aColor_t color );
+void SpellVFXThrust( int player_row, int player_col, int dr, int dc, int range, aColor_t color );
 
 /* Camera shake offsets - add to draw_cam alongside CombatShakeOX/OY */
 float SpellVFXShakeOX( void );

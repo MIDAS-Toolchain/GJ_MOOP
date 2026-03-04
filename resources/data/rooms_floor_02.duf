@@ -54,3 +54,23 @@
   room_id: "-"
   name: ""
 }
+@goblin_barracks {
+  room_id: "\\"
+  name: "Goblin Barracks"
+}
+@goblin_tunnel {
+  room_id: "|"
+  name: "Goblin Tunnel"
+}
+@goblin_den {
+  room_id: ";"
+  name: "Goblin Den"
+}
+@goblin_warren {
+  room_id: ":"
+  name: "Goblin Warren"
+}
+@goblin_boss {
+  room_id: "q"
+  name: "Goblin Boss"
+}

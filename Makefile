@@ -95,7 +95,8 @@ SYS_SRCS = tween.c \
 					 poison_pool.c \
 					 placed_traps.c \
 					 floor_cutscene.c \
-					 dev_mode.c
+					 dev_mode.c \
+					 bank.c
 
 WORLD_SRCS = world.c \
 						 game_viewport.c \
@@ -105,6 +106,7 @@ ENEMIES_SRCS = enemies.c \
 							 enemy_utils.c \
 							 enemy_rat.c \
 							 enemy_skeleton.c \
+							 enemy_shaman.c \
 							 rendering.c
 
 NPC_SRCS = npc.c \

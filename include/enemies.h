@@ -3,8 +3,8 @@
 
 #include <Archimedes.h>
 
-#define MAX_ENEMY_TYPES  16
-#define MAX_ENEMIES      32
+#define MAX_ENEMY_TYPES  32
+#define MAX_ENEMIES      64
 
 typedef struct
 {
@@ -48,6 +48,7 @@ typedef struct Enemy_t
   int   burn_ticks;
   int   burn_dmg;
   int   stun_turns;
+  int   root_turns;
 } Enemy_t;
 
 extern EnemyType_t g_enemy_types[MAX_ENEMY_TYPES];
@@ -70,12 +71,21 @@ void EnemySkeletonTick( Enemy_t* e, int player_row, int player_col,
                         int (*walkable)(int,int),
                         Enemy_t* all, int count );
 
+void EnemyShamanTick( Enemy_t* e, int player_row, int player_col,
+                      int (*walkable)(int,int),
+                      Enemy_t* all, int count );
+
 /* enemies.c - enemy turn management (owns its own tween manager) */
 #include "world.h"
 
 void EnemiesSetWorld( World_t* w );
 void EnemiesSetNPCs( void* npcs, int* num_npcs );
+void EnemiesSetList( Enemy_t* list, int* count );
 int  EnemyBlockedByNPC( int row, int col );
+
+/* Shaman totem spawn helper (uses stored list/count) */
+int  EnemyShamanSpawnTotem( int row, int col, int (*walkable)(int,int),
+                            Enemy_t* all, int count );
 void EnemiesUpdate( float dt );
 int  EnemiesTurning( void );
 

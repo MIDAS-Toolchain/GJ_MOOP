@@ -73,6 +73,25 @@ static int pending_class = -1;   /* set when embark triggers outro */
 static void cs_RebuildFiltered( void )
 {
   num_filtered = ItemsBuildFiltered( last_class_idx, filtered, MAX_CONSUMABLES + MAX_DOORS, 0 );
+
+  /* Keep first 3 consumables + the last one (rare) for the preview */
+  int cons_total = 0;
+  for ( int i = 0; i < num_filtered; i++ )
+    if ( filtered[i].type == FILTERED_CONSUMABLE ) cons_total++;
+
+  int cons_seen = 0;
+  int write = 0;
+  for ( int i = 0; i < num_filtered; i++ )
+  {
+    if ( filtered[i].type == FILTERED_CONSUMABLE )
+    {
+      cons_seen++;
+      if ( cons_seen > 3 && cons_seen < cons_total ) continue;
+    }
+    filtered[write++] = filtered[i];
+  }
+  num_filtered = write;
+
   selected_item = 0;
   browsing_items = 1;
 }
@@ -253,7 +272,7 @@ static void cs_Logic( float dt )
       }
     }
 
-    /* Check doors/openables panel */
+    /* Check trinkets panel */
     {
       aContainerWidget_t* dpanel = a_GetContainerFromWidget( "doors_panel" );
       aRectf_t dr = dpanel->rect;
@@ -265,7 +284,7 @@ static void cs_Logic( float dt )
         int visual_row = 0;
         for ( int fi = 0; fi < num_filtered; fi++ )
         {
-          if ( filtered[fi].type != FILTERED_OPENABLE ) continue;
+          if ( filtered[fi].type != FILTERED_EQUIPMENT ) continue;
           float row_y = dy_start + visual_row * ( LIST_ITEM_SIZE + LIST_ROW_SPACING );
           if ( my >= (int)( row_y - LIST_HIT_MARGIN ) && my <= (int)( row_y + LIST_ITEM_SIZE + LIST_HIT_MARGIN ) )
           {
@@ -363,7 +382,8 @@ static void cs_Draw( float dt )
   {
     int nc = 0, no = 0;
     for ( int i = 0; i < num_filtered; i++ )
-      if ( filtered[i].type == FILTERED_CONSUMABLE ) nc++; else no++;
+      if ( filtered[i].type == FILTERED_CONSUMABLE ) nc++;
+      else if ( filtered[i].type == FILTERED_EQUIPMENT ) no++;
 
     aColor_t panel_bg = (aColor_t){ 0x09, 0x0a, 0x14, (int)( 200 * panel_a ) };
     aColor_t panel_fg = (aColor_t){ 0xc7, 0xcf, 0xcc, (int)( 255 * panel_a ) };
@@ -596,7 +616,7 @@ static void cs_Draw( float dt )
         }
       }
 
-      /* Draw openables for the hovered class (right panel) */
+      /* Draw trinkets for the hovered class (right panel) */
       {
         aContainerWidget_t* dpanel = a_GetContainerFromWidget( "doors_panel" );
         float title_h = SECTION_TITLE_H + LIST_TITLE_GAP;
@@ -608,16 +628,16 @@ static void cs_Draw( float dt )
         dt.fg = (aColor_t){ 0xc7, 0xcf, 0xcc, (int)( 255 * panel_a ) };
         dt.bg = (aColor_t){ 0, 0, 0, 0 };
         dt.scale = 1.2f;
-        a_DrawText( "Can Open:", (int)( dr.x + LIST_PAD_X ), (int)( dr.y + 4.0f ), dt );
+        a_DrawText( "Can Wear:", (int)( dr.x + LIST_PAD_X ), (int)( dr.y + 4.0f ), dt );
         float dx = dr.x + LIST_PAD_X;
         float dy = dr.y + title_h + LIST_PAD_Y;
 
         for ( int fi = 0; fi < num_filtered; fi++ )
         {
-          if ( filtered[fi].type != FILTERED_OPENABLE ) continue;
+          if ( filtered[fi].type != FILTERED_EQUIPMENT ) continue;
           int oi = filtered[fi].index;
           float row_h = LIST_ITEM_SIZE + LIST_HIT_MARGIN * 2;
-          aColor_t oc = g_openables[oi].color;
+          aColor_t oc = g_equipment[oi].color;
           aColor_t oc_a = { oc.r, oc.g, oc.b, (int)( oc.a * panel_a ) };
 
           /* Highlight selected row */
@@ -629,20 +649,20 @@ static void cs_Draw( float dt )
                         oc_a );
           }
 
-          DrawImageOrGlyph( g_openables[oi].image, g_openables[oi].glyph, oc_a,
+          DrawImageOrGlyph( g_equipment[oi].image, g_equipment[oi].glyph, oc_a,
                                dx, dy, LIST_ITEM_SIZE );
 
           aTextStyle_t ns = a_default_text_style;
           ns.fg = ( fi == selected_item && browsing_items ) ? oc_a : fade_white;
           ns.bg = (aColor_t){ 0, 0, 0, 0 };
           ns.scale = 1.0f;
-          a_DrawText( g_openables[oi].name, (int)( dx + LIST_ITEM_SIZE + LIST_TEXT_GAP ), (int)( dy + LIST_ITEM_SIZE * 0.25f ), ns );
+          a_DrawText( g_equipment[oi].name, (int)( dx + LIST_ITEM_SIZE + LIST_TEXT_GAP ), (int)( dy + LIST_ITEM_SIZE * 0.25f ), ns );
 
           dy += LIST_ITEM_SIZE + LIST_ROW_SPACING;
         }
       }
 
-      /* Detail modal - centered between panels, shows consumable or openable info */
+      /* Detail modal - centered between panels, shows consumable or trinket info */
       if ( browsing_items && num_filtered > 0 && selected_item < num_filtered )
       {
         aContainerWidget_t* cpanel = a_GetContainerFromWidget( "consumables_panel" );
@@ -697,13 +717,13 @@ static void cs_Draw( float dt )
           ts.wrap_width = (int)( MODAL_W - MODAL_PAD_X * 2 );
           a_DrawText( c->description, (int)tx, (int)ty, ts );
         }
-        else /* FILTERED_OPENABLE */
+        else /* FILTERED_EQUIPMENT */
         {
-          OpenableInfo_t* o = &g_openables[sel->index];
-          aColor_t oc_a = { o->color.r, o->color.g, o->color.b, (int)( o->color.a * panel_a ) };
+          EquipmentInfo_t* e = &g_equipment[sel->index];
+          aColor_t ec_a = { e->color.r, e->color.g, e->color.b, (int)( e->color.a * panel_a ) };
 
           a_DrawFilledRect( (aRectf_t){ mx, my, MODAL_W, MODAL_H }, (aColor_t){ 0x09, 0x0a, 0x14, (int)( 255 * panel_a ) } );
-          a_DrawRect( (aRectf_t){ mx, my, MODAL_W, MODAL_H }, oc_a );
+          a_DrawRect( (aRectf_t){ mx, my, MODAL_W, MODAL_H }, ec_a );
 
           float ty = my + MODAL_PAD_Y;
           float tx = mx + MODAL_PAD_X;
@@ -712,16 +732,16 @@ static void cs_Draw( float dt )
           ts.bg = (aColor_t){ 0, 0, 0, 0 };
 
           /* Name */
-          ts.fg = oc_a;
+          ts.fg = ec_a;
           ts.scale = MODAL_NAME_SCALE;
-          a_DrawText( o->name, (int)tx, (int)ty, ts );
+          a_DrawText( e->name, (int)tx, (int)ty, ts );
           ty += MODAL_LINE_LG;
 
-          /* Kind */
+          /* Effect */
           char buf[128];
-          ts.fg = fade_white;
+          ts.fg = (aColor_t){ 0xde, 0x9e, 0x41, (int)( 255 * panel_a ) };
           ts.scale = MODAL_TEXT_SCALE;
-          snprintf( buf, sizeof( buf ), "Type: %s", o->kind );
+          snprintf( buf, sizeof( buf ), "Effect: %s", e->effect );
           a_DrawText( buf, (int)tx, (int)ty, ts );
           ty += MODAL_LINE_MD;
 
@@ -729,7 +749,7 @@ static void cs_Draw( float dt )
           ts.fg = (aColor_t){ 0xa8, 0xb5, 0xb2, (int)( 255 * panel_a ) };
           ts.scale = MODAL_DESC_SCALE;
           ts.wrap_width = (int)( MODAL_W - MODAL_PAD_X * 2 );
-          a_DrawText( o->description, (int)tx, (int)ty, ts );
+          a_DrawText( e->description, (int)tx, (int)ty, ts );
         }
       }
 

@@ -98,7 +98,7 @@
     goto: "hold_space_reply"
 }
 @hold_space_reply {
-    text: "It means I was here. Fully present. Aware of your struggle. Deeply empathetic. From a safe distance."
+    text: "It means I was here. Fully present. Aware of your struggle. Deeply empathetic, from a safe distance."
     options: ["opt_could_have_died", "opt_peace_tribe", "opt_leave"]
 }
 @opt_could_have_died {
@@ -166,7 +166,7 @@
     goto: "supposed_to_reply"
 }
 @supposed_to_reply {
-    text: "The dungeon changed. Or perhaps it was always changing and we only noticed when our people began to split. Some grew angry. Some grew still. Families broke apart. Friends stopped recognizing each other. The elders called it 'The Fracture.' We call it Tuesday."
+    text: "The dungeon changed. Or perhaps it was always changing and we only noticed when our people began to split. Some grew angry. Some grew still. Families broke apart. Friends stopped recognizing each other. Us elders called it 'The Fracture.'"
     options: ["opt_war_split", "opt_the_hum", "opt_leave"]
 }
 @opt_war_split {
@@ -175,7 +175,7 @@
     goto: "war_split_reply"
 }
 @war_split_reply {
-    text: "Two generations ago. Goblin generations are short. The angry ones followed Kragthar's grandfather to the eastern caves. We stayed west. Built a place of quiet. They built a place of noise. We've been shouting across the gap ever since. Well. They shout. We observe the shouting."
+    text: "Two generations ago. Goblin generations are short. The angry ones followed Kragthar's grandfather to the eastern caves. We stayed west. Built a place of quiet. They built a place of noise. We've been shouting across the gap ever since. Well. They shout."
     set_lore: "war_tribe"
     options: ["opt_the_hum", "opt_directions", "opt_leave"]
 }
@@ -189,7 +189,7 @@
     goto: "the_hum_reply"
 }
 @the_hum_reply {
-    text: "It is the voice of the dungeon. Or its heartbeat. We do not know. The elders taught us that if you listen without resisting, it passes through you like wind. If you fight it, it finds something to grab."
+    text: "It is the voice of the dungeon. Or its heartbeat. We do not know. The elders find that if you listen without resisting, it passes through you like wind. If you fight it, it finds something to grab."
     options: ["opt_hum_goblins", "opt_hum_peace", "opt_leave"]
 }
 @opt_hum_goblins {

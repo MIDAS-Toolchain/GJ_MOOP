@@ -99,7 +99,7 @@ void QuestTrackerDraw( aRectf_t vp_rect )
 
     if ( m >= 3 )
     {
-      snprintf( buf, sizeof( buf ), "Mushrooms: %d/3 - Return to Nettle", m );
+      snprintf( buf, sizeof( buf ), "Mushrooms: %d/3 - Deliver mushrooms", m );
       ts.fg = QT_GREEN;
     }
     else
@@ -107,6 +107,19 @@ void QuestTrackerDraw( aRectf_t vp_rect )
       snprintf( buf, sizeof( buf ), "Mushrooms: %d/3", m );
       ts.fg = QT_YELLOW;
     }
+
+    a_DrawText( buf, (int)x, (int)y, ts );
+
+    float tw4, th4;
+    a_CalcTextDimensions( buf, ts.type, &tw4, &th4 );
+    y += th4 * QT_SCALE + QT_PAD_Y;
+  }
+
+  /* Return to Laura */
+  if ( FlagGet( "quest_return_laura" ) && !FlagGet( "warning_delivered" ) )
+  {
+    snprintf( buf, sizeof( buf ), "Return to Laura" );
+    ts.fg = QT_GREEN;
 
     a_DrawText( buf, (int)x, (int)y, ts );
   }

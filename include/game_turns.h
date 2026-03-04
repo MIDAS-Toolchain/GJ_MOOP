@@ -20,6 +20,8 @@ void  GameTurnsSetEnemyDelay( float d );
 
 /* Hint arrow state */
 float GameTurnsHintTimer( void );
+float GameTurnsSkipHintTimer( void );
 void  GameTurnsTickHint( float dt );
+void  GameTurnsShowSkipHint( void );
 
 #endif

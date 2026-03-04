@@ -5,7 +5,6 @@
     image_path: "resources/assets/npcs/burble_the_observant.png"
     description: "A goblin in guard armor, standing beside an open gate."
     idle_bark: "*observes*"
-    idle_cooldown: 5
 }
 
 # ==============================
@@ -34,7 +33,7 @@
     goto: "guard_reply"
 }
 @guard_reply {
-    text: "Officially? Yes. Burble the Observant, Gate Watcher of the western passage. Practically? I observe. I note. I do not intervene. Intervention is violence adjacent."
+    text: "Officially? Yes. Gate Watcher of the western passage. Practically? I observe. I note. I do not intervene. Intervention is violence adjacent."
     options: ["opt_stop_me", "opt_what_observe", "opt_about_raid", "opt_leave"]
 }
 @opt_what_observe {
@@ -62,7 +61,7 @@
     goto: "deterrent_reply"
 }
 @deterrent_reply {
-    text: "That is the nicest thing anyone has ever said to me. Truly. The last war goblin who came through said I was 'offensively unthreatening.'"
+    text: "That is the nicest thing anyone has ever said to me."
     options: ["opt_about_raid", "opt_going_in", "opt_leave"]
 }
 @opt_going_in {
@@ -99,7 +98,7 @@
     goto: "raid_stole_reply"
 }
 @raid_stole_reply {
-    text: "I know. I observed them stealing it. It was very upsetting. I filed a detailed mental report. Twelve goblins, one stone, four minutes. Very efficient raid. I almost admired it. Don't tell Thistlewick I said that."
+    text: "I know. I observed them stealing it. Twelve goblins, one stone, four minutes. Very efficient raid. I almost admired it. Don't tell Thistlewick I said that."
     options: ["opt_laura_mention", "opt_leave"]
 }
 @opt_laura_mention {
@@ -116,7 +115,7 @@
     goto: "burble_agree_reply"
 }
 @burble_agree_reply {
-    text: "...I think she was the only one who did anything. And I think about that a lot. While I'm standing here. Observing. Doing nothing."
+    text: "...I think she was the only one who did anything. And I think about that often while I'm standing here, observing. Doing nothing."
     options: ["opt_leave"]
 }
 
@@ -129,7 +128,7 @@
     goto: "thistlewick_where_reply"
 }
 @thistlewick_where_reply {
-    text: "Straight ahead. He'll be the very still one. ...they're all very still. He'll be the MOST still one. You'll know because he won't even blink when you walk up. It's a bit unsettling honestly."
+    text: "Straight ahead. He'll be the very still one."
     options: ["opt_leave"]
 }
 @opt_peace_tribe {

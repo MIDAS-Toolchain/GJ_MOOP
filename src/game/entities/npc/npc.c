@@ -132,7 +132,7 @@ void NPCsDrawAll( aRectf_t vp_rect, GameCamera_t* cam,
                        list[i].world_x, list[i].world_y,
                        (float)world->tile_w, (float)world->tile_h );
     }
-    else
+    else if ( nt->glyph && d_StringGetLength( nt->glyph ) > 0 )
     {
       float sx, sy;
       GV_WorldToScreen( vp_rect, cam,

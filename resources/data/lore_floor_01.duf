@@ -10,7 +10,7 @@
 @millhaven {
     title: "Millhaven"
     category: "Places"
-    description: "A small town of about twelve residents. Main exports: complaints and burnt bread. Despite its size, it sits above one of the most mysterious dungeons in the region."
+    description: "A small town of about twelve residents. Main exports are complaints and burnt bread. Despite its size, it sits above one of the most mysterious dungeons in the region."
 }
 @the_dungeon {
     title: "The Dungeon"

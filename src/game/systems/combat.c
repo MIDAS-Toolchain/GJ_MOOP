@@ -13,6 +13,9 @@
 #include "dialogue.h"
 #include "movement.h"
 #include "poison_pool.h"
+#include "game_viewport.h"
+#include "visibility.h"
+#include "game_turns.h"
 
 extern Player_t player;
 
@@ -113,9 +116,14 @@ void CombatHandleEnemyDeath( Enemy_t* e )
   /* Gold drop */
   if ( t->gold_drop > 0 )
   {
-    PlayerAddGold( t->gold_drop );
+    int gold_bonus = PlayerEquipEffect( "gold_bonus" );
+    int total = t->gold_drop + gold_bonus;
+    PlayerAddGold( total );
     ConsolePushF( console, (aColor_t){ 0xda, 0xaf, 0x20, 255 },
-                  "Picked up %d gold.", t->gold_drop );
+                  "Picked up %d gold.", total );
+    if ( gold_bonus > 0 )
+      CombatVFXSpawnText( e->world_x, e->world_y - 8,
+                          "+1g", (aColor_t){ 0xda, 0xaf, 0x20, 255 } );
   }
 
   /* Drop item on death - check maps first, then consumables */
@@ -161,13 +169,65 @@ void CombatHandleEnemyDeath( Enemy_t* e )
                      t->color );
     ConsolePushF( console, t->color,
                   "The %s dissolves into a pool of goo!", t->name );
+    GameTurnsShowSkipHint();
   }
+
+  /* Linked death: shaman dies → totem crumbles */
+  if ( strcmp( t->ai, "shaman" ) == 0
+       && combat_enemies && combat_enemy_count )
+  {
+    for ( int i = 0; i < *combat_enemy_count; i++ )
+    {
+      if ( !combat_enemies[i].alive ) continue;
+      if ( strcmp( g_enemy_types[combat_enemies[i].type_idx].ai, "static" ) != 0 )
+        continue;
+      combat_enemies[i].alive = 0;
+      CombatVFXSpawnText( combat_enemies[i].world_x, combat_enemies[i].world_y,
+                          "Crumbles!", (aColor_t){ 160, 120, 60, 255 } );
+      ConsolePushF( console, (aColor_t){ 160, 120, 60, 255 },
+                    "The War Totem crumbles!" );
+    }
+  }
+}
+
+/* Totem aura: sum a stat field from nearby static enemies */
+#define TOTEM_RADIUS 3
+
+static int totem_buff_at( Enemy_t* target, int use_damage )
+{
+  if ( !combat_enemies || !combat_enemy_count ) return 0;
+  int bonus = 0;
+  for ( int i = 0; i < *combat_enemy_count; i++ )
+  {
+    Enemy_t* t = &combat_enemies[i];
+    if ( !t->alive || t == target ) continue;
+    EnemyType_t* et = &g_enemy_types[t->type_idx];
+    if ( strcmp( et->ai, "static" ) != 0 ) continue;
+    int dr = abs( t->row - target->row );
+    int dc = abs( t->col - target->col );
+    if ( dr + dc <= TOTEM_RADIUS )
+      bonus += use_damage ? et->damage : et->defense;
+  }
+  return bonus;
+}
+
+int CombatTotemDefenseFor( Enemy_t* e )
+{
+  return totem_buff_at( e, 0 );
 }
 
 /* Helper: deal damage to an enemy, handle death + kill tracking.
    Returns 1 if the enemy died. */
 static int deal_damage( Enemy_t* e, int dmg, aColor_t vfx_color )
 {
+  /* Totem defense aura: reduce incoming damage */
+  int def = totem_buff_at( e, 0 );
+  if ( def > 0 )
+  {
+    dmg -= def;
+    if ( dmg < 1 ) dmg = 1;
+  }
+
   e->hp -= dmg;
   e->turns_since_hit = 0;
 
@@ -239,6 +299,15 @@ int CombatAttack( Enemy_t* e )
     }
   }
 
+  /* Empower buff - double total damage */
+  if ( player.buff.active && strcmp( player.buff.effect, "empower" ) == 0 )
+  {
+    pdmg *= 2;
+    ConsolePushF( console, (aColor_t){ 60, 85, 110, 255 },
+                  "Empowered! Double damage!" );
+    PlayerClearBuff();
+  }
+
   if ( pdmg < 1 ) pdmg = 1;
 
   a_AudioPlaySound( &sfx_hit, NULL );
@@ -268,7 +337,7 @@ int CombatAttack( Enemy_t* e )
 void CombatEnemyHit( Enemy_t* e )
 {
   EnemyType_t* t = &g_enemy_types[e->type_idx];
-  int edmg = t->damage - PlayerStat( "defense" );
+  int edmg = t->damage + totem_buff_at( e, 1 ) - PlayerStat( "defense" );
   if ( edmg < 1 ) edmg = 1;
   PlayerTakeDamage( edmg );
 
@@ -294,6 +363,46 @@ void CombatEnemyHit( Enemy_t* e )
       ConsolePushF( console, (aColor_t){ 0xde, 0x9e, 0x41, 255 },
                     "Thorns deals %d damage to %s.", thorns, t->name );
       deal_damage( e, thorns, (aColor_t){ 0xde, 0x9e, 0x41, 255 } );
+    }
+  }
+}
+
+void CombatDrawTotemAura( aRectf_t vp_rect, GameCamera_t* cam, World_t* w )
+{
+  if ( !combat_enemies || !combat_enemy_count ) return;
+
+  int tw = w->tile_w;
+  int th = w->tile_h;
+
+  for ( int i = 0; i < *combat_enemy_count; i++ )
+  {
+    Enemy_t* t = &combat_enemies[i];
+    if ( !t->alive ) continue;
+    if ( strcmp( g_enemy_types[t->type_idx].ai, "static" ) != 0 ) continue;
+
+    /* Draw aura on tiles within Manhattan distance */
+    for ( int dr = -TOTEM_RADIUS; dr <= TOTEM_RADIUS; dr++ )
+    {
+      for ( int dc = -TOTEM_RADIUS; dc <= TOTEM_RADIUS; dc++ )
+      {
+        if ( abs( dr ) + abs( dc ) > TOTEM_RADIUS ) continue;
+        int r = t->row + dr;
+        int c = t->col + dc;
+        if ( r < 0 || r >= w->width || c < 0 || c >= w->height ) continue;
+        if ( VisibilityGet( r, c ) < 0.01f ) continue;
+
+        float wx = r * tw + tw / 2.0f;
+        float wy = c * th + th / 2.0f;
+
+        /* Fade with distance: center brighter, edges dimmer */
+        int dist = abs( dr ) + abs( dc );
+        int alpha = ( dist == 0 ) ? 50 : 35 - dist * 5;
+        if ( alpha < 10 ) alpha = 10;
+
+        GV_DrawFilledRect( vp_rect, cam, wx, wy,
+                           (float)tw, (float)th,
+                           (aColor_t){ 160, 120, 60, alpha } );
+      }
     }
   }
 }

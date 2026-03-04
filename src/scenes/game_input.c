@@ -124,7 +124,8 @@ int GameInputTargetMode( void )
   int tr, tc, ci, si;
   if ( TargetModeConfirmed( &tr, &tc, &ci, &si ) )
   {
-    if ( GameEventResolveTarget( ci, si, tr, tc, gi_enemies, *gi_num_enemies ) )
+    int res = GameEventResolveTarget( ci, si, tr, tc, gi_enemies, *gi_num_enemies );
+    if ( res == 1 )
     {
       GameTurnsSetEnemyDelay( 0.2f );
       PlayerTickTurnsSinceHit();
@@ -225,7 +226,7 @@ void GameInputMovement( void )
     else
       PlayerShake( dr, dc );
   }
-  else if ( ITileIsRevealedHiddenWall( tr, tc ) )
+  else if ( ITileIsHiddenWall( tr, tc ) )
   {
     ITileOpenHiddenWall( gi_world, tr, tc );
     PlayerStartMove( tr, tc );
@@ -264,12 +265,14 @@ void GameInputMouse( void )
     GameTurnsGetPlayerTile( &fpr, &fpc );
     if ( RapidMoveActive()
          && TileAdjacent( hover_row, hover_col )
-         && TileWalkable( hover_row, hover_col )
          && !EnemyAt( gi_enemies, *gi_num_enemies, hover_row, hover_col )
          && !NPCAt( gi_npcs, *gi_num_npcs, hover_row, hover_col ) )
     {
       app.mouse.pressed = 0;
-      PlayerStartMove( hover_row, hover_col );
+      if ( ITileIsHiddenWall( hover_row, hover_col ) )
+        ITileOpenHiddenWall( gi_world, hover_row, hover_col );
+      if ( TileWalkable( hover_row, hover_col ) )
+        PlayerStartMove( hover_row, hover_col );
     }
     else
     {

@@ -21,6 +21,7 @@ const char*  ITileDescription( int type );
 /* Hidden walls */
 void         ITileReveal( World_t* world, int row, int col );
 int          ITileIsRevealedHiddenWall( int row, int col );
+int          ITileIsHiddenWall( int row, int col );
 void         ITileOpenHiddenWall( World_t* world, int row, int col );
 
 #endif

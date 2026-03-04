@@ -44,6 +44,11 @@ static int   hint_shown = 0;
 static float hint_timer = 0.0f;
 #define HINT_DURATION  2.5f
 
+/* Skip-turn hint */
+static int   skip_hint_shown = 0;
+static float skip_hint_timer = 0.0f;
+static int   turn_count = 0;
+
 void GameTurnsInit( Console_t* con, aSoundEffect_t* click,
                     Enemy_t* enemies, int* num_enemies,
                     NPC_t* npcs, int* num_npcs,
@@ -61,6 +66,9 @@ void GameTurnsInit( Console_t* con, aSoundEffect_t* click,
   turn.enemy_delay = 0;
   hint_shown = 0;
   hint_timer = 0.0f;
+  skip_hint_shown = 0;
+  skip_hint_timer = 0.0f;
+  turn_count = 0;
 }
 
 void GameTurnsUpdateSystems( float dt )
@@ -148,6 +156,9 @@ void GameTurnsHandleTurnEnd( float dt, int turn_skipped )
               if ( inv_type == INV_CONSUMABLE
                    && strcmp( g_consumables[gi->item_idx].key, "cave_mushroom" ) == 0 )
                 FlagIncr( "mushrooms_collected" );
+              if ( inv_type == INV_CONSUMABLE
+                   && strcmp( g_consumables[gi->item_idx].key, "hearthstone" ) == 0 )
+                FlagSet( "has_relic", 1 );
 
               if ( !hint_shown && inv_type == INV_CONSUMABLE )
               {
@@ -178,6 +189,12 @@ void GameTurnsHandleTurnEnd( float dt, int turn_skipped )
       PoisonPoolTick( frame_pr, frame_pc );
       GameEventsNewTurn();
       PlayerTickTurnsSinceHit();
+      turn_count++;
+      if ( turn_count == 5 && !skip_hint_shown )
+      {
+        skip_hint_shown = 1;
+        skip_hint_timer = HINT_DURATION;
+      }
       for ( int i = 0; i < *gt_num_enemies; i++ )
         if ( gt_enemies[i].alive ) gt_enemies[i].turns_since_hit++;
 
@@ -200,11 +217,16 @@ void GameTurnsHandleTurnEnd( float dt, int turn_skipped )
   if ( turn.enemy_delay > 0 )
   {
     turn.enemy_delay -= dt;
-    if ( turn.enemy_delay <= 0 && !EnemyProjectileInFlight()
-         && !SpellVFXActive() )
+    if ( turn.enemy_delay <= 0 )
     {
-      turn.enemy_delay = 0;
-      EnemiesStartTurn( gt_enemies, *gt_num_enemies, frame_pr, frame_pc, TileWalkable );
+      /* Wait for projectiles / spell VFX to finish before starting enemy turn */
+      if ( EnemyProjectileInFlight() || SpellVFXActive() )
+        turn.enemy_delay = 0.01f;
+      else
+      {
+        turn.enemy_delay = 0;
+        EnemiesStartTurn( gt_enemies, *gt_num_enemies, frame_pr, frame_pc, TileWalkable );
+      }
     }
   }
 }
@@ -219,4 +241,17 @@ float GameTurnsEnemyDelay( void )  { return turn.enemy_delay; }
 void  GameTurnsSetEnemyDelay( float d ) { turn.enemy_delay = d; }
 
 float GameTurnsHintTimer( void )   { return hint_timer; }
-void  GameTurnsTickHint( float dt ) { if ( hint_timer > 0.0f ) hint_timer -= dt; }
+void  GameTurnsTickHint( float dt )
+{
+  if ( hint_timer > 0.0f ) hint_timer -= dt;
+  if ( skip_hint_timer > 0.0f ) skip_hint_timer -= dt;
+}
+float GameTurnsSkipHintTimer( void ) { return skip_hint_timer; }
+void  GameTurnsShowSkipHint( void )
+{
+  if ( !skip_hint_shown )
+  {
+    skip_hint_shown = 1;
+    skip_hint_timer = HINT_DURATION;
+  }
+}

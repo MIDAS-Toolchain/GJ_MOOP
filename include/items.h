@@ -8,6 +8,7 @@
 
 #define FILTERED_CONSUMABLE 0
 #define FILTERED_OPENABLE   1
+#define FILTERED_EQUIPMENT  2
 
 typedef struct
 {
@@ -74,6 +75,7 @@ typedef struct
   int effect_value;
   char class_name[MAX_NAME_LENGTH]; /* which class gets this as starter */
   char description[256];
+  aImage_t* image;
 } EquipmentInfo_t;
 
 typedef struct { int type; int index; } FilteredItem_t;

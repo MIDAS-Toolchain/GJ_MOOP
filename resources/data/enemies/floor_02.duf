@@ -11,6 +11,78 @@
     description: "A squat, mean-looking goblin armed with a crude club."
 }
 
+@spider {
+    name: "Cave Spider"
+    glyph: "x"
+    hp: 8
+    damage: 2
+    defense: 0
+    ai: "basic"
+    gold_drop: 2
+    color: [100, 80, 60, 255]
+    image_path: ""
+    description: "Fast and aggressive spider. A bigger problem than a rat."
+}
+
+@goblin_shaman {
+    name: "Goblin Shaman"
+    glyph: "G"
+    hp: 10
+    damage: 3
+    defense: 1
+    ai: "shaman"
+    sight_range: 6
+    gold_drop: 2
+    color: [80, 140, 100, 255]
+    image_path: "resources/assets/enemies/goblin_shaman.png"
+    description: "A goblin mystic that plants war totems to shield its allies."
+}
+
+@war_totem {
+    name: "War Totem"
+    glyph: "T"
+    hp: 5
+    damage: 1
+    defense: 1
+    ai: "static"
+    sight_range: 0
+    gold_drop: 0
+    color: [160, 120, 60, 255]
+    image_path: "resources/assets/enemies/goblin_totem.png"
+    description: "A crude totem. Nearby enemies deal +1 damage and take -1 damage."
+}
+
+@goblin_slinger {
+    name: "Goblin Slinger"
+    glyph: "s"
+    hp: 8
+    damage: 3
+    defense: 1
+    ai: "ranged_telegraph"
+    telegraph_turns: 1
+    range: 5
+    sight_range: 8
+    gold_drop: 2
+    color: [140, 130, 70, 255]
+    image_path: "resources/assets/enemies/goblin_slinger.png"
+    description: "A goblin with a crude sling. Telegraphs its shots before firing."
+}
+
+@kragthar {
+    name: "Kragthar"
+    glyph: "K"
+    hp: 20
+    damage: 4
+    defense: 2
+    ai: "basic"
+    sight_range: 6
+    gold_drop: 3
+    drop_item: "hearthstone"
+    color: [180, 60, 50, 255]
+    image_path: ""
+    description: "The war goblin warlord. Red paint, big axe, bad attitude."
+}
+
 @red_slime {
     name: "Red Slime"
     glyph: "S"

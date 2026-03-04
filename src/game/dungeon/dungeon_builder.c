@@ -157,8 +157,13 @@ void DungeonBuild( World_t* world )
       {
         ITilePlace( world, x, y, ITILE_RAT_HOLE );
       }
-      else if ( c == 'S' )
+      else if ( c == 'S' || c == '?' )
       {
+        /* Background wall so it looks normal, midground ITile for interaction */
+        world->background[idx].tile     = 1;
+        world->background[idx].glyph    = "#";
+        world->background[idx].glyph_fg = (aColor_t){ 0x81, 0x97, 0x96, 255 };
+        world->background[idx].solid    = 1;
         ITilePlace( world, x, y, ITILE_HIDDEN_WALL );
       }
       else if ( c == 'B' || c == 'G' || c == 'R' || c == 'W' )

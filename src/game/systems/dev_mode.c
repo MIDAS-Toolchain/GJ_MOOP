@@ -54,6 +54,7 @@ int DevModeInput( void )
       ConsolePush( dev_console, "DEV MODE ON", DEV_COLOR );
       ConsolePush( dev_console, "T - teleport to NPC", DEV_COLOR );
       ConsolePush( dev_console, "G - gear up (floor 01 drops)", DEV_COLOR );
+      ConsolePush( dev_console, "H - heal to full", DEV_COLOR );
     }
     else
     {
@@ -195,12 +196,21 @@ int DevModeInput( void )
       if ( ai >= 0 ) PlayerEquip( EQUIP_ARMOR, ai );
 
       int ti = EquipmentByKey( trinket_key );
-      if ( ti >= 0 ) PlayerEquip( EQUIP_TRINKET1, ti );
+      if ( ti >= 0 ) PlayerEquip( EQUIP_TRINKET2, ti );
 
       PlayerRecalcStats();
       ConsolePush( dev_console, "GEAR UP: floor 01 drops equipped", DEV_COLOR );
     }
 
+    return 1;
+  }
+
+  /* H - heal to full */
+  if ( app.keyboard[SDL_SCANCODE_H] == 1 )
+  {
+    app.keyboard[SDL_SCANCODE_H] = 0;
+    PlayerHeal( player.max_hp );
+    ConsolePush( dev_console, "HEALED TO FULL", DEV_COLOR );
     return 1;
   }
 

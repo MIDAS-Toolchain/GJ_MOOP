@@ -20,6 +20,12 @@ static int char_to_room_id( char c )
     case ')': return 19;  case '[': return 20;  case ']': return 21;
     case '{': return 22;  case '}': return 23;  case '-': return 24;
     case '_': return 25;  case '+': return 26;  case '=': return 27;
+    case '\\': return 28; case '|': return 29; case ';': return 30;
+    case ':': return 31;
+    case 'q': return 32;  case 'w': return 33;  case 'e': return 34;
+    case 'r': return 35;  case 't': return 36;  case 'y': return 37;
+    case 'u': return 38;  case 'i': return 39;  case 'o': return 40;
+    case 'p': return 41;
     default:  return ROOM_NONE;
   }
 }

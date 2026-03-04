@@ -131,24 +131,35 @@ void ShopSpawn( World_t* world )
   /* --- Guaranteed class armor + trinket (slots 0-1) --- */
   static const struct { const char* cls;
                         const char* armor;   int armor_cost;
-                        const char* trinket; int trinket_cost; } class_equip[] = {
-    { "Mercenary", "chainmail",    12, "blood_medal",  10 },
-    { "Rogue",     "shadow_vest",  10, "viper_fang",   10 },
-    { "Mage",      "warded_robes", 10, "surge_stone",  10 },
+                        const char* trinket; int trinket_cost; } class_equip[][3] = {
+    /* Floor 1 */
+    {
+      { "Mercenary", "chainmail",           12, "blood_medal",    14 },
+      { "Rogue",     "shadow_vest",         12, "viper_fang",     14 },
+      { "Mage",      "warded_robes",        12, "surge_stone",    14 },
+    },
+    /* Floor 2 */
+    {
+      { "Mercenary", "iron_platemail",      24, "crimson_ring",   28 },
+      { "Rogue",     "ghost_leather",       24, "phantom_charm",  28 },
+      { "Mage",      "runecloth_vestments", 24, "prism_pendant",  28 },
+    },
   };
+
+  int tier = ( g_current_floor == 2 ) ? 1 : 0;
 
   for ( int c = 0; c < 3; c++ )
   {
-    if ( strcmp( player.name, class_equip[c].cls ) != 0 ) continue;
+    if ( strcmp( player.name, class_equip[tier][c].cls ) != 0 ) continue;
 
-    int ai = EquipmentByKey( class_equip[c].armor );
+    int ai = EquipmentByKey( class_equip[tier][c].armor );
     if ( ai >= 0 )
     {
       ShopItem_t* si = &g_shop_items[g_num_shop_items];
       memset( si, 0, sizeof( ShopItem_t ) );
       si->item_type  = INV_EQUIPMENT;
       si->item_index = ai;
-      si->cost       = class_equip[c].armor_cost;
+      si->cost       = class_equip[tier][c].armor_cost;
       si->row        = tiles[slot][0];
       si->col        = tiles[slot][1];
       si->world_x    = si->row * world->tile_w + world->tile_w / 2.0f;
@@ -158,14 +169,14 @@ void ShopSpawn( World_t* world )
       slot++;
     }
 
-    int ti = EquipmentByKey( class_equip[c].trinket );
+    int ti = EquipmentByKey( class_equip[tier][c].trinket );
     if ( ti >= 0 )
     {
       ShopItem_t* si = &g_shop_items[g_num_shop_items];
       memset( si, 0, sizeof( ShopItem_t ) );
       si->item_type  = INV_EQUIPMENT;
       si->item_index = ti;
-      si->cost       = class_equip[c].trinket_cost;
+      si->cost       = class_equip[tier][c].trinket_cost;
       si->row        = tiles[slot][0];
       si->col        = tiles[slot][1];
       si->world_x    = si->row * world->tile_w + world->tile_w / 2.0f;

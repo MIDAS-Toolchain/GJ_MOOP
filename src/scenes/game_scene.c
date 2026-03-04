@@ -44,6 +44,7 @@
 #include "game_input.h"
 #include "floor_cutscene.h"
 #include "dev_mode.h"
+#include "bank.h"
 
 static void gs_Logic( float );
 static void gs_Draw( float );
@@ -122,7 +123,9 @@ void GameSceneInit( void )
   /* Enemies & combat */
   EnemiesLoadTypes();
   EnemiesInit( enemies, &num_enemies );
+  EnemiesSetList( enemies, &num_enemies );
   CombatInit( &console );
+  BankInit( &console );
   CombatSetEnemies( enemies, &num_enemies );
   CombatSetGroundItems( ground_items, &num_ground_items );
   GameEventsSetWorld( world, enemies, &num_enemies );
@@ -328,6 +331,9 @@ static void gs_Draw( float dt )
     /* Draw placed traps */
     PlacedTrapsDrawAll( vp_rect, &draw_cam, world, settings.gfx_mode );
 
+    /* Draw totem aura overlay on affected floor tiles */
+    CombatDrawTotemAura( vp_rect, &draw_cam, world );
+
     /* Draw ground items BEFORE enemies/darkness so they get dimmed */
     GroundItemsDrawAll( vp_rect, &draw_cam, ground_items, num_ground_items,
                         world, settings.gfx_mode );
@@ -505,6 +511,28 @@ static void gs_Draw( float dt )
     hts.align = TEXT_ALIGN_RIGHT;
     a_DrawText( "USE CONSUMABLES IN TOUGH COMBATS!",
                 (int)( shaft_x - shaft_len - 6 ), (int)( tip_y - 5 ), hts );
+    }
+  }
+
+  /* Skip-turn hint text above console */
+  {
+    float st = GameTurnsSkipHintTimer();
+    if ( st > 0.0f )
+    {
+      float alpha = 1.0f;
+      if ( st < HINT_FADE ) alpha = st / HINT_FADE;
+
+      aContainerWidget_t* cp = a_GetContainerFromWidget( "console_panel" );
+      aRectf_t cr = cp->rect;
+      cr.y += TransitionGetConsoleOY();
+
+      aTextStyle_t sts = a_default_text_style;
+      sts.bg    = (aColor_t){ 0, 0, 0, 0 };
+      sts.fg    = (aColor_t){ 255, 255, 255, (int)( 255 * alpha ) };
+      sts.scale = 2.0f;
+      sts.align = TEXT_ALIGN_CENTER;
+      a_DrawText( "Press SPACE to skip turn",
+                  (int)( cr.x + cr.w / 2 ), (int)( cr.y - 48 ), sts );
     }
   }
 

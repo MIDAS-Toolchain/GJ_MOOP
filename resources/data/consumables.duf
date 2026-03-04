@@ -46,7 +46,7 @@
     bonus_damage: 3
     effect: "cleave"
     range: 1
-    image_path: ""
+    image_path: "resources/assets/consumables/iron_loaf.png"
     description: "Cleaves all adjacent enemies at once. Rock-hard and twice as mean."
     color: [180, 150, 60, 255]
 }
@@ -57,7 +57,7 @@
     bonus_damage: 3
     effect: "reach"
     range: 2
-    image_path: ""
+    image_path: "resources/assets/consumables/mutton_leg.png"
     description: "Thrust 2 tiles deep in a straight line. Bigger bone, bigger swing."
     color: [190, 140, 80, 255]
 }
@@ -70,7 +70,7 @@
     range: 3
     requires_los: 1
     heal: 3
-    image_path: ""
+    image_path: "resources/assets/consumables/spiced_stew.png"
     description: "Heals 3 HP, then hurl the scalding bowl up to 3 tiles."
     color: [230, 120, 30, 255]
 }
@@ -95,36 +95,36 @@
     type: "gadget"
     glyph: ")"
     bonus_damage: 1
-    effect: "shoot"
-    range: 4
+    effect: "pierce"
+    range: 5
     requires_los: 1
     image_path: "resources/assets/consumables/flint_arrow.png"
-    description: "Shoot in a straight line up to 4 tiles. Requires line of sight."
+    description: "Shoot in a straight line up to 5 tiles. Pierces through enemies."
     color: [180, 180, 180, 255]
 }
 @poison_arrow {
     name: "Poison Arrow"
     type: "gadget"
     glyph: ")"
-    bonus_damage: 0
+    bonus_damage: 1
     effect: "poison"
-    range: 3
+    range: 5
     requires_los: 1
     ticks: 3
     tick_damage: 1
     image_path: "resources/assets/consumables/poison_arrow.png"
-    description: "Poisons target for 1 damage per turn for 3 turns. Patient kills."
+    description: "Shoot up to 5 tiles. Poisons for 1 per turn for 3 turns."
     color: [80, 200, 80, 255]
 }
 @bear_trap {
     name: "Bear Trap"
     type: "gadget"
     glyph: "^"
-    bonus_damage: 2
-    effect: "trap_stun"
+    bonus_damage: 1
+    effect: "trap_root"
     place_range: 1
     image_path: "resources/assets/consumables/bear_trap.png"
-    description: "Place on adjacent tile. Enemy that steps on it takes 2 damage and loses a turn."
+    description: "Place on adjacent tile. Deals damage and roots the enemy."
     color: [160, 160, 160, 255]
 }
 @steel_arrow {
@@ -132,11 +132,11 @@
     type: "gadget"
     glyph: ")"
     bonus_damage: 2
-    effect: "shoot"
-    range: 4
+    effect: "pierce"
+    range: 5
     requires_los: 1
-    image_path: ""
-    description: "Shoot in a straight line up to 4 tiles. Hits harder than flint."
+    image_path: "resources/assets/consumables/steel_arrow.png"
+    description: "Shoot in a straight line up to 5 tiles. Pierces through enemies."
     color: [200, 200, 210, 255]
 }
 @venom_arrow {
@@ -145,35 +145,35 @@
     glyph: ")"
     bonus_damage: 1
     effect: "poison"
-    range: 3
+    range: 5
     requires_los: 1
     ticks: 3
     tick_damage: 2
-    image_path: ""
-    description: "Poisons target for 2 damage per turn for 3 turns. Nastier venom."
+    image_path: "resources/assets/consumables/venom_arrow.png"
+    description: "Shoot up to 5 tiles.and poisons for 2 per turn for 3 turns."
     color: [60, 180, 60, 255]
 }
 @serrated_trap {
     name: "Serrated Trap"
     type: "gadget"
     glyph: "^"
-    bonus_damage: 3
-    effect: "trap_stun"
+    bonus_damage: 2
+    effect: "trap_root"
     place_range: 1
-    image_path: ""
-    description: "Place on adjacent tile. Jagged teeth deal 3 damage and stun."
+    image_path: "resources/assets/consumables/serrated_trap.png"
+    description: "Place on adjacent tile. Deals damage and roots the enemy."
     color: [140, 140, 150, 255]
 }
 @smoke_bomb {
     name: "Smoke Bomb"
     type: "gadget"
     glyph: "*"
-    bonus_damage: 0
+    bonus_damage: 1
     effect: "smoke"
     radius: 2
     duration: 2
     image_path: ""
-    description: "Drop at your feet. Enemies in 2-tile radius can't target you for 2 turns."
+    description: "Drop at your feet. Deals damage and stuns all enemies within 2 tiles for 2 turns."
     color: [120, 120, 120, 255]
 }
 # ==============================
@@ -183,7 +183,7 @@
     name: "Scroll of Spark"
     type: "scroll"
     glyph: "?"
-    bonus_damage: 1
+    bonus_damage: 2
     effect: "magic_bolt"
     range: 4
     requires_los: 0
@@ -208,7 +208,7 @@
     name: "Scroll of Fireball"
     type: "scroll"
     glyph: "?"
-    bonus_damage: 2
+    bonus_damage: 1
     effect: "aoe"
     range: 3
     requires_los: 1
@@ -221,11 +221,11 @@
     name: "Scroll of Lightning"
     type: "scroll"
     glyph: "?"
-    bonus_damage: 2
+    bonus_damage: 4
     effect: "magic_bolt"
     range: 4
     requires_los: 0
-    image_path: ""
+    image_path: "resources/assets/consumables/scroll_lightning.png"
     description: "Zap any enemy within 4 tiles. A fiercer bolt that ignores walls."
     color: [255, 255, 100, 255]
 }
@@ -238,7 +238,7 @@
     range: 3
     requires_los: 0
     duration: 2
-    image_path: ""
+    image_path: "resources/assets/consumables/scroll_blizzard.png"
     description: "Deals 2 bonus damage and freezes target for 2 turns."
     color: [80, 160, 255, 255]
 }
@@ -246,12 +246,12 @@
     name: "Scroll of Inferno"
     type: "scroll"
     glyph: "?"
-    bonus_damage: 3
+    bonus_damage: 2
     effect: "aoe"
     range: 3
     requires_los: 1
     aoe_radius: 1
-    image_path: ""
+    image_path: "resources/assets/consumables/scroll_inferno.png"
     description: "A fiercer fireball. Hits target and all enemies within 1 tile."
     color: [255, 70, 20, 255]
 }
@@ -322,12 +322,33 @@
 @cave_mushroom {
     name: "Cave Mushroom"
     type: "quest"
-    glyph: "%"
+    glyph: ","
+    bonus_damage: 0
+    effect: "none"
+    image_path: "resources/assets/items/cave_mushroom.png"
+    description: "A plump cave mushroom. Could brew something with this."
+    color: [140, 120, 80, 255]
+}
+@hearthstone {
+    name: "Hearthstone"
+    type: "quest"
+    glyph: "*"
     bonus_damage: 0
     effect: "none"
     image_path: ""
-    description: "A plump cave mushroom. Nettle could brew something with this."
-    color: [140, 120, 80, 255]
+    description: "A small carved rock, passed down for generations. It represents a promise."
+    color: [210, 180, 100, 255]
+}
+@unyielding_ale {
+    name: "Unyielding Ale"
+    type: "potion"
+    glyph: "!"
+    bonus_damage: 0
+    effect: "empower"
+    heal: 0
+    image_path: ""
+    description: "Grishnak's cave ale. Spite-brewed. Your next attack deals double damage."
+    color: [60, 85, 110, 255]
 }
 @mushroom_mint_tea {
     name: "Mushroom Mint Tea"

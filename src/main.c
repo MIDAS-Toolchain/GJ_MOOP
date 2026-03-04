@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -41,6 +42,7 @@ void aMainloop( void )
 
 int main( void )
 {
+  srand( (unsigned)time( NULL ) );
   a_Init( SCREEN_WIDTH, SCREEN_HEIGHT, "Archimedes" );
 
   dLogConfig_t log_cfg = {

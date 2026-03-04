@@ -226,7 +226,8 @@ static void LoadEquipmentDUF( const char* path )
     dDUFValue_t* effect  = d_DUFGetObjectItem( entry, "effect" );
     dDUFValue_t* effval  = d_DUFGetObjectItem( entry, "effect_value" );
     dDUFValue_t* cls     = d_DUFGetObjectItem( entry, "class" );
-    dDUFValue_t* desc    = d_DUFGetObjectItem( entry, "description" );
+    dDUFValue_t* desc     = d_DUFGetObjectItem( entry, "description" );
+    dDUFValue_t* img_path = d_DUFGetObjectItem( entry, "image_path" );
 
     if ( name )   strncpy( e->name, name->value_string, MAX_NAME_LENGTH - 1 );
     if ( kind )   strncpy( e->kind, kind->value_string, MAX_NAME_LENGTH - 1 );
@@ -239,6 +240,9 @@ static void LoadEquipmentDUF( const char* path )
     if ( def )    e->defense = (int)def->value_int;
     if ( effval ) e->effect_value = (int)effval->value_int;
     e->color = ParseDUFColor( color );
+
+    if ( img_path && strlen( img_path->value_string ) > 0 )
+      e->image = a_ImageLoad( img_path->value_string );
 
     g_num_equipment++;
   }
@@ -297,13 +301,13 @@ int ItemsBuildFiltered( int class_idx, FilteredItem_t* out, int max_out, int inc
     }
   }
 
-  /* Add matching openables */
-  for ( int i = 0; i < g_num_openables && count < max_out; i++ )
+  /* Add matching trinkets (skip starters - shown separately) */
+  for ( int i = g_num_starters; i < g_num_equipment && count < max_out; i++ )
   {
-    if ( strcmp( g_openables[i].required_type, ckey ) == 0 ||
-         strcmp( g_openables[i].required_type, "any" ) == 0 )
+    if ( strcmp( g_equipment[i].kind, "trinket" ) == 0 &&
+         strcmp( g_equipment[i].class_name, ckey ) == 0 )
     {
-      out[count].type = FILTERED_OPENABLE;
+      out[count].type = FILTERED_EQUIPMENT;
       out[count].index = i;
       count++;
     }

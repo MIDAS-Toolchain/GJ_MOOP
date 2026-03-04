@@ -10,6 +10,7 @@
 #include "dialogue.h"
 #include "items.h"
 #include "lore.h"
+#include "bank.h"
 
 extern Player_t player;
 
@@ -90,6 +91,7 @@ void DialogueEntryInit( DialogueEntry_t* de )
   de->give_item        = d_StringInit();
   de->take_item        = d_StringInit();
   de->set_lore         = d_StringInit();
+  de->action           = d_StringInit();
 
   for ( int i = 0; i < MAX_NODE_OPTIONS; i++ )
     de->option_keys[i] = d_StringInit();
@@ -116,6 +118,7 @@ void DialogueEntryDestroy( DialogueEntry_t* de )
   d_StringDestroy( de->give_item );
   d_StringDestroy( de->take_item );
   d_StringDestroy( de->set_lore );
+  d_StringDestroy( de->action );
 
   for ( int i = 0; i < MAX_NODE_OPTIONS; i++ )
     d_StringDestroy( de->option_keys[i] );
@@ -135,8 +138,10 @@ void NPCTypeInit( NPCType_t* npc )
   npc->glyph       = d_StringInit();
   npc->description = d_StringInit();
   npc->combat_bark = d_StringInit();
-  npc->idle_bark   = d_StringInit();
-  npc->idle_log    = d_StringInit();
+  npc->idle_bark    = d_StringInit();
+  npc->idle_log     = d_StringInit();
+  npc->action_label = d_StringInit();
+  d_StringSet( npc->action_label, "Talk" );
 }
 
 void NPCTypeDestroy( NPCType_t* npc )
@@ -151,6 +156,7 @@ void NPCTypeDestroy( NPCType_t* npc )
   d_StringDestroy( npc->combat_bark );
   d_StringDestroy( npc->idle_bark );
   d_StringDestroy( npc->idle_log );
+  d_StringDestroy( npc->action_label );
 }
 
 void DialogueDestroyAll( void )
@@ -234,8 +240,9 @@ static void DialogueLoadFile( const char* path, const char* stem )
       npc->color = ParseDUFColor( d_DUFGetObjectItem( entry, "color" ) );
       copy_dstr( npc->description, d_DUFGetObjectItem( entry, "description" ) );
       copy_dstr( npc->combat_bark, d_DUFGetObjectItem( entry, "combat_bark" ) );
-      copy_dstr( npc->idle_bark,   d_DUFGetObjectItem( entry, "idle_bark" ) );
+      copy_dstr( npc->idle_bark,    d_DUFGetObjectItem( entry, "idle_bark" ) );
       copy_dstr( npc->idle_log,    d_DUFGetObjectItem( entry, "idle_log" ) );
+      copy_dstr( npc->action_label, d_DUFGetObjectItem( entry, "action" ) );
 
       dDUFValue_t* idle_cd = d_DUFGetObjectItem( entry, "idle_cooldown" );
       if ( idle_cd ) npc->idle_cooldown = (int)idle_cd->value_int;
@@ -248,7 +255,13 @@ static void DialogueLoadFile( const char* path, const char* stem )
 
       dDUFValue_t* img_path = d_DUFGetObjectItem( entry, "image_path" );
       if ( img_path && img_path->value_string && strlen( img_path->value_string ) > 0 )
-        npc->image = a_ImageLoad( img_path->value_string );
+      {
+        struct stat img_st;
+        if ( stat( img_path->value_string, &img_st ) == 0 )
+          npc->image = a_ImageLoad( img_path->value_string );
+        else
+          printf( "NPC '%s': image not found: %s\n", stem, img_path->value_string );
+      }
 
       continue;
     }
@@ -352,6 +365,7 @@ static void DialogueLoadFile( const char* path, const char* stem )
     copy_dstr( de->give_item,  d_DUFGetObjectItem( entry, "give_item" ) );
     copy_dstr( de->take_item,  d_DUFGetObjectItem( entry, "take_item" ) );
     copy_dstr( de->set_lore,   d_DUFGetObjectItem( entry, "set_lore" ) );
+    copy_dstr( de->action,    d_DUFGetObjectItem( entry, "action" ) );
 
     { dDUFValue_t* v = d_DUFGetObjectItem( entry, "give_gold" );
       if ( v ) de->give_gold = (int)v->value_int; }
@@ -427,6 +441,15 @@ static int  dlg_node_idx = -1;     /* current speech node index in entries[] */
 /* Filtered option indices visible to the player */
 static int  dlg_visible_opts[MAX_NODE_OPTIONS];
 static int  dlg_num_visible = 0;
+
+/* Speech text override (set by actions, cleared each selection) */
+static char dlg_text_override[256] = { 0 };
+
+void DialogueOverrideText( const char* text )
+{
+  strncpy( dlg_text_override, text, sizeof( dlg_text_override ) - 1 );
+  dlg_text_override[sizeof( dlg_text_override ) - 1] = '\0';
+}
 
 static DialogueEntry_t* find_entry( NPCType_t* npc, const char* key )
 {
@@ -519,6 +542,16 @@ static int check_conditions( DialogueEntry_t* de )
   return 1;
 }
 
+/* ---- Dispatch custom action string ---- */
+
+static void DialogueDispatchAction( const char* a )
+{
+  if ( strcmp( a, "bank_deposit" ) == 0 )   { BankDeposit( 10 ); }
+  if ( strcmp( a, "bank_withdraw" ) == 0 )  { BankWithdraw( 10 ); }
+  if ( strcmp( a, "bank_check" ) == 0 )     { BankCheck(); }
+  if ( strcmp( a, "bank_greeting" ) == 0 )  { BankGreeting(); }
+}
+
 /* ---- Execute actions on a node ---- */
 
 static void execute_actions( DialogueEntry_t* de )
@@ -569,6 +602,9 @@ static void execute_actions( DialogueEntry_t* de )
 
   if ( de->give_gold > 0 )
     PlayerAddGold( de->give_gold );
+
+  if ( de->action && d_StringGetLength( de->action ) > 0 )
+    DialogueDispatchAction( d_StringPeek( de->action ) );
 }
 
 /* ---- Build filtered options for current speech node ---- */
@@ -599,6 +635,7 @@ static void build_visible_options( void )
 
 void DialogueStart( int npc_type_idx )
 {
+  dlg_text_override[0] = '\0';
   if ( npc_type_idx < 0 || npc_type_idx >= g_num_npc_types ) return;
 
   NPCType_t* npc = &g_npc_types[npc_type_idx];
@@ -630,6 +667,7 @@ void DialogueStart( int npc_type_idx )
 
 void DialogueSelectOption( int index )
 {
+  dlg_text_override[0] = '\0';
   if ( !dlg_active || dlg_npc_type < 0 ) return;
   if ( index < 0 || index >= dlg_num_visible ) return;
 
@@ -687,6 +725,7 @@ aColor_t DialogueGetNPCColor( void )
 
 const char* DialogueGetText( void )
 {
+  if ( dlg_text_override[0] ) return dlg_text_override;
   if ( dlg_npc_type < 0 || dlg_node_idx < 0 ) return "";
   return d_StringPeek( g_npc_types[dlg_npc_type].entries[dlg_node_idx].text );
 }

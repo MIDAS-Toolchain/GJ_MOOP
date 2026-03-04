@@ -98,3 +98,11 @@
   room_id: "}"
   name: "Exit Chamber"
 }
+@upper_passage {
+  room_id: "\"
+  name: "Upper Passage"
+}
+@lower_passage {
+  room_id: "|"
+  name: "Lower Passage"
+}

@@ -233,3 +233,20 @@
     description: "Scrolls crackle with extra force. +1 scroll damage."
     color: [100, 100, 200, 255]
 }
+
+# ==============================
+# UNIVERSAL
+# ==============================
+@golden_ring {
+    name: "Golden Ring"
+    kind: "trinket"
+    slot: "trinket"
+    glyph: "o"
+    damage: 0
+    defense: 0
+    effect: "gold_bonus"
+    effect_value: 1
+    class: ""
+    description: "Grants +1 gold per enemy killed."
+    color: [218, 175, 32, 255]
+}

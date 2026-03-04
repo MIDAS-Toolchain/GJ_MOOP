@@ -87,12 +87,19 @@ void ITileReveal( World_t* world, int row, int col )
   int idx = t->col * world->width + t->row;
   world->midground[idx].glyph    = "#";
   world->midground[idx].glyph_fg = (aColor_t){ 0xc0, 0x94, 0x73, 255 };
+  world->background[idx].solid   = 0;
 }
 
 int ITileIsRevealedHiddenWall( int row, int col )
 {
   ITile_t* t = ITileAt( row, col );
   return ( t && t->type == ITILE_HIDDEN_WALL && t->revealed );
+}
+
+int ITileIsHiddenWall( int row, int col )
+{
+  ITile_t* t = ITileAt( row, col );
+  return ( t && t->type == ITILE_HIDDEN_WALL );
 }
 
 void ITileOpenHiddenWall( World_t* world, int row, int col )
@@ -106,6 +113,11 @@ void ITileOpenHiddenWall( World_t* world, int row, int col )
   world->midground[idx].glyph    = "";
   world->midground[idx].glyph_fg = (aColor_t){ 0, 0, 0, 0 };
   world->midground[idx].solid    = 0;
+
+  world->background[idx].tile     = 0;
+  world->background[idx].glyph    = ".";
+  world->background[idx].glyph_fg = (aColor_t){ 0x39, 0x4a, 0x50, 255 };
+  world->background[idx].solid    = 0;
 
   t->active = 0;
 }

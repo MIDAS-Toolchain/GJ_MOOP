@@ -1,0 +1,126 @@
+@npc {
+    name: "Clink the Counter"
+    glyph: "C"
+    color: [100, 140, 180, 255]
+    image_path: "resources/assets/npcs/clink_the_counter.png"
+    description: "A goblin behind a stone counter, carefully stacking coins into perfectly even piles."
+}
+
+# ==============================
+# GREETINGS
+# ==============================
+@greeting {
+    start: true
+    priority: 0
+    text: "Welcome to the Goblin Vault. I hold gold. I return gold. I do not charge interest because interest is exploitation and Thistlewick gave me a very long lecture about it."
+    action: "bank_greeting"
+    options: ["opt_deposit", "opt_withdraw", "opt_how_work", "opt_interest", "opt_leave"]
+}
+@greeting_return {
+    start: true
+    priority: 1
+    require_flag: "used_bank"
+    text: "Welcome back. Your gold is exactly where you left it. I counted it four times while you were gone."
+    action: "bank_greeting"
+    options: ["opt_deposit", "opt_withdraw", "opt_leave"]
+}
+
+# ==============================
+# HOW DOES IT WORK
+# ==============================
+@opt_how_work {
+    label: "How does this work?"
+    goto: "how_work_reply"
+}
+@how_work_reply {
+    text: "You give me gold. I put it in the vault. You die horribly in the dungeon. Your gold survives. Next adventurer comes along, says the magic words, and I give them the gold. Simple. Elegant. Depressing."
+    set_flag: "used_bank"
+    options: ["opt_magic_words", "opt_deposit", "opt_withdraw", "opt_leave"]
+}
+@opt_magic_words {
+    label: "What are the magic words?"
+    goto: "magic_words_reply"
+}
+@magic_words_reply {
+    text: "'I'd like to make a withdrawal.' That's it. No passwords. No blood rituals. We're a peace tribe. Our security is based on trust and the assumption that no one would rob a goblin sitting in a cave."
+    options: ["opt_deposit", "opt_withdraw", "opt_leave"]
+}
+
+# ==============================
+# INTEREST
+# ==============================
+@opt_interest {
+    label: "No interest? At all?"
+    goto: "interest_reply"
+}
+@interest_reply {
+    text: "Thistlewick sat me down for THREE HOURS. 'Interest is the commodification of time, Clink. Time belongs to everyone, Clink. You cannot own a moment, Clink.' I just wanted to charge two percent. TWO PERCENT."
+    options: ["opt_thistlewick_right", "opt_two_percent", "opt_deposit", "opt_withdraw", "opt_leave"]
+}
+@opt_two_percent {
+    label: "Two percent seems fair."
+    goto: "two_percent_reply"
+}
+@two_percent_reply {
+    text: "THANK you! That's what I said! But no. 'Profit from holding is indistinguishable from theft, Clink.' He meditated at me for another hour after that."
+    options: ["opt_deposit", "opt_withdraw", "opt_leave"]
+}
+@opt_thistlewick_right {
+    label: "He might have a point."
+    goto: "thistlewick_right_reply"
+}
+@thistlewick_right_reply {
+    text: "Don't you start. I get enough philosophy from Glorbnax. Last week he told me money is an illusion. I told him to pay for his tea with an illusion. He hasn't spoken to me since. Best week of my career."
+    options: ["opt_deposit", "opt_withdraw", "opt_leave"]
+}
+
+# ==============================
+# DEPOSIT
+# ==============================
+@opt_deposit {
+    label: "Store 10 gold."
+    color: "quest"
+    action: "bank_deposit"
+    goto: "deposit_reply"
+}
+@deposit_reply {
+    text: "Deposited. Safe and sound. I'll guard it with my life. Well, I'm a pacifist. I'll guard it with my presence."
+    set_flag: "used_bank"
+    options: ["opt_withdraw", "opt_how_much", "opt_leave"]
+}
+
+# ==============================
+# WITHDRAW
+# ==============================
+@opt_withdraw {
+    label: "Withdraw 10 gold."
+    color: "quest"
+    require_flag: "has_vault_gold"
+    action: "bank_withdraw"
+    goto: "withdraw_reply"
+}
+@withdraw_reply {
+    text: "There you go. Spend it wisely. Or don't. I'm not a financial advisor."
+    options: ["opt_deposit", "opt_leave"]
+}
+
+# ==============================
+# HOW MUCH IS IN THERE
+# ==============================
+@opt_how_much {
+    label: "How much do I have stored?"
+    action: "bank_check"
+    goto: "how_much_reply"
+}
+@how_much_reply {
+    text: "Let me check the ledger..."
+    options: ["opt_deposit", "opt_withdraw", "opt_leave"]
+}
+
+# ==============================
+# LEAVE
+# ==============================
+@opt_leave {
+    label: "[Leave]"
+    goto: "end"
+}

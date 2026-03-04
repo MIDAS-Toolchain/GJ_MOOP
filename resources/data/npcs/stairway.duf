@@ -24,7 +24,7 @@
     goto: "descend_reply"
 }
 @descend_reply {
-    text: "The stairs spiral down into a hum so deep you feel it in your ribs. The air thickens. Whatever is below, it's waiting."
+    text: "The stairs spiral down into a deeper hum. The air thickens. Whatever is below, it's waiting."
     set_flag: "stair_descend"
     options: ["opt_back"]
 }
@@ -32,7 +32,8 @@
 # ==============================
 # BACK
 # ==============================
+
 @opt_back {
-    label: "[Step away]"
+    label: "[Continue]"
     goto: "end"
 }

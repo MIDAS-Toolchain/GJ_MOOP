@@ -1,0 +1,214 @@
+@npc {
+    name: "Thistlewick the Still"
+    glyph: "T"
+    color: [100, 140, 180, 255]
+    image_path: "resources/assets/npcs/thistlewick_the_still.png"
+    description: "A goblin sitting perfectly still. His eyes are closed. He does not appear to notice you."
+    idle_bark: "..."
+    idle_cooldown: 8
+}
+
+# ==============================
+# PRE-RELIC — WON'T TALK
+# ==============================
+@greeting {
+    start: true
+    priority: 0
+    require_not_flag: "has_relic"
+    require_not_flag: "relic_returned"
+    text: "..."
+    options: ["opt_hello", "opt_urgent", "opt_poke", "opt_leave"]
+}
+@opt_hello {
+    label: "Hello?"
+    goto: "silence_1"
+}
+@silence_1 {
+    text: "..."
+    options: ["opt_urgent", "opt_poke", "opt_leave"]
+}
+@opt_urgent {
+    label: "I have an urgent message!"
+    goto: "silence_2"
+}
+@silence_2 {
+    text: "..."
+    options: ["opt_poke", "opt_yell", "opt_leave"]
+}
+@opt_poke {
+    label: "Are you... alive?"
+    goto: "silence_3"
+}
+@silence_3 {
+    text: "*a single nostril flares slightly*"
+    options: ["opt_yell", "opt_leave"]
+}
+@opt_yell {
+    label: "PEOPLE ARE GOING TO DIE!"
+    goto: "silence_4"
+}
+@silence_4 {
+    text: "..."
+    options: ["opt_give_up", "opt_leave"]
+}
+@opt_give_up {
+    label: "...fine."
+    goto: "give_up_reply"
+}
+@give_up_reply {
+    text: "..."
+    options: ["opt_leave"]
+}
+
+# ==============================
+# HAS RELIC — NOW HE TALKS
+# ==============================
+@greeting_has_relic {
+    start: true
+    priority: 1
+    require_flag: "has_relic"
+    require_not_flag: "relic_returned"
+    text: "...you have it."
+    options: ["opt_return_relic", "opt_now_you_talk", "opt_leave"]
+}
+@opt_now_you_talk {
+    label: "Oh, NOW you talk?"
+    goto: "now_talk_reply"
+}
+@now_talk_reply {
+    text: "I talk when there is something worth hearing. You were shouting earlier. That was not worth hearing. This is."
+    options: ["opt_return_relic", "opt_leave"]
+}
+@opt_return_relic {
+    label: "Laura sent me. The Hearthstone is yours."
+    color: "quest"
+    goto: "return_relic_reply"
+}
+@return_relic_reply {
+    text: "Thank you. Put it there."
+    clear_flag: "has_relic"
+    set_flag: "relic_returned"
+    options: ["opt_thats_it", "opt_warn_him", "opt_leave"]
+}
+@opt_thats_it {
+    label: "That's it? 'Put it there?'"
+    goto: "thats_it_reply"
+}
+@thats_it_reply {
+    text: "What would you prefer? Weeping? A feast? We are goblins of stillness. The stone is returned. This is enough."
+    options: ["opt_warn_him", "opt_leave"]
+}
+
+# ==============================
+# THE WARNING
+# ==============================
+@opt_warn_him {
+    label: "Laura says something is coming from below."
+    color: "quest"
+    goto: "warn_reply"
+}
+@warn_reply {
+    text: "Yes."
+    options: ["opt_yes_what", "opt_she_saw", "opt_leave"]
+}
+@opt_yes_what {
+    label: "...yes? That's it?"
+    color: "quest"
+    set_flag: "quest_return_laura"
+    goto: "yes_what_reply"
+}
+@yes_what_reply {
+    text: "What would you have me say? I have sat in this room for three years. I hear the hum every moment of every day. I know what is below."
+    set_flag: "warning_delivered"
+    options: ["opt_know", "opt_do_something", "opt_leave"]
+}
+@opt_she_saw {
+    label: "She saw things. Chanting. Kneeling. Something down there."
+    color: "quest"
+    set_flag: "quest_return_laura"
+    goto: "she_saw_reply"
+}
+@she_saw_reply {
+    text: "I know."
+    set_flag: "warning_delivered"
+    options: ["opt_know", "opt_do_something", "opt_leave"]
+}
+@opt_know {
+    label: "You KNOW? And you're just sitting here?"
+    goto: "know_reply"
+}
+@know_reply {
+    text: "Yes."
+    options: ["opt_why_nothing", "opt_leave"]
+}
+@opt_why_nothing {
+    label: "WHY?"
+    goto: "why_nothing_reply"
+}
+@why_nothing_reply {
+    text: "Because I do not know what else to do."
+    options: ["opt_fight", "opt_run", "opt_laura_right", "opt_leave"]
+}
+
+# ==============================
+# THE REAL THISTLEWICK
+# ==============================
+@opt_fight {
+    label: "You could fight."
+    goto: "fight_reply"
+}
+@fight_reply {
+    text: "I have spent my life teaching goblins to put down their weapons. If I pick one up now, everything I have built is a lie. Every goblin who chose peace because I told them to. A lie."
+    options: ["opt_run", "opt_laura_right", "opt_leave"]
+}
+@opt_run {
+    label: "You could run."
+    goto: "run_reply"
+}
+@run_reply {
+    text: "Where? The overworld hunts us. The dungeon changes us. Below is worse. Above is gone. This is what is left."
+    options: ["opt_fight", "opt_laura_right", "opt_leave"]
+}
+@opt_laura_right {
+    label: "Laura was right, wasn't she?"
+    goto: "laura_right_reply"
+}
+@laura_right_reply {
+    text: "Laura picked up a weapon because she saw what I saw and chose to act. I saw what she saw and chose to sit."
+    options: ["opt_forgive_laura", "opt_leave"]
+}
+@opt_forgive_laura {
+    label: "You should let her come home."
+    goto: "forgive_reply"
+}
+@forgive_reply {
+    text: "...I will think about it."
+    options: ["opt_leave"]
+}
+
+# ==============================
+# POST-WARNING
+# ==============================
+@greeting_warned {
+    start: true
+    priority: 2
+    require_flag: "warning_delivered"
+    text: "You are still here."
+    options: ["opt_forgive_laura", "opt_what_now", "opt_leave"]
+}
+@opt_what_now {
+    label: "What happens now?"
+    goto: "what_now_reply"
+}
+@what_now_reply {
+    text: "I do not know."
+    options: ["opt_leave"]
+}
+
+# ==============================
+# LEAVE
+# ==============================
+@opt_leave {
+    label: "[Leave]"
+    goto: "end"
+}

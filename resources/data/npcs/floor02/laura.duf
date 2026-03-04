@@ -40,7 +40,7 @@
     require_flag: "quest_relic"
     require_not_flag: "has_relic"
     text: "Still looking for the Hearthstone? Kragthar's camp is to the east. Big goblin, red paint. You can't miss him."
-    options: ["opt_where_relic", "opt_who_are_you", "opt_why_fighting", "opt_leave"]
+    options: ["opt_where_relic", "opt_ready", "opt_who_are_you", "opt_why_fighting", "opt_leave"]
 }
 @greeting_has_relic {
     start: true
@@ -72,6 +72,10 @@
 @opt_need_help {
     label: "Need any help?"
     color: "quest"
+    require_not_flag: "quest_relic"
+    require_not_flag: "has_relic"
+    require_not_flag: "relic_returned"
+    require_not_flag: "warning_delivered"
     goto: "need_help_reply"
 }
 @need_help_reply {
@@ -97,7 +101,7 @@
     goto: "how_help_reply"
 }
 @how_help_reply {
-    text: "The war goblins raided the peace tribe last week. Stole their sacred relic - the Goblin Hearthstone. If you get it back and return it, their leader Thistlewick will owe you. He'll have to listen. And maybe then I can warn them before it's too late."
+    text: "The war goblins raided the peace tribe last week. Stole their sacred relic - the Hearthstone. If you get it back and return it, their leader Thistlewick will owe you. He'll have to listen. And maybe then I can warn them before it's too late."
     options: ["opt_where_relic", "opt_what_hearthstone", "opt_accept_relic", "opt_leave"]
 }
 @opt_what_hearthstone {
@@ -115,7 +119,7 @@
 @where_relic_reply {
     text: "Kragthar's camp, to the east. Big goblin, red paint. He's probably sitting on the Hearthstone right now. The war goblins don't negotiate. Be ready for a fight."
     set_lore: "war_tribe"
-    options: ["opt_accept_relic", "opt_leave"]
+    options: ["opt_accept_relic", "opt_ready", "opt_leave"]
 }
 @opt_accept_relic {
     label: "I'll get it back."
@@ -124,8 +128,20 @@
     goto: "relic_accepted"
 }
 @relic_accepted {
-    text: "Thank you. Really. I've been standing in this hallway for days with no one willing to help, after I came back up. Come back with the Hearthstone and we can fix this. Maybe."
+    text: "Thank you. Really. But don't rush east yet. Kragthar hits hard and he's not alone. Explore south first - there are supplies down there if you look. And the peace tribe has a shop to the west. Gear up before you pick that fight."
     options: ["opt_about_below", "opt_who_are_you", "opt_leave"]
+}
+
+# ==============================
+# READY FOR KRAGTHAR?
+# ==============================
+@opt_ready {
+    label: "Am I ready for Kragthar?"
+    goto: "ready_reply"
+}
+@ready_reply {
+    text: "Honestly? Probably not yet. There are rooms to the south worth exploring - supplies, things people left behind. And the peace tribe runs a shop to the west. They're pacifists, not stupid. They'll sell you what you need. Gear up first, then go east."
+    options: ["opt_accept_relic", "opt_leave"]
 }
 
 # ==============================
@@ -204,7 +220,7 @@
     goto: "about_below_reply"
 }
 @about_below_reply {
-    text: "I went deeper. One floor. Just to scout. The hum was so loud I could feel it in my teeth. And there were... people. Or things that used to be people. Kneeling. Chanting. Facing something I couldn't see."
+    text: "I went deeper, just to scout. The hum was so much louder. And there were... people. Or things that used to be people. Kneeling, chanting. Facing something I couldn't see."
     options: ["opt_below_more", "opt_below_come_back", "opt_leave"]
 }
 @opt_below_more {
@@ -253,7 +269,7 @@
     goto: "what_say_reply"
 }
 @what_say_reply {
-    text: "Tell him Laura sent you. Tell him the Hearthstone is returned. And then tell him what I couldn't - that something is coming up from below and standing still won't save anyone. He won't like it. Say it anyway."
+    text: "Tell him Laura sent you. Tell him the Hearthstone is returned. And then tell him that something is coming up from below and standing still won't save anyone."
     options: ["opt_about_below", "opt_leave"]
 }
 
@@ -265,6 +281,7 @@
     require_flag: "relic_returned"
     color: "quest"
     set_flag: "warning_delivered"
+    clear_flag: "quest_return_laura"
     goto: "told_him_reply"
 }
 @told_him_reply {

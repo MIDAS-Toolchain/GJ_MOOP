@@ -161,7 +161,7 @@
     goto: "town_reply"
 }
 @town_reply {
-    text: "Ah, Millhaven! Population: dwindling. Main exports: complaints and burnt bread. But it's home."
+    text: "Ah, Millhaven! Population's dwindling. Main exports are complaints and burnt bread. But it's home."
     options: ["opt_town_mayor", "opt_town_bakery", "opt_town_dungeon", "opt_leave"]
 }
 @opt_town_mayor {
@@ -306,6 +306,8 @@
 }
 @opt_claim_reward {
     label: "The rats are dead."
+    require_flag: "quest_rats"
+    require_not_flag: "rats_cleared"
     require_flag_min: "rat_kills:3"
     color: "complete"
     goto: "reward_node"
@@ -445,7 +447,7 @@
     require_flag: "has_mayors_note"
     require_not_flag: "guard_leaving"
     text: "You again! What's that you've got there?"
-    options: ["opt_show_note", "opt_whats_up", "opt_ask_rats", "opt_about_rats_followup","opt_leave"]
+    options: ["opt_show_note", "opt_whats_up", "opt_ask_rats", "opt_about_rats_followup", "opt_claim_reward", "opt_leave"]
 }
 @opt_show_note {
     label: "A letter from Mayor Greta. Says the bearer can leave."
@@ -457,6 +459,7 @@
     set_flag: "guard_leaving"
     set_flag: "got_sandwich"
     clear_flag: "has_mayors_note"
+    take_item: "Mayor's Note"
     give_item: "Graf's Sandwich"
     options: ["opt_guard_goodbye", "opt_ask_rats", "opt_about_rats_followup", "opt_leave"]
 }

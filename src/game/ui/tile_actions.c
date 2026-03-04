@@ -70,12 +70,13 @@ static int build_labels( const char** labels, Enemy_t* enemies, int num_enemies 
     return 2;
   }
 
-  /* NPC: Talk action */
+  /* NPC: configurable action (Talk, Walk, Open, Read...) */
   NPC_t* n = NPCAt( ta_npcs, *ta_num_npcs,
                      tile_action_row, tile_action_col );
   if ( n && adjacent )
   {
-    labels[0] = "Talk";
+    NPCType_t* nt = &g_npc_types[n->type_idx];
+    labels[0] = d_StringPeek( nt->action_label );
     labels[1] = "Look";
     return 2;
   }
@@ -312,7 +313,7 @@ int TileActionsLogic( int mouse_moved, Enemy_t* enemies, int num_enemies )
         CombatAttack( ae );
       }
     }
-    else if ( strcmp( action, "Talk" ) == 0 )
+    else if ( strcmp( action, "Look" ) != 0 )
     {
       NPC_t* tn = NPCAt( ta_npcs, *ta_num_npcs,
                            tile_action_row, tile_action_col );

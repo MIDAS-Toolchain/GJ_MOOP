@@ -13,28 +13,42 @@
     start: true
     priority: 0
     text: "No."
-    options: ["opt_no_what", "opt_who_are_you", "opt_what_drinking", "opt_leave"]
+    options: ["opt_give_mushrooms", "opt_no_what", "opt_who_are_you", "opt_what_drinking", "opt_leave"]
 }
 @greeting_merc {
     start: true
     priority: 1
     require_class: "Mercenary"
     text: "A mercenary. I have twelve opinions about mercenaries. None of them are positive. Sit down if you want. Or don't. I'm not moving either way."
-    options: ["opt_twelve_opinions", "opt_who_are_you", "opt_what_drinking", "opt_leave"]
+    options: ["opt_give_mushrooms", "opt_twelve_opinions", "opt_who_are_you", "opt_what_drinking", "opt_leave"]
 }
 @greeting_rogue {
     start: true
     priority: 1
     require_class: "Rogue"
     text: "I see you looking at my mug. It's not for sale. It's not for trade. It's not for borrowing. It is mine."
-    options: ["opt_who_are_you", "opt_what_drinking", "opt_peace_tribe", "opt_leave"]
+    options: ["opt_give_mushrooms", "opt_who_are_you", "opt_what_drinking", "opt_peace_tribe", "opt_leave"]
 }
 @greeting_mage {
     start: true
     priority: 1
     require_class: "Mage"
     text: "A mage. I have opinions about magic. Several. I will share them whether you ask or not."
-    options: ["opt_opinions_magic", "opt_who_are_you", "opt_what_drinking", "opt_leave"]
+    options: ["opt_give_mushrooms", "opt_opinions_magic", "opt_who_are_you", "opt_what_drinking", "opt_leave"]
+}
+@greeting_gave_ale {
+    start: true
+    priority: 2
+    require_flag: "bought_ale"
+    text: "You again. The ale was good. This is a fact, not a question. Don't waste it on something small."
+    options: ["opt_peace_tribe", "opt_laura_said", "opt_leave"]
+}
+@greeting_gave_to_nettle {
+    start: true
+    priority: 2
+    require_flag: "bought_tea"
+    text: "I heard you gave mushrooms to Nettle. For TEA. You had perfectly good brewing mushrooms and you chose LEAF WATER. I have a new opinion about you. It is not positive."
+    options: ["opt_peace_tribe", "opt_laura_said", "opt_leave"]
 }
 
 # ==============================
@@ -91,7 +105,7 @@
 }
 @drinking_reply {
     text: "Cave ale. Brewed it myself. From mushrooms, mostly. And spite. The spite is what gives it body."
-    options: ["opt_any_good", "opt_who_are_you", "opt_peace_tribe", "opt_leave"]
+    options: ["opt_any_good", "opt_try_ale", "opt_who_are_you", "opt_peace_tribe", "opt_leave"]
 }
 @opt_any_good {
     label: "Is it any good?"
@@ -99,7 +113,7 @@
 }
 @any_good_reply {
     text: "It is the best ale in this dungeon. This is not a matter of opinion. This is a fact I have decided, and I will not be argued with."
-    options: ["opt_who_are_you", "opt_peace_tribe", "opt_leave"]
+    options: ["opt_try_ale", "opt_who_are_you", "opt_peace_tribe", "opt_leave"]
 }
 
 # ==============================
@@ -175,6 +189,7 @@
 }
 @opt_doors_glowing {
     label: "Wait - the doors were already here?"
+    color: "lore"
     goto: "doors_glowing_reply"
 }
 @doors_glowing_reply {
@@ -184,6 +199,7 @@
 }
 @opt_table {
     label: "What table?"
+    color: "lore"
     goto: "table_reply"
 }
 @table_reply {
@@ -234,6 +250,50 @@
 }
 @miss_her_reply {
     text: "...I'm not answering that. Not because I don't have an answer. I have several answers. I'm just choosing not to yield any of them."
+    options: ["opt_leave"]
+}
+
+# ==============================
+# ALE QUEST
+# ==============================
+@opt_try_ale {
+    label: "Can I try some?"
+    color: "quest"
+    require_not_flag: "bought_ale"
+    require_not_flag: "bought_tea"
+    goto: "try_ale_reply"
+}
+@try_ale_reply {
+    text: "Hmm. I respect the directness. Problem is, I'm on my last batch. Need more cave mushrooms to brew another. Three should do it. They grow in the lower caves. I won't beg for them. That would be yielding."
+    options: ["opt_ill_find_them", "opt_leave"]
+}
+@opt_ill_find_them {
+    label: "I'll get your mushrooms."
+    color: "quest"
+    goto: "ill_find_reply"
+}
+@ill_find_reply {
+    text: "Fine. Don't make a big thing of it. Three mushrooms. Lower caves. And don't tell Nettle. She'll want them for that leaf water she calls tea."
+    set_flag: "quest_mushrooms"
+    options: ["opt_leave"]
+}
+
+# ==============================
+# MUSHROOM TURN-IN
+# ==============================
+@opt_give_mushrooms {
+    label: "I found some cave mushrooms."
+    color: "complete"
+    require_flag_min: "mushrooms_collected:3"
+    require_not_flag: "bought_ale"
+    require_not_flag: "bought_tea"
+    goto: "give_mushrooms_reply"
+}
+@give_mushrooms_reply {
+    text: "...you actually brought mushrooms. I'm not going to thank you. But I will brew you the strongest ale this dungeon has ever seen. *aggressive brewing noises* ...here. Unyielding Ale. Drink it before a fight. You'll hit like you mean it."
+    give_item: "Unyielding Ale"
+    set_flag: "bought_ale"
+    clear_flag: "quest_mushrooms"
     options: ["opt_leave"]
 }
 
