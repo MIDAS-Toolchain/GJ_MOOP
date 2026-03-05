@@ -3,12 +3,17 @@
 
 #include <stdint.h>
 
+#include <Archimedes.h>
+#include <Daedalus.h>
+
 #include "ed_defines.h"
 #include "ed_structs.h"
 
 void e_GetOrigin( World_t* map, int* originx, int* originy );
-void e_GetCellAtMouseInViewport( const int width,   const int height,
+int WithinRange( int x, int y, aRectf_t rect );
+int e_GetCellAtMouseInViewport( const int width,   const int height,
                                  const int tile_w,  const int tile_h,
+                                 aRectf_t menu_rect,
                                  const int originx, const int originy,
                                  int* grid_x, int* grid_y );
 void e_GetCellAtMouse( const int width,      const int height,
@@ -37,6 +42,7 @@ uint16_t GlyphTileConverter( int glyph_index, int rotated );
 uint16_t TileGlyphConverter( int tile_index );
 World_t* convert_mats_worlds( const char* filename );
 void e_SaveWorld( World_t* world, const char* filename );
+dArray_t* FindMapFiles( const char* base_dir, dArray_t* array );
 
 #endif
 

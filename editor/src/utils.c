@@ -1,6 +1,13 @@
 
+#define _DEFAULT_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include <Archimedes.h>
 #include <Daedalus.h>
@@ -22,14 +29,31 @@ void e_GetOrigin( World_t* world, int* originx, int* originy )
   *originy = app.g_viewport.y - ( (float)( world->height * world->tile_h ) / 2 );
 }
 
-void e_GetCellAtMouseInViewport( const int width,   const int height,
+int WithinRange( int x, int y, aRectf_t rect )
+{
+  if ( x >= rect.x && y >= rect.y &&
+       x <= ( rect.x + rect.w ) && y <= ( rect.y + rect.h ) )
+  {
+    return 1;
+  }
+
+  return 0;
+}
+
+int e_GetCellAtMouseInViewport( const int width,   const int height,
                                  const int tile_w,  const int tile_h,
+                                 aRectf_t menu_rect,
                                  const int originx, const int originy,
                                  int* grid_x, int* grid_y )
 {
   aPoint2f_t scale = a_ViewportCalculateScale();
   float view_x = app.g_viewport.x - app.g_viewport.w;
   float view_y = app.g_viewport.y - app.g_viewport.h;
+
+  if ( WithinRange( app.mouse.x, app.mouse.y, menu_rect ) )
+  {
+    return 0;
+  }
 
   float world_mouse_x = ( app.mouse.x / scale.y ) + view_x;
   float world_mouse_y = ( app.mouse.y / scale.y ) + view_y;
@@ -49,6 +73,8 @@ void e_GetCellAtMouseInViewport( const int width,   const int height,
     *grid_x = cell_x;
     *grid_y = cell_y;
   }
+
+  return 1;
 }
 
 void e_GetCellAtMouse( const int width,      const int height,
@@ -454,6 +480,45 @@ void e_SaveWorld( World_t* world, const char* filename )
   fclose(file);
 }
 
+dArray_t* FindMapFiles( const char* base_dir, dArray_t* array )
+{
+  struct dirent* dir_p;
+  DIR* dir = opendir( base_dir );
+  dArray_t* path_array = d_ArrayInit( 10, sizeof(dString_t) );
+  
+  if ( !dir ) return NULL;
+
+  while ( ( dir_p = readdir( dir ) ) != NULL )
+  {
+    if( dir_p->d_type == DT_DIR )
+    {
+      if ( strcmp(dir_p->d_name, ".") != 0 &&
+        strcmp( dir_p->d_name, ".." ) != 0 )
+      {
+        char new_path[1024];
+        snprintf( new_path, sizeof(new_path), "%s/%s", base_dir, dir_p->d_name );
+        //printf("base: %s\n", base_dir);
+        //printf("dir name: %s\n", dir_p->d_name);
+        //printf("path: %s\n", new_path);
+        FindMapFiles( new_path, array );
+      }
+    }
+    else
+    {
+      char* dot = strchr( dir_p->d_name, '.' );
+      if ( dot && strcmp( dot, ".map" ) == 0 )
+      {
+        char new_path[1024];
+        snprintf( new_path, sizeof(new_path), "%s/%s", base_dir, dir_p->d_name );
+        d_ArrayAppend( array, new_path );
+        //printf( "%s\n", new_path );
+      }
+    }
+  }
+
+  return path_array;
+}
+
 uint16_t GlyphTileConverter( int glyph_index, int rotated )
 {
   switch ( glyph_index )
@@ -506,18 +571,23 @@ uint16_t TileGlyphConverter( int tile_index )
     case TILE_LVL1_FLOOR:
       return TILE_GLYPH_FLOOR-1;
     
-    case TILE_RED_DOOR_EW  & TILE_RED_DOOR_NS:
+    case TILE_RED_DOOR_EW:
+    case TILE_RED_DOOR_NS:
       return TILE_GLYPH_RED_DOOR-1;
     
-    case TILE_GREEN_DOOR_EW & TILE_GREEN_DOOR_NS:
+    case TILE_GREEN_DOOR_EW:
+    case TILE_GREEN_DOOR_NS:
       return TILE_GLYPH_GREEN_DOOR-1;
     
-    case TILE_BLUE_DOOR_EW & TILE_BLUE_DOOR_NS:
+    case TILE_BLUE_DOOR_EW:
+    case TILE_BLUE_DOOR_NS:
       return TILE_GLYPH_BLUE_DOOR-1;
     
-    case TILE_WHITE_DOOR_EW & TILE_WHITE_DOOR_NS:
+    case TILE_WHITE_DOOR_EW:
+    case TILE_WHITE_DOOR_NS:
       return TILE_GLYPH_WHITE_DOOR-1;
   }
 
   return TILE_EMPTY;
 }
+

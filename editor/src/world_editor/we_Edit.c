@@ -50,6 +50,8 @@ static int tile_y  = 0;
 static void we_EditLogic( float dt );
 static void we_EditDraw( float dt );
 
+aRectf_t edit_menu_rect = {0};
+
 char* wem_strings[WEM_MAX+1] =
 {
   "WEM_NONE",
@@ -68,6 +70,13 @@ void we_Edit( void )
 
   e_GetOrigin( g_map, &originx, &originy );
   
+  edit_menu_rect = (aRectf_t){
+    .x = edit_menu_x,
+    .y = edit_menu_y,
+    .w = 155,
+    .h = 520
+  };
+  
   color_x = edit_menu_x + 5;
   color_y = edit_menu_y + 5;
   
@@ -76,21 +85,13 @@ void we_Edit( void )
   glyph_x = edit_menu_x + 5;
   glyph_y = edit_menu_y + tile_y +
     (g_tile_sets[g_current_tileset]->col + g_tile_sets[g_current_tileset]->tile_h) + 5;
-
-  app.active_widget = a_GetWidget( "generation_menu" );
-  aContainerWidget_t* container = a_GetContainerFromWidget( "generation_menu" );
-  app.active_widget->hidden = 1;
-
-  for ( int i = 0; i < container->num_components; i++ )
-  {
-    aWidget_t* current = &container->components[i];
-    current->hidden = 1;
-  }
 }
 
 static void we_EditLogic( float dt )
 {
   a_DoInput();
+  
+  a_DoWidget();
   
   if ( app.keyboard[A_ESCAPE] == 1 )
   {
@@ -119,11 +120,14 @@ static void we_EditLogic( float dt )
     if ( g_map != NULL )
     {
       int grid_x = 0, grid_y = 0;
+      int clicked = 0;
       if ( !g_toggle_ascii )
       {
-        e_GetCellAtMouseInViewport( g_map->width,  g_map->height,
-                                   g_map->tile_w, g_map->tile_h,
-                                   originx, originy, &grid_x, &grid_y );
+        clicked = e_GetCellAtMouseInViewport( g_map->width,  g_map->height,
+                                              g_map->tile_w, g_map->tile_h,
+                                              edit_menu_rect,
+                                              originx, originy,
+                                              &grid_x, &grid_y );
       }
 
       if ( editor_mode == WEM_SELECT )
@@ -134,22 +138,26 @@ static void we_EditLogic( float dt )
       if ( editor_mode == WEM_NONE )
       {
         int index = grid_y * g_map->width + grid_x;
-        if ( !g_toggle_room )
+        
+        if ( clicked )
         {
-          if ( tile_index >= TILE_BLUE_DOOR_EW && tile_index <= TILE_WHITE_DOOR_NS )
+          if ( !g_toggle_room )
           {
-            e_UpdateTile( index, TILE_LVL1_FLOOR, tile_index, TILE_EMPTY );
+            if ( tile_index >= TILE_BLUE_DOOR_EW && tile_index <= TILE_WHITE_DOOR_NS )
+            {
+              e_UpdateTile( index, TILE_LVL1_FLOOR, tile_index, TILE_EMPTY );
+            }
+
+            else
+          {
+              e_UpdateTile( index, tile_index, TILE_EMPTY, TILE_EMPTY );
+            }
           }
 
           else
           {
-            e_UpdateTile( index, tile_index, TILE_EMPTY, TILE_EMPTY );
+            g_map->room_ids[index] = glyph_index;
           }
-        }
-
-        else
-        {
-          g_map->room_ids[index] = glyph_index;
         }
       }
     }
@@ -210,8 +218,6 @@ static void we_EditLogic( float dt )
   }
   
   a_ViewportInput( &app.g_viewport, EDITOR_WORLD_WIDTH, EDITOR_WORLD_HEIGHT );
-  
-  a_DoWidget();
 }
 
 static void we_EditDraw( float dt )
@@ -221,14 +227,8 @@ static void we_EditDraw( float dt )
     WorldDraw( originx, originy, g_map, g_tile_sets[g_current_tileset],
                g_toggle_room, g_toggle_ascii );
   }
-  
-  aRectf_t rect = {
-    .x = edit_menu_x,
-    .y = edit_menu_y,
-    .w = 155,
-    .h = 520
-  };
-  a_DrawFilledRect( rect, blue );
+
+  a_DrawFilledRect( edit_menu_rect, blue );
   
   aTextStyle_t ts = {
     .type = FONT_CODE_PAGE_437,

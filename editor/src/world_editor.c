@@ -85,11 +85,6 @@ void e_WorldEditorInit( void )
   {
     aWidget_t* current = &world_menu_container->components[i];
 
-    if ( strcmp( current->name, "creation" ) == 0 )
-    {
-      current->action = we_Creation;
-    }
-
     if ( strcmp( current->name, "edit" ) == 0 )
     {
       current->action = we_Edit;

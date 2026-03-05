@@ -47,7 +47,7 @@ void we_Load( void )
     {
       current->action = wel_LoadNo;
     }
-  }
+  }  
 }
 
 static void wel_LoadLogic( float dt )

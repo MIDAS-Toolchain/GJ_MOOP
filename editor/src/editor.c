@@ -26,6 +26,7 @@ static void ed_Draw( float );
 
 aColor_t master_colors[MAX_COLOR_GROUPS][48] = {0};
 Tileset_t* g_tile_sets[MAX_TILESETS] = {NULL};
+dArray_t* g_map_filenames  = NULL;
 
 void EditorInit( void )
 {
@@ -33,6 +34,19 @@ void EditorInit( void )
   app.delegate.draw  = ed_Draw;
   
   app.g_viewport = (aRectf_t){0};
+ 
+  if ( g_map_filenames == NULL )
+  {
+    char temp_filename[1024];
+    g_map_filenames = d_ArrayInit( 10, sizeof(temp_filename) );
+    FindMapFiles( "..", g_map_filenames );
+    for ( size_t i = 0; i < g_map_filenames->count; i++ )
+    {
+      char* temp;
+      temp = d_ArrayGet( g_map_filenames, i );
+      printf("%s\n", temp);
+    }
+  }
   
   e_LoadColorPalette( master_colors, "resources/colorpalette/colors.hex" );
   
@@ -119,5 +133,7 @@ void EditorDestroy( void )
       e_TilesetDestroy( g_tile_sets[i] );
     }
   }
+
+  d_ArrayDestroy( g_map_filenames );
 }
 
