@@ -168,6 +168,43 @@ static void we_EditLogic( float dt )
     app.mouse.button = 0, app.mouse.state = 0;
     e_ColorMouseCheck( color_x, color_y,
                       &fg_index, &selected_fg.x, &selected_fg.y, 0 );
+    
+    if ( g_map != NULL )
+    {
+      int grid_x = 0, grid_y = 0;
+      int clicked = 0;
+      if ( !g_toggle_ascii )
+      {
+        clicked = e_GetCellAtMouseInViewport( g_map->width,  g_map->height,
+                                              g_map->tile_w, g_map->tile_h,
+                                              edit_menu_rect,
+                                              originx, originy,
+                                              &grid_x, &grid_y );
+      }
+
+      if ( editor_mode == WEM_SELECT )
+      {
+
+      }
+
+      if ( editor_mode == WEM_NONE )
+      {
+        int index = grid_y * g_map->width + grid_x;
+        
+        if ( clicked )
+        {
+          if ( !g_toggle_room )
+          {
+            e_UpdateTile( index, TILE_LVL1_FLOOR, TILE_EMPTY, TILE_EMPTY );
+          }
+
+          else
+          {
+            g_map->room_ids[index] = TILE_EMPTY;
+          }
+        }
+      }
+    }
   }
   
   if ( app.keyboard[A_S] == 1 )
