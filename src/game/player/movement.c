@@ -7,6 +7,7 @@
 #include "sound_manager.h"
 #include "movement.h"
 #include "doors.h"
+#include "dev_mode.h"
 
 extern Player_t player;
 

@@ -66,6 +66,29 @@
     text: "So now they know. And they're still just sitting there, aren't they? ...yeah. That sounds right."
     options: ["opt_what_now", "opt_who_are_you", "opt_why_fighting", "opt_leave"]
 }
+@greeting_at_barricade {
+    start: true
+    priority: 6
+    require_flag: "laura_relocated"
+    text: "This is it. The passage south. I barricaded it when I came back up. Whatever's down there... it's getting louder."
+    options: ["opt_whats_down_there", "opt_ready_go", "opt_leave"]
+}
+@opt_whats_down_there {
+    label: "What did you see down there?"
+    goto: "whats_down_reply"
+}
+@whats_down_reply {
+    text: "Shapes. Kneeling. Chanting. I didn't stay long enough to count them. The hum was so loud I could feel it in my teeth."
+    options: ["opt_ready_go", "opt_leave"]
+}
+@opt_ready_go {
+    label: "I'm not ready yet."
+    goto: "not_ready_reply"
+}
+@not_ready_reply {
+    text: "Take your time. I'm not going anywhere. Well, not again."
+    options: ["opt_leave"]
+}
 
 # ==============================
 # NEED HELP - MAIN QUEST SPINE
@@ -89,11 +112,13 @@
 }
 @opt_why_exiled {
     label: "They exiled you?"
+    color: "lore"
     goto: "exiled_explain"
 }
 @exiled_explain {
     text: "Peace goblins don't fight. That's their whole thing. I used to be one of them. Then when the war goblins raided us, I picked up a blade, and told everyone we needed to defend ourselves. They called it 'choosing violence.' I called it 'not wanting to die.'"
     set_flag: "knows_laura_exile"
+    set_lore: "laura"
     options: ["opt_how_help", "opt_leave"]
 }
 @opt_how_help {
@@ -107,10 +132,12 @@
 }
 @opt_what_hearthstone {
     label: "What's the Hearthstone?"
+    color: "lore"
     goto: "hearthstone_reply"
 }
 @hearthstone_reply {
     text: "Small carved rock, been passed down since we first came underground. Represents the promise we made - that we'd survive together. Kragthar took it because he knew it would hurt."
+    set_lore: "kragthar"
     options: ["opt_where_relic", "opt_accept_relic", "opt_leave"]
 }
 @opt_where_relic {
@@ -278,11 +305,10 @@
 # WARNING DELIVERED
 # ==============================
 @opt_told_him {
-    label: "He listened. I don't think he believed me."
+    label: "He listened. I don't think he will do anything."
     require_flag: "relic_returned"
     color: "quest"
     set_flag: "warning_delivered"
-    clear_flag: "quest_return_laura"
     goto: "told_him_reply"
 }
 @told_him_reply {
@@ -303,6 +329,7 @@
 # ==============================
 @opt_what_now {
     label: "So what do we do now?"
+    color: "quest"
     require_flag: "warning_delivered"
     goto: "what_now_reply"
 }
@@ -341,12 +368,26 @@
 @opt_go_south {
     label: "What about the south passage?"
     color: "quest"
+    clear_flag: "quest_return_laura"
     goto: "go_south_reply"
 }
 @go_south_reply {
     text: "That's where I came back up from. I barricaded it behind me. If you want to go deeper... meet me there. I need a minute."
-    action: "relocate:ROW,COL"
+    options: ["opt_go_south_yes", "opt_go_south_no"]
+}
+@opt_go_south_yes {
+    label: "Lead the way."
+    color: "quest"
+    action: "relocate:59,38"
     set_flag: "laura_relocated"
+    goto: "end"
+}
+@opt_go_south_no {
+    label: "Not yet."
+    goto: "go_south_wait"
+}
+@go_south_wait {
+    text: "I'll be here. Just don't take too long."
     options: ["opt_leave"]
 }
 

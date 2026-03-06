@@ -8,7 +8,7 @@
 #include "ground_items.h"
 
 #define DUNGEON_W 100
-#define DUNGEON_H 50
+#define DUNGEON_H 75
 
 extern int g_current_floor;
 

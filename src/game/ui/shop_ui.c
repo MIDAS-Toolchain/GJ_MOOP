@@ -158,7 +158,8 @@ int ShopUILogic( void )
 
   int opt_count = 2; /* Buy, Leave */
 
-  /* Mouse hover on option rows */
+  /* Mouse hover on option rows (only when mouse is active input) */
+  if ( InputModeGet() == INPUT_MOUSE )
   {
     int mx = app.mouse.x;
     int my = app.mouse.y;

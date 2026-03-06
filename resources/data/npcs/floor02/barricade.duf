@@ -2,8 +2,11 @@
     name: "Barricade"
     glyph: "="
     color: [140, 110, 80, 255]
+    image_path: "resources/assets/npcs/barricade.png"
     description: "A crude barricade of broken furniture and rusty chains. Somebody wanted this passage sealed."
     action: "Inspect"
+    no_face: true
+    no_shadow: true
 }
 
 # ==============================
@@ -12,41 +15,43 @@
 @start_default {
     start: true
     priority: 0
-    text: "Somebody put this here for a reason. Best to leave it alone."
+    require_not_flag: "laura_relocated"
+    text: "A wall of broken crates and twisted chains blocks the passage south. Whoever put this here didn't want anything getting through."
     options: ["opt_leave"]
 }
 
 # ==============================
-# LAURA AT BARRICADE
+# LAURA RELOCATED - can remove
 # ==============================
-@greeting_at_stairs {
+@greeting_can_remove {
     start: true
-    priority: 10
+    priority: 1
     require_flag: "laura_relocated"
-    text: "I blocked this when I came back up. Didn't want that stuff following me."
-    options: ["opt_open_it", "opt_not_ready", "opt_leave"]
+    require_not_flag: "barricade_hopped"
+    text: "Laura put this here. You could hop over it. But there's no coming back."
+    options: ["opt_remove", "opt_not_yet", "opt_leave"]
 }
 
 # ==============================
 # OPTIONS
 # ==============================
-@opt_open_it {
-    label: "Can you open it?"
+@opt_remove {
+    label: "Hop the barricade."
     color: "quest"
-    goto: "open_reply"
+    goto: "remove_reply"
 }
-@open_reply {
-    text: "If you're sure. Don't say I didn't warn you."
-    set_flag: "barricade_opened"
+@remove_reply {
+    text: "You swing your legs over and drop down the other side. The landing echoes. Something stirs in the dark."
+    set_flag: "barricade_hopped"
     options: ["opt_leave"]
 }
 
-@opt_not_ready {
+@opt_not_yet {
     label: "Not yet."
-    goto: "not_ready_reply"
+    goto: "not_yet_reply"
 }
-@not_ready_reply {
-    text: "Smart. Take your time. It's not going anywhere."
+@not_yet_reply {
+    text: "The barricade stands firm. Whatever is down there can wait."
     options: ["opt_leave"]
 }
 

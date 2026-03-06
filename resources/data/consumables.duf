@@ -83,7 +83,7 @@
     range: 3
     ticks: 2
     tick_damage: 1
-    image_path: ""
+    image_path: "resources/assets/consumables/dragon_pepper.png"
     description: "Breathe fire in a wide cone. Burns enemies for 1 damage over 2 turns."
     color: [255, 60, 30, 255]
 }
@@ -120,7 +120,7 @@
     name: "Bear Trap"
     type: "gadget"
     glyph: "^"
-    bonus_damage: 1
+    bonus_damage: 2
     effect: "trap_root"
     place_range: 1
     image_path: "resources/assets/consumables/bear_trap.png"
@@ -157,7 +157,7 @@
     name: "Serrated Trap"
     type: "gadget"
     glyph: "^"
-    bonus_damage: 2
+    bonus_damage: 4
     effect: "trap_root"
     place_range: 1
     image_path: "resources/assets/consumables/serrated_trap.png"
@@ -171,9 +171,10 @@
     bonus_damage: 1
     effect: "smoke"
     radius: 2
+    aoe_radius: 2
     duration: 2
-    image_path: ""
-    description: "Drop at your feet. Deals damage and stuns all enemies within 2 tiles for 2 turns."
+    image_path: "resources/assets/consumables/smoke_bomb.png"
+    description: "Throw at an adjacent tile. Deals damage and stuns all enemies within 2 tiles for 2 turns."
     color: [120, 120, 120, 255]
 }
 # ==============================
@@ -259,12 +260,12 @@
     name: "Scroll of Teleport"
     type: "scroll"
     glyph: "?"
-    bonus_damage: 0
+    bonus_damage: 2
     effect: "swap"
     range: 99
     requires_los: 0
-    image_path: ""
-    description: "Swap positions with any enemy in the room. Instant repositioning."
+    image_path: "resources/assets/consumables/teleport_scroll.png"
+    description: "Teleport to an enemy, dealing bonus damage and cleaving all adjacent foes on arrival."
     color: [180, 80, 255, 255]
 }
 # ==============================
@@ -280,6 +281,17 @@
     image_path: ""
     description: "Restores 4 HP. Works for anyone with a mouth. Or a skull."
     color: [220, 60, 80, 255]
+}
+@medium_health_potion {
+    name: "Medium Health Potion"
+    type: "potion"
+    glyph: "!"
+    bonus_damage: 0
+    effect: "heal"
+    heal: 8
+    image_path: ""
+    description: "Restores 8 HP. Twice the potion, twice the recovery."
+    color: [200, 40, 60, 255]
 }
 # ==============================
 # QUEST ITEMS - carried, not class-locked
@@ -299,12 +311,12 @@
     type: "quest"
     glyph: "%"
     bonus_damage: 0
-    effect: "none"
+    effect: "eat_sandwich"
     heal: 1
     action: "Eat"
     gives: "stinky_cheese"
     use_message: "The cheese was far too stinky to eat!"
-    image_path: ""
+    image_path: "resources/assets/consumables/grafs_sandwhich.png"
     description: "A three-week-old ham and cheese sandwich. It smells... assertive."
     color: [200, 180, 80, 255]
 }
@@ -315,7 +327,7 @@
     bonus_damage: 0
     effect: "lure"
     action: "Lure"
-    image_path: ""
+    image_path: "resources/assets/consumables/stinky_cheese.png"
     description: "Pungent beyond belief. Something in the walls might find this irresistible."
     color: [200, 200, 80, 255]
 }
@@ -338,6 +350,16 @@
     image_path: ""
     description: "A small carved rock, passed down for generations. It represents a promise."
     color: [210, 180, 100, 255]
+}
+@goblin_jail_key {
+    name: "Goblin Jail Key"
+    type: "quest"
+    glyph: "k"
+    bonus_damage: 0
+    effect: "none"
+    image_path: ""
+    description: "A crude iron key. The tag reads 'Vactaion Room' in scratchy handwriting."
+    color: [180, 160, 100, 255]
 }
 @unyielding_ale {
     name: "Unyielding Ale"

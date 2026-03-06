@@ -77,7 +77,8 @@ UI_SRCS     = inventory_ui.c \
 						pause_menu.c \
 						game_over.c
 UTILS_SRCS  = draw_utils.c \
-							context_menu.c
+							context_menu.c \
+							input_mode.c
 PLAYER_SRCS = items.c \
 						maps.c \
 						movement.c \
@@ -109,6 +110,7 @@ ENEMIES_SRCS = enemies.c \
 							 enemy_rat.c \
 							 enemy_skeleton.c \
 							 enemy_shaman.c \
+							 enemy_horror.c \
 							 rendering.c
 
 NPC_SRCS = npc.c \
@@ -119,6 +121,9 @@ GROUND_SRCS = ground_items.c
 
 DUNGEON_SRCS = dungeon_builder.c \
 							 dungeon_spawner.c \
+							 floor_1_spawner.c \
+							 floor_2_spawner.c \
+							 floor_3_spawner.c \
 							 dungeon_handler.c \
 							 doors.c \
 							 objects.c \

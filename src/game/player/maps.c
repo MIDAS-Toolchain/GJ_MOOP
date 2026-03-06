@@ -1,5 +1,7 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <Archimedes.h>
 #include <Daedalus.h>
 
@@ -62,7 +64,15 @@ void MapsLoadAll( void )
     m->color = ParseDUFColor( color );
 
     if ( img_path && strlen( img_path->value_string ) > 0 )
+    {
+      if ( access( img_path->value_string, F_OK ) != 0 )
+      {
+        fprintf( stderr, "FATAL: missing image '%s' for map '%s'\n",
+                 img_path->value_string, m->name );
+        exit( 1 );
+      }
       m->image = a_ImageLoad( img_path->value_string );
+    }
 
     g_num_maps++;
   }

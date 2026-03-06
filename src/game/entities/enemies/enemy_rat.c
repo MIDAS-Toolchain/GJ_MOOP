@@ -4,20 +4,23 @@
 #include "pathfinding.h"
 #include "visibility.h"
 
-#define DEFAULT_CHASE_TURNS  4
+#define DEFAULT_CHASE_TURNS  5
 
 /* ---- A* blocker ---- */
 
 typedef struct
 {
   int (*walkable)(int,int);
+  Enemy_t* all;
+  int count;
 } RatPathCtx_t;
 
 static int rat_blocked( int r, int c, void* ctx )
 {
   RatPathCtx_t* p = ctx;
-  if ( !p->walkable( r, c ) )      return 1;
-  if ( EnemyBlockedByNPC( r, c ) ) return 1;
+  if ( !p->walkable( r, c ) )              return 1;
+  if ( EnemyBlockedByNPC( r, c ) )         return 1;
+  if ( EnemyAt( p->all, p->count, r, c ) ) return 1;
   return 0;
 }
 
@@ -92,13 +95,14 @@ void EnemyBasicAITick( Enemy_t* e, int player_row, int player_col,
   }
 
   /* A* pathfinding toward best adjacent tile */
-  RatPathCtx_t ctx = { walkable };
+  RatPathCtx_t ctx = { walkable, all, count };
   PathNode_t path[PATH_MAX_LEN];
   int len = PathfindAStar( e->row, e->col, best_r, best_c,
                            EnemyGridW(), EnemyGridH(),
                            rat_blocked, &ctx, path );
   if ( len >= 2
-       && !EnemyAt( all, count, path[1].row, path[1].col ) )
+       && !EnemyAt( all, count, path[1].row, path[1].col )
+       && !EnemyBlockedByNPC( path[1].row, path[1].col ) )
   {
     e->row = path[1].row;
     e->col = path[1].col;

@@ -9,6 +9,7 @@
 #include "world.h"
 #include "tween.h"
 #include "placed_traps.h"
+#include "dev_mode.h"
 
 static World_t* world = NULL;
 static NPC_t*   npc_list  = NULL;
@@ -85,6 +86,36 @@ int EnemyShamanSpawnTotem( int row, int col, int (*walkable)(int,int),
   return -1;
 }
 
+int EnemyHorrorSpawnBaby( int row, int col, int (*walkable)(int,int),
+                          Enemy_t* all, int count )
+{
+  if ( !stored_list || !stored_count || !world ) return -1;
+
+  int ti = EnemyTypeByKey( "baby_horror" );
+  if ( ti < 0 ) return -1;
+
+  static const int dx[] = { 1, -1, 0, 0 };
+  static const int dy[] = { 0, 0, 1, -1 };
+  for ( int d = 0; d < 4; d++ )
+  {
+    int nr = row + dx[d];
+    int nc = col + dy[d];
+    if ( !walkable( nr, nc ) ) continue;
+    if ( EnemyAt( all, count, nr, nc ) ) continue;
+    if ( EnemyBlockedByNPC( nr, nc ) ) continue;
+
+    Enemy_t* baby = EnemySpawn( stored_list, stored_count, ti,
+                                 nr, nc, world->tile_w, world->tile_h );
+    if ( baby )
+    {
+      CombatVFXSpawnText( baby->world_x, baby->world_y,
+                          "Spawns!", (aColor_t){ 140, 40, 80, 255 } );
+      return (int)( baby - stored_list );
+    }
+  }
+  return -1;
+}
+
 int EnemyBlockedByNPC( int row, int col )
 {
   if ( !npc_list || !npc_count ) return 0;
@@ -118,6 +149,8 @@ static void start_next_attack( void );
 
 static void tick_and_move( int i )
 {
+  if ( DevModeNoclip() ) return;
+
   /* Stunned or rooted enemies can't move */
   if ( turn_list[i].stun_turns > 0 ) return;
   if ( turn_list[i].root_turns > 0 ) return;
@@ -140,6 +173,12 @@ static void tick_and_move( int i )
   else if ( strcmp( t->ai, "shaman" ) == 0 )
     EnemyShamanTick( &turn_list[i], turn_pr, turn_pc,
                      turn_walkable, turn_list, turn_count );
+  else if ( strcmp( t->ai, "horror" ) == 0 )
+    EnemyHorrorTick( &turn_list[i], turn_pr, turn_pc,
+                     turn_walkable, turn_list, turn_count );
+  else if ( strcmp( t->ai, "baby_horror" ) == 0 )
+    EnemyBasicAITick( &turn_list[i], turn_pr, turn_pc,
+                      turn_walkable, turn_list, turn_count );
 
   /* Skeleton just fired - spawn arrow projectile */
   if ( old_ai == 1 && turn_list[i].ai_state == 3 )

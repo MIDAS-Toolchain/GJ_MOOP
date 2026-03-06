@@ -20,6 +20,8 @@ typedef struct
 {
   int (*walkable)(int,int);
   int player_row, player_col;
+  Enemy_t* all;
+  int count;
 } ShamanPathCtx_t;
 
 static int shaman_blocked( int r, int c, void* ctx )
@@ -28,6 +30,7 @@ static int shaman_blocked( int r, int c, void* ctx )
   if ( !p->walkable( r, c ) )                     return 1;
   if ( r == p->player_row && c == p->player_col )  return 1;
   if ( EnemyBlockedByNPC( r, c ) )                 return 1;
+  if ( EnemyAt( p->all, p->count, r, c ) )        return 1;
   return 0;
 }
 
@@ -68,13 +71,14 @@ static void move_toward( Enemy_t* e, int target_row, int target_col,
                          int player_row, int player_col,
                          int (*walkable)(int,int), Enemy_t* all, int count )
 {
-  ShamanPathCtx_t ctx = { walkable, player_row, player_col };
+  ShamanPathCtx_t ctx = { walkable, player_row, player_col, all, count };
   PathNode_t path[PATH_MAX_LEN];
   int len = PathfindAStar( e->row, e->col, target_row, target_col,
                            EnemyGridW(), EnemyGridH(),
                            shaman_blocked, &ctx, path );
   if ( len >= 2
-       && !EnemyAt( all, count, path[1].row, path[1].col ) )
+       && !EnemyAt( all, count, path[1].row, path[1].col )
+       && !EnemyBlockedByNPC( path[1].row, path[1].col ) )
   {
     e->row = path[1].row;
     e->col = path[1].col;

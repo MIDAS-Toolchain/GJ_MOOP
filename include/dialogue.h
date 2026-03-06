@@ -4,7 +4,7 @@
 #include <Archimedes.h>
 #include <Daedalus.h>
 
-#define MAX_NPC_TYPES      16
+#define MAX_NPC_TYPES      32
 #define MAX_DIALOGUE_NODES 512
 #define MAX_NODE_OPTIONS    8
 #define MAX_CONDITIONS      4
@@ -39,6 +39,8 @@ typedef struct
   dString_t* require_item;
   dString_t* require_lore[MAX_CONDITIONS];
   int  num_require_lore;
+  dString_t* require_not_lore[MAX_CONDITIONS];
+  int  num_require_not_lore;
 
   /* Conditions (gold) */
   int  require_gold_min;
@@ -69,6 +71,8 @@ typedef struct
   dString_t*  action_label;     /* tile action label: "Talk", "Walk", "Open"... */
   int         combat;           /* 1 = fights enemies in room */
   int         damage;           /* melee damage dealt to enemies */
+  int         no_face;          /* 1 = don't rotate to face player */
+  int         no_shadow;        /* 1 = don't draw shadow underneath */
   aImage_t*   image;
   DialogueEntry_t entries[MAX_DIALOGUE_NODES];
   int         num_entries;

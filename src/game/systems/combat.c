@@ -16,6 +16,7 @@
 #include "game_viewport.h"
 #include "visibility.h"
 #include "game_turns.h"
+#include "dev_mode.h"
 
 extern Player_t player;
 
@@ -188,6 +189,23 @@ void CombatHandleEnemyDeath( Enemy_t* e )
                     "The War Totem crumbles!" );
     }
   }
+
+  /* Linked death: horror dies → baby horrors dissolve */
+  if ( strcmp( t->ai, "horror" ) == 0
+       && combat_enemies && combat_enemy_count )
+  {
+    for ( int i = 0; i < *combat_enemy_count; i++ )
+    {
+      if ( !combat_enemies[i].alive ) continue;
+      if ( strcmp( g_enemy_types[combat_enemies[i].type_idx].ai, "baby_horror" ) != 0 )
+        continue;
+      combat_enemies[i].alive = 0;
+      CombatVFXSpawnText( combat_enemies[i].world_x, combat_enemies[i].world_y,
+                          "Dissolves!", (aColor_t){ 140, 40, 80, 255 } );
+      ConsolePushF( console, (aColor_t){ 140, 40, 80, 255 },
+                    "The Baby Horror dissolves!" );
+    }
+  }
 }
 
 /* Totem aura: sum a stat field from nearby static enemies */
@@ -233,6 +251,20 @@ static int deal_damage( Enemy_t* e, int dmg, aColor_t vfx_color )
 
   CombatVFXSpawnNumber( e->world_x, e->world_y, dmg, vfx_color );
 
+  if ( e->hp <= 0 )
+  {
+    CombatHandleEnemyDeath( e );
+    return 1;
+  }
+  return 0;
+}
+
+/* Same as deal_damage but skips totem defense aura */
+static int deal_damage_ignore_def( Enemy_t* e, int dmg, aColor_t vfx_color )
+{
+  e->hp -= dmg;
+  e->turns_since_hit = 0;
+  CombatVFXSpawnNumber( e->world_x, e->world_y, dmg, vfx_color );
   if ( e->hp <= 0 )
   {
     CombatHandleEnemyDeath( e );
@@ -308,13 +340,29 @@ int CombatAttack( Enemy_t* e )
     PlayerClearBuff();
   }
 
+  /* Passive: armor_break - every Nth attack ignores enemy defense */
+  int armor_break = PlayerEquipEffect( "armor_break" );
+  int broke_armor = 0;
+  if ( armor_break > 0 )
+  {
+    player.attack_counter++;
+    if ( player.attack_counter % armor_break == 0 )
+    {
+      broke_armor = 1;
+      ConsolePushF( console, (aColor_t){ 0xcf, 0x57, 0x3c, 255 },
+                    "CRACK! Defense shattered!" );
+    }
+  }
+
   if ( pdmg < 1 ) pdmg = 1;
 
   a_AudioPlaySound( &sfx_hit, NULL );
   ConsolePushF( console, (aColor_t){ 0xe8, 0xc1, 0x70, 255 },
                 "You hit %s for %d damage.", t->name, pdmg );
 
-  int killed = deal_damage( e, pdmg, (aColor_t){ 0xeb, 0xed, 0xe9, 255 } );
+  int killed = broke_armor
+    ? deal_damage_ignore_def( e, pdmg, (aColor_t){ 0xeb, 0xed, 0xe9, 255 } )
+    : deal_damage( e, pdmg, (aColor_t){ 0xeb, 0xed, 0xe9, 255 } );
 
   /* Passive: poison - apply DOT on melee hit */
   int psn = PlayerEquipEffect( "poison" );
@@ -336,10 +384,57 @@ int CombatAttack( Enemy_t* e )
 
 void CombatEnemyHit( Enemy_t* e )
 {
+  if ( DevModeNoclip() ) return;
   EnemyType_t* t = &g_enemy_types[e->type_idx];
   int edmg = t->damage + totem_buff_at( e, 1 ) - PlayerStat( "defense" );
   if ( edmg < 1 ) edmg = 1;
+
+  /* Passive: dodge - every Nth incoming hit is dodged */
+  int dodge = PlayerEquipEffect( "dodge" );
+  if ( dodge > 0 )
+  {
+    player.dodge_counter++;
+    if ( player.dodge_counter % dodge == 0 )
+    {
+      CombatVFXSpawnText( player.world_x, player.world_y,
+                          "Dodged!", (aColor_t){ 0x75, 0xa7, 0x43, 255 } );
+      ConsolePushF( console, (aColor_t){ 0x75, 0xa7, 0x43, 255 },
+                    "Flickered! Attack dodged!" );
+      return;
+    }
+  }
+
   PlayerTakeDamage( edmg );
+
+  /* Passive: mana_shield - lethal hit consumes a scroll instead */
+  if ( player.hp <= 0 )
+  {
+    int ms = PlayerEquipEffect( "mana_shield" );
+    if ( ms > 0 )
+    {
+      /* Find a random scroll in inventory */
+      int scroll_slots[MAX_INVENTORY];
+      int num_scrolls = 0;
+      for ( int i = 0; i < MAX_INVENTORY; i++ )
+      {
+        if ( player.inventory[i].type == INV_CONSUMABLE
+             && strcmp( g_consumables[player.inventory[i].index].type, "scroll" ) == 0 )
+          scroll_slots[num_scrolls++] = i;
+      }
+      if ( num_scrolls > 0 )
+      {
+        int pick = scroll_slots[rand() % num_scrolls];
+        const char* sname = g_consumables[player.inventory[pick].index].name;
+        player.hp += edmg; /* undo lethal: restore HP to pre-hit value */
+        InventoryRemove( pick );
+        CombatVFXSpawnText( player.world_x, player.world_y,
+                            "Shielded!", (aColor_t){ 0x64, 0x64, 0xc8, 255 } );
+        ConsolePushF( console, (aColor_t){ 0x64, 0x64, 0xc8, 255 },
+                      "Grimoire Locket consumed %s!", sname );
+        return;
+      }
+    }
+  }
 
   CombatVFXSpawnNumber( player.world_x, player.world_y, edmg,
                         (aColor_t){ 0xcf, 0x57, 0x3c, 255 } );

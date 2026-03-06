@@ -1,0 +1,124 @@
+@npc {
+    name: "Drem"
+    glyph: "D"
+    color: [140, 120, 100, 255]
+    image_path: "resources/assets/npcs/drem.png"
+    description: "An ex-cultist sitting with his head in his hands. He keeps glancing at the west corridor."
+}
+
+# ==============================
+# GREETINGS
+# ==============================
+@greeting {
+    start: true
+    priority: 0
+    require_not_flag: "quest_found_horror"
+    require_not_flag: "told_drem_rescued"
+    text: "You... you're going out there? Into the tunnels? Please. I need to ask you something."
+    options: ["opt_what", "opt_leave"]
+}
+@greeting_quest {
+    start: true
+    priority: 1
+    require_flag: "quest_found_horror"
+    require_not_flag: "found_horror_rescued"
+    text: "Did you find her? Bloop? She's small. Doesn't bite. Much."
+    options: ["opt_not_yet", "opt_leave"]
+}
+@greeting_rescued {
+    start: true
+    priority: 10
+    require_flag: "found_horror_rescued"
+    require_not_flag: "told_drem_rescued"
+    text: "She's... she's back? You brought her back?"
+    options: ["opt_shes_back"]
+}
+@greeting_happy {
+    start: true
+    priority: 15
+    require_flag: "told_drem_rescued"
+    text: "She ate my bedroll. Muri is furious. I've never been happier."
+    options: ["opt_leave"]
+}
+
+# ==============================
+# QUEST START
+# ==============================
+@opt_what {
+    label: "What is it?"
+    goto: "quest_start"
+}
+@quest_start {
+    text: "My horror. Bloop. She wandered off into the west tunnels. She's small, she's harmless, she doesn't know how to get back. I can't go out there — the lost ones would tear me apart. But you... you're armed."
+    options: ["opt_accept", "opt_refuse"]
+}
+@opt_accept {
+    label: "I'll look for her."
+    color: "quest"
+    set_flag: "quest_found_horror"
+    goto: "accept_reply"
+}
+@accept_reply {
+    text: "Thank you. She's somewhere past the lost one's den. She won't attack you. Just... be careful with her. Please."
+    options: ["opt_leave"]
+}
+@opt_refuse {
+    label: "I have enough to deal with."
+    goto: "refuse_reply"
+}
+@refuse_reply {
+    text: "I understand. If you change your mind... she's out there. Waiting."
+    options: ["opt_leave"]
+}
+
+# ==============================
+# QUEST IN PROGRESS
+# ==============================
+@opt_not_yet {
+    label: "Not yet."
+    goto: "not_yet_reply"
+}
+@not_yet_reply {
+    text: "Please keep looking. She's past the den. The room after the lost one. She'll be there. She has to be."
+    options: ["opt_leave"]
+}
+
+# ==============================
+# QUEST COMPLETE — RESCUED
+# ==============================
+@opt_shes_back {
+    label: "She's safe."
+    color: "complete"
+    goto: "rescued_reply"
+}
+@rescued_reply {
+    text: "I can hear her. She's scratching at the wall. That's her happy noise. Thank you. I don't... I can't... here. Take this. It's all I have."
+    set_flag: "told_drem_rescued"
+    options: ["opt_reward_merc", "opt_reward_rogue", "opt_reward_mage"]
+}
+@opt_reward_merc {
+    label: "[Take reward]"
+    require_class: "Mercenary"
+    give_item: "Dragon Pepper"
+    goto: "end"
+}
+@opt_reward_rogue {
+    label: "[Take reward]"
+    require_class: "Rogue"
+    give_item: "Smoke Bomb"
+    goto: "end"
+}
+@opt_reward_mage {
+    label: "[Take reward]"
+    require_class: "Mage"
+    give_item: "Scroll of Teleport"
+    goto: "end"
+}
+
+# ==============================
+# LEAVE
+# ==============================
+@opt_leave {
+    label: "[Leave]"
+    goto: "end"
+}

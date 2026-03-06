@@ -24,6 +24,7 @@ void aMainloop( void )
   a_GetFPS();
   a_PrepareScene();
   
+  InputModeUpdate();
   app.delegate.logic( dt );
   app.delegate.draw( dt );
   

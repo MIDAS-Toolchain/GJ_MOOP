@@ -1,5 +1,7 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <Archimedes.h>
@@ -84,7 +86,15 @@ static void EnemiesLoadFile( const char* path )
     t->color = ParseDUFColor( color );
 
     if ( img_path && strlen( img_path->value_string ) > 0 )
+    {
+      if ( access( img_path->value_string, F_OK ) != 0 )
+      {
+        fprintf( stderr, "FATAL: missing image '%s' for enemy '%s'\n",
+                 img_path->value_string, t->name );
+        exit( 1 );
+      }
       t->image = a_ImageLoad( img_path->value_string );
+    }
 
     g_num_enemy_types++;
   }

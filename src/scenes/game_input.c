@@ -19,6 +19,7 @@
 #include "visibility.h"
 #include "pause_menu.h"
 #include "dungeon.h"
+#include "dev_mode.h"
 #include "interactive_tile.h"
 #include "pathfinding.h"
 
@@ -117,6 +118,9 @@ void GameInputInventory( void )
   }
 
   InventoryUILogic( mouse_moved );
+
+  if ( !InventoryUIFocused() )
+    InventoryUIHotkey();
 
   if ( InventoryUIFocused() )
   {
@@ -276,6 +280,21 @@ void GameInputMovement( void )
 
   Enemy_t* bump = EnemyAt( gi_enemies, *gi_num_enemies, tr, tc );
   NPC_t* bump_npc = NPCAt( gi_npcs, *gi_num_npcs, tr, tc );
+  if ( !bump && !bump_npc )
+  {
+    /* Debug: dump all alive NPCs near this tile */
+    for ( int dbg = 0; dbg < *gi_num_npcs; dbg++ )
+    {
+      if ( !gi_npcs[dbg].alive ) continue;
+      int dr2 = abs( gi_npcs[dbg].row - tr );
+      int dc2 = abs( gi_npcs[dbg].col - tc );
+      if ( dr2 + dc2 <= 2 )
+        printf( "DEBUG NEAR (%d,%d): npc[%d] type=%d at (%d,%d) wx=%.1f wy=%.1f\n",
+                tr, tc, dbg, gi_npcs[dbg].type_idx,
+                gi_npcs[dbg].row, gi_npcs[dbg].col,
+                gi_npcs[dbg].world_x, gi_npcs[dbg].world_y );
+    }
+  }
   if ( bump )
   {
     PlayerLunge( dr, dc );
@@ -298,7 +317,7 @@ void GameInputMovement( void )
       DialogueStart( bump_npc->type_idx );
     }
   }
-  else if ( TileWalkable( tr, tc ) )
+  else if ( TileWalkable( tr, tc ) || DevModeNoclip() )
     PlayerStartMove( tr, tc );
   else if ( TileHasDoor( tr, tc ) )
   {

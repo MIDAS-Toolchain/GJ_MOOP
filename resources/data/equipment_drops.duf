@@ -51,6 +51,18 @@
     description: "Forged iron plates. Nothing gets through easy."
     color: [200, 100, 100, 255]
 }
+@blackiron_plate {
+    name: "Blackiron Plate"
+    kind: "armor"
+    slot: "armor"
+    glyph: "["
+    damage: 0
+    defense: 4
+    effect: "none"
+    class: "mercenary"
+    description: "Dark forged steel. Weighs a ton. Stops everything."
+    color: [220, 110, 110, 255]
+}
 @crimson_ring {
     name: "Crimson Ring"
     kind: "trinket"
@@ -129,6 +141,18 @@
     description: "Pale hide from something that shouldn't have skin. Unnervingly tough."
     color: [100, 200, 100, 255]
 }
+@void_shroud {
+    name: "Void Shroud"
+    kind: "armor"
+    slot: "armor"
+    glyph: "["
+    damage: 0
+    defense: 4
+    effect: "none"
+    class: "rogue"
+    description: "Stitched from shadow. Light bends around it."
+    color: [120, 220, 120, 255]
+}
 @phantom_charm {
     name: "Phantom Charm"
     kind: "trinket"
@@ -137,9 +161,9 @@
     damage: 0
     defense: 0
     effect: "first_strike"
-    effect_value: 2
+    effect_value: 4
     class: "rogue"
-    description: "Your first attack each room deals +2 bonus damage."
+    description: "Your first attack each room deals +4 bonus damage."
     color: [100, 200, 100, 255]
 }
 @viper_fang {
@@ -207,6 +231,18 @@
     description: "Woven with protective glyphs. Shrugs off what robes can't."
     color: [100, 100, 200, 255]
 }
+@spellwoven_mantle {
+    name: "Spellwoven Mantle"
+    kind: "armor"
+    slot: "armor"
+    glyph: "["
+    damage: 0
+    defense: 4
+    effect: "none"
+    class: "mage"
+    description: "Threads of raw arcana. Hums when struck."
+    color: [120, 120, 220, 255]
+}
 @prism_pendant {
     name: "Prism Pendant"
     kind: "trinket"
@@ -231,6 +267,49 @@
     effect_value: 1
     class: "mage"
     description: "Scrolls crackle with extra force. +1 scroll damage."
+    color: [100, 100, 200, 255]
+}
+
+# ==============================
+# COUNTING TRINKETS (floor 3)
+# ==============================
+@fracture_knuckle {
+    name: "Fracture Knuckle"
+    kind: "trinket"
+    slot: "trinket"
+    glyph: "o"
+    damage: 0
+    defense: 0
+    effect: "armor_break"
+    effect_value: 4
+    class: "mercenary"
+    description: "Every 4th attack ignores enemy defense."
+    color: [200, 100, 100, 255]
+}
+@flicker_ring {
+    name: "Flicker Ring"
+    kind: "trinket"
+    slot: "trinket"
+    glyph: "o"
+    damage: 0
+    defense: 0
+    effect: "dodge"
+    effect_value: 4
+    class: "rogue"
+    description: "Every 4th hit against you misses completely."
+    color: [100, 200, 100, 255]
+}
+@grimoire_locket {
+    name: "Grimoire Locket"
+    kind: "trinket"
+    slot: "trinket"
+    glyph: "o"
+    damage: 0
+    defense: 0
+    effect: "mana_shield"
+    effect_value: 1
+    class: "mage"
+    description: "A lethal hit consumes a random scroll instead of killing you."
     color: [100, 100, 200, 255]
 }
 

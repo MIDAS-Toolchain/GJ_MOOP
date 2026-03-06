@@ -83,7 +83,15 @@ void ShopSpawn( World_t* world )
 {
   /* Set rug positions for current floor */
   extern int g_current_floor;
-  if ( g_current_floor == 2 )
+  if ( g_current_floor >= 3 )
+  {
+    static const int f3[6][2] = {
+      {56,49}, {57,49}, {58,49},
+      {56,50}, {57,50}, {58,50}
+    };
+    memcpy( rug, f3, sizeof(rug) );
+  }
+  else if ( g_current_floor == 2 )
   {
     static const int f2[6][2] = {
       {11,2}, {12,2}, {13,2},
@@ -140,13 +148,19 @@ void ShopSpawn( World_t* world )
     },
     /* Floor 2 */
     {
-      { "Mercenary", "iron_platemail",      24, "crimson_ring",   28 },
-      { "Rogue",     "ghost_leather",       24, "phantom_charm",  28 },
-      { "Mage",      "runecloth_vestments", 24, "prism_pendant",  28 },
+      { "Mercenary", "iron_platemail",      24, "crimson_ring",     28 },
+      { "Rogue",     "ghost_leather",       24, "phantom_charm",    28 },
+      { "Mage",      "runecloth_vestments", 24, "prism_pendant",    28 },
+    },
+    /* Floor 3 */
+    {
+      { "Mercenary", "blackiron_plate",     36, "fracture_knuckle", 42 },
+      { "Rogue",     "void_shroud",         36, "flicker_ring",     42 },
+      { "Mage",      "spellwoven_mantle",   36, "grimoire_locket",  42 },
     },
   };
 
-  int tier = ( g_current_floor == 2 ) ? 1 : 0;
+  int tier = ( g_current_floor >= 3 ) ? 2 : ( g_current_floor == 2 ) ? 1 : 0;
 
   for ( int c = 0; c < 3; c++ )
   {

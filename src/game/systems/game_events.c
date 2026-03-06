@@ -18,6 +18,7 @@
 #include "spell_vfx.h"
 #include "interactive_tile.h"
 #include "room_enumerator.h"
+#include "game_turns.h"
 
 extern Player_t player;
 
@@ -93,7 +94,7 @@ static void evt_LookMap( int index )
 static void evt_Equip( int index )
 {
   EquipmentInfo_t* e = &g_equipment[index];
-  ConsolePushF( con, e->color, "%s equipped %s", player.name, e->name );
+  ConsolePushF( con, e->color, "You equip %s", e->name );
   PlayerRecalcStats();
 }
 
@@ -117,7 +118,7 @@ static void evt_SwapEquip( int new_idx, int old_idx )
 static void evt_UseConsumable( int index )
 {
   ConsumableInfo_t* c = &g_consumables[index];
-  ConsolePushF( con, c->color, "%s used %s", player.name, c->name );
+  ConsolePushF( con, c->color, "You use %s", c->name );
 }
 
 int GameEventUseConsumable( int consumable_index )
@@ -143,8 +144,8 @@ int GameEventUseConsumable( int consumable_index )
     {
       PlayerApplyBuff( 0, "empower", 0 );
       ConsolePushF( con, c->color,
-                    "%s drinks %s. Next attack deals double damage!",
-                    player.name, c->name );
+                    "You drink %s. Next attack deals double damage!",
+                    c->name );
       consumable_used = 1;
       return 1;
     }
@@ -156,7 +157,7 @@ int GameEventUseConsumable( int consumable_index )
 
     if ( healed <= 0 )
     {
-      ConsolePushF( con, c->color, "%s is already at full health.", player.name );
+      ConsolePushF( con, c->color, "You are already at full health." );
       return 0;
     }
 
@@ -164,7 +165,7 @@ int GameEventUseConsumable( int consumable_index )
     CombatVFXSpawnNumber( player.world_x, player.world_y, healed,
                           (aColor_t){ 0x75, 0xa7, 0x43, 255 } );
     ConsolePushF( con, (aColor_t){ 0x75, 0xa7, 0x43, 255 },
-                  "%s drinks %s. Restored %d HP.", player.name, c->name, healed );
+                  "You drink %s. Restored %d HP.", c->name, healed );
 
     consumable_used = 1;
     return 1;
@@ -176,11 +177,11 @@ int GameEventUseConsumable( int consumable_index )
     PlayerApplyBuff( c->bonus_damage, c->effect, c->heal );
 
     if ( strcmp( c->effect, "none" ) != 0 && strlen( c->effect ) > 0 )
-      ConsolePushF( con, c->color, "%s eats %s. Next attack: %s (+%d dmg).",
-                    player.name, c->name, c->effect, c->bonus_damage );
+      ConsolePushF( con, c->color, "You eat %s. Next attack: %s (+%d dmg).",
+                    c->name, c->effect, c->bonus_damage );
     else
-      ConsolePushF( con, c->color, "%s eats %s. Next attack: +%d dmg.",
-                    player.name, c->name, c->bonus_damage );
+      ConsolePushF( con, c->color, "You eat %s. Next attack: +%d dmg.",
+                    c->name, c->bonus_damage );
 
     consumable_used = 1;
     return 1;
@@ -230,6 +231,10 @@ int GameEventUseConsumable( int consumable_index )
 
       return 1;
     }
+
+    /* Sandwich - set flag, then fall through to generic handler */
+    if ( strcmp( c->effect, "eat_sandwich" ) == 0 )
+      FlagSet( "sandwich_eaten", 1 );
 
     /* Generic quest item: heal + message + give item */
     if ( c->heal > 0 )
@@ -392,8 +397,8 @@ int GameEventResolveTarget( int consumable_idx, int inv_slot,
       hit->hp -= fd;
       hit->turns_since_hit = 0;
       CombatVFXSpawnNumber( hit->world_x, hit->world_y, fd, hit_color );
-      ConsolePushF( con, hit_color, "%s shoots %s for %d damage!",
-                    player.name, t->name, fd );
+      ConsolePushF( con, hit_color, "You shoot %s for %d damage!",
+                    t->name, fd );
       if ( hit->hp <= 0 )
         CombatHandleEnemyDeath( hit );
     }
@@ -476,7 +481,7 @@ int GameEventResolveTarget( int consumable_idx, int inv_slot,
         CombatVFXSpawnNumber( player.world_x, player.world_y, healed,
                               (aColor_t){ 0x75, 0xa7, 0x43, 255 } );
         ConsolePushF( con, (aColor_t){ 0x75, 0xa7, 0x43, 255 },
-                      "%s eats %s. Restored %d HP.", player.name, c->name, healed );
+                      "You eat %s. Restored %d HP.", c->name, healed );
       }
     }
 
@@ -507,8 +512,8 @@ int GameEventResolveTarget( int consumable_idx, int inv_slot,
       hit->hp -= fd;
       hit->turns_since_hit = 0;
       CombatVFXSpawnNumber( hit->world_x, hit->world_y, fd, hit_color );
-      ConsolePushF( con, hit_color, "%s hurls the bowl at %s for %d damage!",
-                    player.name, t->name, fd );
+      ConsolePushF( con, hit_color, "You hurl the bowl at %s for %d damage!",
+                    t->name, fd );
       if ( hit->hp <= 0 )
         CombatHandleEnemyDeath( hit );
     }
@@ -588,7 +593,7 @@ int GameEventResolveTarget( int consumable_idx, int inv_slot,
     }
 
     PlacedTrapSpawn( target_row, target_col, dmg, 2 );
-    ConsolePushF( con, hit_color, "%s sets a bear trap.", player.name );
+    ConsolePushF( con, hit_color, "You set a bear trap." );
 
     consume_scroll( inv_slot );
     consumable_used = 1;
@@ -602,8 +607,8 @@ int GameEventResolveTarget( int consumable_idx, int inv_slot,
     for ( int i = 0; i < num_enemies; i++ )
     {
       if ( !enemies[i].alive ) continue;
-      int edr = abs( enemies[i].row - pr );
-      int edc = abs( enemies[i].col - pc );
+      int edr = abs( enemies[i].row - target_row );
+      int edc = abs( enemies[i].col - target_col );
       if ( edr + edc <= c->radius )
       {
         int fd = apply_totem_def( &enemies[i], dmg );
@@ -621,12 +626,11 @@ int GameEventResolveTarget( int consumable_idx, int inv_slot,
 
     if ( stunned > 0 )
       ConsolePushF( con, hit_color,
-                    "%s throws a smoke bomb! %d enemies hit and stunned for %d turns.",
-                    player.name, stunned, c->duration );
+                    "You throw a smoke bomb! %d enemies hit and stunned for %d turns.",
+                    stunned, c->duration );
     else
       ConsolePushF( con, hit_color,
-                    "%s throws a smoke bomb! The smoke dissipates harmlessly.",
-                    player.name );
+                    "You throw a smoke bomb! The smoke dissipates harmlessly." );
 
     consume_scroll( inv_slot );
     consumable_used = 1;
@@ -712,8 +716,8 @@ int GameEventResolveTarget( int consumable_idx, int inv_slot,
       if ( !enemies[i].alive ) continue;
       int dr = abs( enemies[i].row - target_row );
       int dc = abs( enemies[i].col - target_col );
-      if ( dr + dc <= c->aoe_radius || ( enemies[i].row == target_row
-                                          && enemies[i].col == target_col ) )
+      int dist = ( dr > dc ) ? dr : dc;
+      if ( dist <= c->aoe_radius )
       {
         int fd = apply_totem_def( &enemies[i], dmg );
         enemies[i].hp -= fd;
@@ -729,12 +733,11 @@ int GameEventResolveTarget( int consumable_idx, int inv_slot,
 
     if ( hits > 0 )
       ConsolePushF( con, hit_color,
-                    "%s hurls a fireball! %d enemies hit for %d damage!",
-                    player.name, hits, dmg );
+                    "You hurl a fireball! %d enemies hit for %d damage!",
+                    hits, dmg );
     else
       ConsolePushF( con, hit_color,
-                    "%s hurls a fireball! It explodes harmlessly.",
-                    player.name );
+                    "You hurl a fireball! It explodes harmlessly." );
 
     consume_scroll( inv_slot );
     consumable_used = 1;
@@ -771,13 +774,42 @@ int GameEventResolveTarget( int consumable_idx, int inv_slot,
     hit->world_x = tmp_wx;
     hit->world_y = tmp_wy;
 
-    /* Move player to enemy's old grid position (through the movement system) */
-    (void)old_er;
-    (void)old_ec;
-
+    /* Deal bonus damage to swapped enemy */
+    int swap_dmg = dmg + 2;
+    int fd = apply_totem_def( hit, swap_dmg );
+    hit->hp -= fd;
+    hit->turns_since_hit = 0;
+    CombatVFXSpawnNumber( hit->world_x, hit->world_y, fd, hit_color );
     ConsolePushF( con, hit_color,
-                  "%s teleports, swapping places with %s!",
-                  player.name, t->name );
+                  "%s teleports into %s for %d damage!",
+                  player.name, t->name, fd );
+    if ( hit->hp <= 0 )
+      CombatHandleEnemyDeath( hit );
+
+    /* Cleave around new player position (enemy's old tile) */
+    static const int swap_dirs[8][2] = {
+      {1,0}, {-1,0}, {0,1}, {0,-1}, {1,1}, {1,-1}, {-1,1}, {-1,-1}
+    };
+    for ( int d = 0; d < 8; d++ )
+    {
+      int ar = old_er + swap_dirs[d][0];
+      int ac = old_ec + swap_dirs[d][1];
+      Enemy_t* adj = EnemyAt( enemies, num_enemies, ar, ac );
+      if ( adj && adj != hit )
+      {
+        EnemyType_t* at = &g_enemy_types[adj->type_idx];
+        int ad = apply_totem_def( adj, swap_dmg );
+        adj->hp -= ad;
+        adj->turns_since_hit = 0;
+        CombatVFXSpawnNumber( adj->world_x, adj->world_y, ad, hit_color );
+        ConsolePushF( con, hit_color, "%s crashes into %s for %d damage!",
+                      player.name, at->name, ad );
+        if ( adj->hp <= 0 )
+          CombatHandleEnemyDeath( adj );
+      }
+    }
+
+    SpellVFXSweep( old_er, old_ec, hit_color );
 
     consume_scroll( inv_slot );
     consumable_used = 1;

@@ -101,6 +101,7 @@ void DialogueEntryInit( DialogueEntry_t* de )
     de->require_flag[i]     = d_StringInit();
     de->require_not_flag[i] = d_StringInit();
     de->require_lore[i]     = d_StringInit();
+    de->require_not_lore[i] = d_StringInit();
   }
 }
 
@@ -128,6 +129,7 @@ void DialogueEntryDestroy( DialogueEntry_t* de )
     d_StringDestroy( de->require_flag[i] );
     d_StringDestroy( de->require_not_flag[i] );
     d_StringDestroy( de->require_lore[i] );
+    d_StringDestroy( de->require_not_lore[i] );
   }
 }
 
@@ -254,6 +256,12 @@ static void DialogueLoadFile( const char* path, const char* stem )
       dDUFValue_t* damage_v = d_DUFGetObjectItem( entry, "damage" );
       if ( damage_v ) npc->damage = (int)damage_v->value_int;
 
+      dDUFValue_t* noface_v = d_DUFGetObjectItem( entry, "no_face" );
+      if ( noface_v ) npc->no_face = (int)noface_v->value_int;
+
+      dDUFValue_t* noshadow_v = d_DUFGetObjectItem( entry, "no_shadow" );
+      if ( noshadow_v ) npc->no_shadow = (int)noshadow_v->value_int;
+
       dDUFValue_t* img_path = d_DUFGetObjectItem( entry, "image_path" );
       if ( img_path && img_path->value_string && strlen( img_path->value_string ) > 0 )
       {
@@ -321,6 +329,7 @@ static void DialogueLoadFile( const char* path, const char* stem )
     de->num_require_flag = 0;
     de->num_require_not_flag = 0;
     de->num_require_lore = 0;
+    de->num_require_not_lore = 0;
     for ( dDUFValue_t* ch = entry->child; ch; ch = ch->next )
     {
       if ( !ch->key ) continue;
@@ -355,6 +364,17 @@ static void DialogueLoadFile( const char* path, const char* stem )
           for ( dDUFValue_t* a = ch->child; a && de->num_require_lore < MAX_CONDITIONS; a = a->next )
             if ( a->value_string )
               d_StringSet( de->require_lore[de->num_require_lore++],
+                           a->value_string );
+      }
+      if ( strcmp( ch->key, "require_not_lore" ) == 0 )
+      {
+        if ( ch->value_string && de->num_require_not_lore < MAX_CONDITIONS )
+          d_StringSet( de->require_not_lore[de->num_require_not_lore++],
+                       ch->value_string );
+        else if ( ch->type == D_DUF_ARRAY )
+          for ( dDUFValue_t* a = ch->child; a && de->num_require_not_lore < MAX_CONDITIONS; a = a->next )
+            if ( a->value_string )
+              d_StringSet( de->require_not_lore[de->num_require_not_lore++],
                            a->value_string );
       }
     }
@@ -530,6 +550,14 @@ static int check_conditions( DialogueEntry_t* de )
       return 0;
   }
 
+  /* require_not_lore: ALL listed lore keys must NOT be discovered */
+  for ( int i = 0; i < de->num_require_not_lore; i++ )
+  {
+    if ( d_StringGetLength( de->require_not_lore[i] ) > 0
+         && LoreIsDiscovered( d_StringPeek( de->require_not_lore[i] ) ) )
+      return 0;
+  }
+
   /* require_item */
   if ( d_StringGetLength( de->require_item ) > 0 )
   {
@@ -539,6 +567,15 @@ static int check_conditions( DialogueEntry_t* de )
   /* require_gold_min */
   if ( de->require_gold_min > 0 && player.gold < de->require_gold_min )
     return 0;
+
+  /* give_item requires inventory space */
+  if ( d_StringGetLength( de->give_item ) > 0 )
+  {
+    int has_space = 0;
+    for ( int i = 0; i < MAX_INVENTORY; i++ )
+      if ( player.inventory[i].type == INV_EMPTY ) { has_space = 1; break; }
+    if ( !has_space ) return 0;
+  }
 
   return 1;
 }
@@ -566,8 +603,21 @@ static void DialogueDispatchAction( const char* a )
 
 /* ---- Execute actions on a node ---- */
 
-static void execute_actions( DialogueEntry_t* de )
+static int execute_actions( DialogueEntry_t* de )
 {
+  /* If this node gives an item, check inventory space first */
+  if ( d_StringGetLength( de->give_item ) > 0 )
+  {
+    int has_space = 0;
+    for ( int i = 0; i < MAX_INVENTORY; i++ )
+      if ( player.inventory[i].type == INV_EMPTY ) { has_space = 1; break; }
+    if ( !has_space )
+    {
+      DialogueOverrideText( "Inventory full!" );
+      return 0;
+    }
+  }
+
   if ( d_StringGetLength( de->set_flag ) > 0 )
   {
     char buf[256];
@@ -589,23 +639,33 @@ static void execute_actions( DialogueEntry_t* de )
   if ( d_StringGetLength( de->clear_flag ) > 0 )
     FlagClear( d_StringPeek( de->clear_flag ) );
 
+  if ( d_StringGetLength( de->take_item ) > 0 )
+  {
+    /* Support "Item Name:N" to take multiple */
+    char tbuf[256];
+    strncpy( tbuf, d_StringPeek( de->take_item ), sizeof( tbuf ) - 1 );
+    tbuf[sizeof( tbuf ) - 1] = '\0';
+    int take_count = 1;
+    char* tcolon = strchr( tbuf, ':' );
+    if ( tcolon ) { *tcolon = '\0'; take_count = atoi( tcolon + 1 ); }
+
+    for ( int t = 0; t < take_count; t++ )
+    {
+      for ( int i = 0; i < MAX_INVENTORY; i++ )
+      {
+        if ( player.inventory[i].type == INV_CONSUMABLE &&
+             strcmp( g_consumables[player.inventory[i].index].name, tbuf ) == 0 )
+        { InventoryRemove( i ); break; }
+      }
+    }
+  }
+
   if ( d_StringGetLength( de->give_item ) > 0 )
   {
     for ( int i = 0; i < g_num_consumables; i++ )
     {
       if ( strcmp( g_consumables[i].name, d_StringPeek( de->give_item ) ) == 0 )
       { InventoryAdd( INV_CONSUMABLE, i ); break; }
-    }
-  }
-
-  if ( d_StringGetLength( de->take_item ) > 0 )
-  {
-    for ( int i = 0; i < MAX_INVENTORY; i++ )
-    {
-      if ( player.inventory[i].type == INV_CONSUMABLE &&
-           strcmp( g_consumables[player.inventory[i].index].name,
-                   d_StringPeek( de->take_item ) ) == 0 )
-      { InventoryRemove( i ); break; }
     }
   }
 
@@ -617,6 +677,8 @@ static void execute_actions( DialogueEntry_t* de )
 
   if ( de->action && d_StringGetLength( de->action ) > 0 )
     DialogueDispatchAction( d_StringPeek( de->action ) );
+
+  return 1;
 }
 
 /* ---- Build filtered options for current speech node ---- */
@@ -686,7 +748,8 @@ void DialogueSelectOption( int index )
   NPCType_t* npc = &g_npc_types[dlg_npc_type];
   DialogueEntry_t* opt = &npc->entries[dlg_visible_opts[index]];
 
-  execute_actions( opt );
+  if ( !execute_actions( opt ) )
+    return;
 
   /* Follow goto */
   if ( d_StringCompareToCString( opt->goto_key, "end" ) == 0 )

@@ -74,3 +74,43 @@
   room_id: "q"
   name: "Goblin Boss"
 }
+@rogue_annex {
+  room_id: "("
+  name: "Rogue Annex"
+}
+@merc_annex {
+  room_id: ")"
+  name: "Mercenary Annex"
+}
+@green_chamber {
+  room_id: "&"
+  name: "Green Chamber"
+}
+@blue_chamber {
+  room_id: "^"
+  name: "Blue Chamber"
+}
+@red_chamber {
+  room_id: "%"
+  name: "Red Chamber"
+}
+@treasure_room {
+  room_id: "$"
+  name: "Treasure Room"
+}
+@elite_room {
+  room_id: "*"
+  name: "Elite Room"
+}
+@goblin_jail {
+  room_id: "e"
+  name: "Goblin Jail"
+}
+@goblin_cave {
+  room_id: "g"
+  name: "Goblin Cave"
+}
+@water_cavern {
+  room_id: "w"
+  name: "Water Cavern"
+}

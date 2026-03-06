@@ -21,15 +21,20 @@ int DungeonCharToRoomId( char c )
     case ')': return 19;  case '[': return 20;  case ']': return 21;
     case '{': return 22;  case '}': return 23;  case '-': return 24;
     case '_': return 25;  case '+': return 26;  case '=': return 27;
-    default:  return ROOM_NONE;
+    case '\\': return 28; case '|': return 29; case ';': return 30;
+    case ':': return 31;
+    default:
+      if ( c >= 'a' && c <= 'z' ) return 32 + ( c - 'a' );
+      return ROOM_NONE;
   }
 }
 
 char DungeonRoomIdToChar( int id )
 {
   if ( id >= 0 && id <= 9 ) return '0' + id;
-  static const char lut[] = "!@~$%^&*()[]{}-_+=";
-  if ( id >= 10 && id <= 27 ) return lut[id - 10];
+  static const char lut[] = "!@~$%^&*()[]{}-_+=\\|;:";
+  if ( id >= 10 && id <= 31 ) return lut[id - 10];
+  if ( id >= 32 && id <= 57 ) return 'a' + ( id - 32 );
   return '.';
 }
 
@@ -124,7 +129,9 @@ int g_current_floor = 1;
 
 void DungeonBuild( World_t* world )
 {
-  const char* map_path = ( g_current_floor == 2 )
+  const char* map_path = ( g_current_floor >= 3 )
+    ? "resources/data/floors/floor_03.map"
+    : ( g_current_floor == 2 )
     ? "resources/data/floors/floor_02.map"
     : "resources/data/floors/floor_01.map";
   dString_t** floor = dungeon_load_map( map_path );
@@ -189,7 +196,9 @@ void DungeonBuild( World_t* world )
 
   dungeon_free_map( floor );
 
-  RoomLoadData( ( g_current_floor == 2 )
+  RoomLoadData( ( g_current_floor >= 3 )
+    ? "resources/data/rooms_floor_03.duf"
+    : ( g_current_floor == 2 )
     ? "resources/data/rooms_floor_02.duf"
     : "resources/data/rooms_floor_01.duf" );
 

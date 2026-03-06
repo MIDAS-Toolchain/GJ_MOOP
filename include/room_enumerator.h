@@ -2,7 +2,7 @@
 #define __ROOM_ENUMERATOR_H__
 
 #define ROOM_NONE     -1
-#define MAX_ROOMS      42
+#define MAX_ROOMS      58
 
 enum {
   ROOM_CENTRAL   = 0,   /* '0' */
@@ -37,16 +37,9 @@ enum {
   ROOM_29           = 29, /* '|' */
   ROOM_30           = 30, /* ';' */
   ROOM_31           = 31, /* ':' */
-  ROOM_32           = 32, /* 'q' */
-  ROOM_33           = 33, /* 'w' */
-  ROOM_34           = 34, /* 'e' */
-  ROOM_35           = 35, /* 'r' */
-  ROOM_36           = 36, /* 't' */
-  ROOM_37           = 37, /* 'y' */
-  ROOM_38           = 38, /* 'u' */
-  ROOM_39           = 39, /* 'i' */
-  ROOM_40           = 40, /* 'o' */
-  ROOM_41           = 41, /* 'p' */
+  /* 'a'..'z' → 32..57 */
+  ROOM_A            = 32, /* 'a' */
+  ROOM_Z            = 57, /* 'z' */
 };
 
 void        RoomEnumeratorInit( int width, int height );

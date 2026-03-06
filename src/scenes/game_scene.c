@@ -46,6 +46,8 @@
 #include "npc_relocate.h"
 #include "dev_mode.h"
 #include "bank.h"
+#include "lore.h"
+#include "dungeon_spawner.h"
 
 static void gs_Logic( float );
 static void gs_Draw( float );
@@ -126,7 +128,6 @@ void GameSceneInit( void )
   EnemiesInit( enemies, &num_enemies );
   EnemiesSetList( enemies, &num_enemies );
   CombatInit( &console );
-  BankInit( &console );
   CombatSetEnemies( enemies, &num_enemies );
   CombatSetGroundItems( ground_items, &num_ground_items );
   GameEventsSetWorld( world, enemies, &num_enemies );
@@ -136,6 +137,9 @@ void GameSceneInit( void )
 
   /* NPCs & dialogue */
   FlagsInit();
+  /* Restore persistent lore discoveries as per-run flags */
+  if ( LoreIsDiscovered( "shop_rats" ) )  FlagSet( "knows_shop_rats", 1 );
+  BankInit( &console );
   DialogueLoadAll();
   EnemiesSetNPCs( npcs, &num_npcs );
   NPCsInit( npcs, &num_npcs );
@@ -145,7 +149,9 @@ void GameSceneInit( void )
   GroundItemsInit( ground_items, &num_ground_items );
 
   /* Shop */
-  if ( g_current_floor == 2 )
+  if ( g_current_floor >= 3 )
+    ShopLoadPool( "resources/data/shops/floor_03_shop.duf" );
+  else if ( g_current_floor == 2 )
     ShopLoadPool( "resources/data/shops/floor_02_shop.duf" );
   else
     ShopLoadPool( "resources/data/shops/floor_01_shop.duf" );
@@ -229,10 +235,16 @@ static void gs_Logic( float dt )
     return;
   }
 
+  DungeonDeferredSpawns( npcs, num_npcs, enemies, &num_enemies, world );
+
   /* Stairway descend - transition to next floor */
   if ( !DialogueActive() && FlagGet( "stair_descend" ) )
   {
     FlagClear( "stair_descend" );
+    /* Destroy treasure maps - they're floor-specific */
+    for ( int i = 0; i < MAX_INVENTORY; i++ )
+      if ( player.inventory[i].type == INV_MAP )
+        InventoryRemove( i );
     g_current_floor++;
     a_WidgetCacheFree();
     GameSceneInit();
@@ -271,7 +283,7 @@ static void gs_Draw( float dt )
     aContainerWidget_t* vp = a_GetContainerFromWidget( "game_viewport" );
     aRectf_t vr = { vp->rect.x, vp->rect.y, vp->rect.w - 1, vp->rect.h };
     float va = TransitionGetViewportAlpha();
-    a_DrawFilledRect( vr, (aColor_t){ 0x09, 0x0a, 0x14, (int)( 255 * va ) } );
+    a_DrawFilledRect( vr, (aColor_t){ 0, 0, 0, (int)( 255 * va ) } );
     a_DrawRect( vr, (aColor_t){ 0x39, 0x4a, 0x50, (int)( 255 * va ) } );
   }
 

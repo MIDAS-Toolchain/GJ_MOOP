@@ -112,9 +112,9 @@
     damage: 0
     defense: 0
     effect: "first_strike"
-    effect_value: 1
+    effect_value: 2
     class: "rogue"
-    description: "Your first attack each room deals +1 bonus damage."
+    description: "Your first attack each room deals +2 bonus damage."
     color: [80, 180, 80, 255]
     image_path: "resources/assets/equipment/shadow_charm.png"
 

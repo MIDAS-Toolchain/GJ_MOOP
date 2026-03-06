@@ -12,7 +12,7 @@
 @greeting {
     start: true
     priority: 0
-    text: "Welcome to the Goblin Vault. I hold gold. I return gold. I do not charge interest because interest is exploitation and Thistlewick gave me a very long lecture about it."
+    text: "Welcome to the Goblin Vault. I hold gold. I return gold. No interest. Thistlewick gave me a lecture about that."
     action: "bank_greeting"
     options: ["opt_deposit", "opt_withdraw", "opt_how_work", "opt_interest", "opt_leave"]
 }
@@ -20,9 +20,9 @@
     start: true
     priority: 1
     require_flag: "used_bank"
-    text: "Welcome back. Your gold is exactly where you left it. I counted it four times while you were gone."
+    text: "Welcome back. Your gold is where you left it. Counted it four times."
     action: "bank_greeting"
-    options: ["opt_deposit", "opt_withdraw", "opt_leave"]
+    options: ["opt_deposit", "opt_withdraw", "opt_how_much", "opt_leave"]
 }
 
 # ==============================
@@ -33,7 +33,7 @@
     goto: "how_work_reply"
 }
 @how_work_reply {
-    text: "You give me gold. I put it in the vault. You die horribly in the dungeon. Your gold survives. Next adventurer comes along, says the magic words, and I give them the gold. Simple. Elegant. Depressing."
+    text: "You give me gold. I vault it. You die in the dungeon. Your gold survives. Next adventurer says the magic words, I hand it over. Simple."
     set_flag: "used_bank"
     options: ["opt_magic_words", "opt_deposit", "opt_withdraw", "opt_leave"]
 }
@@ -42,7 +42,7 @@
     goto: "magic_words_reply"
 }
 @magic_words_reply {
-    text: "'I'd like to make a withdrawal.' That's it. No passwords. No blood rituals. We're a peace tribe. Our security is based on trust and the assumption that no one would rob a goblin sitting in a cave."
+    text: "'I'd like to make a withdrawal.' That's it. No passwords. No blood rituals. Security is trust and the assumption no one robs a goblin in a cave."
     options: ["opt_deposit", "opt_withdraw", "opt_leave"]
 }
 
@@ -54,7 +54,7 @@
     goto: "interest_reply"
 }
 @interest_reply {
-    text: "Thistlewick sat me down for THREE HOURS. 'Interest is the commodification of time, Clink. Time belongs to everyone, Clink. You cannot own a moment, Clink.' I just wanted to charge two percent. TWO PERCENT."
+    text: "Thistlewick sat me down for THREE HOURS. 'Interest is the commodification of time, Clink.' I just wanted two percent. TWO PERCENT."
     options: ["opt_thistlewick_right", "opt_two_percent", "opt_deposit", "opt_withdraw", "opt_leave"]
 }
 @opt_two_percent {
@@ -62,7 +62,7 @@
     goto: "two_percent_reply"
 }
 @two_percent_reply {
-    text: "THANK you! That's what I said! But no. 'Profit from holding is indistinguishable from theft, Clink.' He meditated at me for another hour after that."
+    text: "THANK you! But no. 'Profit from holding is theft, Clink.' Then he meditated at me for an hour."
     options: ["opt_deposit", "opt_withdraw", "opt_leave"]
 }
 @opt_thistlewick_right {
@@ -70,7 +70,7 @@
     goto: "thistlewick_right_reply"
 }
 @thistlewick_right_reply {
-    text: "Don't you start. I get enough philosophy from Glorbnax. Last week he told me money is an illusion. I told him to pay for his tea with an illusion. He hasn't spoken to me since. Best week of my career."
+    text: "Don't you start. Glorbnax told me money is an illusion last week. I told him to pay for his tea with one. He hasn't spoken to me since."
     options: ["opt_deposit", "opt_withdraw", "opt_leave"]
 }
 
@@ -80,13 +80,9 @@
 @opt_deposit {
     label: "Store 10 gold."
     color: "quest"
+    require_gold_min: 10
     action: "bank_deposit"
-    goto: "deposit_reply"
-}
-@deposit_reply {
-    text: "Deposited. Safe and sound. I'll guard it with my life. Well, I'm a pacifist. I'll guard it with my presence."
-    set_flag: "used_bank"
-    options: ["opt_withdraw", "opt_how_much", "opt_leave"]
+    goto: "bank_more"
 }
 
 # ==============================
@@ -97,11 +93,7 @@
     color: "quest"
     require_flag: "has_vault_gold"
     action: "bank_withdraw"
-    goto: "withdraw_reply"
-}
-@withdraw_reply {
-    text: "There you go. Spend it wisely. Or don't. I'm not a financial advisor."
-    options: ["opt_deposit", "opt_leave"]
+    goto: "bank_more"
 }
 
 # ==============================
@@ -115,6 +107,16 @@
 @how_much_reply {
     text: "Let me check the ledger..."
     options: ["opt_deposit", "opt_withdraw", "opt_leave"]
+}
+
+# ==============================
+# BANK MORE (shared loop-back)
+# ==============================
+@bank_more {
+    text: "Anything else?"
+    set_flag: "used_bank"
+    action: "bank_check"
+    options: ["opt_deposit", "opt_withdraw", "opt_how_much", "opt_leave"]
 }
 
 # ==============================

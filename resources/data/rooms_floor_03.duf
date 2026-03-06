@@ -1,0 +1,116 @@
+@entry_room {
+  room_id: "0"
+  name: "Entry Chamber"
+}
+@greta_room {
+  room_id: "1"
+  name: "Greta's Chamber"
+}
+@vestry {
+  room_id: "2"
+  name: "Vestry"
+}
+@sacristy {
+  room_id: "3"
+  name: "Sacristy"
+}
+@church_nave {
+  room_id: "4"
+  name: "Church Nave"
+}
+@west_chapel {
+  room_id: "5"
+  name: "West Chapel"
+}
+@east_chapel {
+  room_id: "6"
+  name: "East Chapel"
+}
+@horrors_den {
+  room_id: "7"
+  name: "Horror's Den"
+}
+@outer_crypt {
+  room_id: "8"
+  name: "Outer Crypt"
+}
+@church_crossing {
+  room_id: "9"
+  name: "Church Crossing"
+}
+@central_aisle {
+  room_id: "!"
+  name: "Central Aisle"
+}
+@south_chamber {
+  room_id: "@"
+  name: "South Chamber"
+}
+@north_approach {
+  room_id: "~"
+  name: "North Approach"
+}
+@ex_cultist_town {
+  room_id: "t"
+  name: "Ex-Cultist Town"
+}
+@ossuary {
+  room_id: "$"
+  name: "Ossuary"
+}
+@reliquary {
+  room_id: "^"
+  name: "Reliquary"
+}
+@ambulatory {
+  room_id: "%"
+  name: "Ambulatory"
+}
+@north_chapel {
+  room_id: "*"
+  name: "North Chapel"
+}
+@chapter_house {
+  room_id: "&"
+  name: "Chapter House"
+}
+@chancel {
+  room_id: "-"
+  name: "Chancel"
+}
+@lost_horror_den {
+  room_id: "("
+  name: "Lost Horror's Den"
+}
+@found_horror_den {
+  room_id: ")"
+  name: "Found Horror's Den"
+}
+@north_passage {
+  room_id: "q"
+  name: "North Passage"
+}
+@prelost_room {
+  room_id: "w"
+  name: "Prelost Room"
+}
+@north_pinnacle {
+  room_id: "e"
+  name: "North Pinnacle"
+}
+@west_cellar {
+  room_id: "y"
+  name: "West Cellar"
+}
+@south_cellar {
+  room_id: "u"
+  name: "South Cellar"
+}
+@east_cellar {
+  room_id: "r"
+  name: "East Cellar"
+}
+@inner_cellar {
+  room_id: "i"
+  name: "Inner Cellar"
+}

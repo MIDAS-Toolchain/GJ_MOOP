@@ -1,0 +1,60 @@
+@npc {
+    name: "Goblin Door"
+    glyph: "+"
+    color: [120, 90, 60, 255]
+    image_path: "resources/assets/npcs/goblin_door.png"
+    description: "A heavy door bound with iron bands. Crude goblin runes are scratched into the wood."
+    action: "Open"
+    no_face: true
+    no_shadow: true
+}
+
+# ==============================
+# LOCKED (default)
+# ==============================
+@locked {
+    start: true
+    priority: 0
+    text: "The door is locked shut. There's a note nailed to it that reads: 'On Vactaion. Do NOT open. - The Goblin Jaler'"
+    options: ["opt_knock", "opt_leave"]
+}
+
+# ==============================
+# HAS KEY
+# ==============================
+@has_key {
+    start: true
+    priority: 5
+    require_item: "Goblin Jail Key"
+    text: "The door is locked. The key from the jailer looks like it fits."
+    options: ["opt_unlock", "opt_leave"]
+}
+
+# ==============================
+# OPTIONS
+# ==============================
+@opt_knock {
+    label: "Knock anyway"
+    goto: "knock_reply"
+}
+@knock_reply {
+    text: "Nothing happens."
+    options: ["opt_leave"]
+}
+
+@opt_unlock {
+    label: "Unlock the door"
+    color: "quest"
+    take_item: "Goblin Jail Key"
+    set_flag: "jail_door_opened"
+    action: "relocate:0,0"
+    goto: "end"
+}
+
+# ==============================
+# LEAVE
+# ==============================
+@opt_leave {
+    label: "[Step away]"
+    goto: "end"
+}

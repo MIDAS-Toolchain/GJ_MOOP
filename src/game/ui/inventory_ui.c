@@ -49,6 +49,9 @@
 #define EQ_ACTION_COUNT   2
 #define INV_ACTION_COUNT  3
 
+/* Consumable hotkeys: 1-9, 0 */
+#define MAX_HOTKEYS 10
+
 static const char* eq_slot_labels[EQUIP_SLOTS] = { "WPN", "ARM", "TRK", "TRK" };
 static const char* eq_action_labels[EQ_ACTION_COUNT] = { "Unequip", "Look" };
 
@@ -136,6 +139,25 @@ static float CalcModalW( int item_type, int item_index )
   a_CalcTextDimensions( name, a_default_text_style.type, &tw, &th );
   float needed = tw * EQ_MODAL_NAME_S + EQ_MODAL_PAD_X * 2;
   return needed > EQ_MODAL_MIN_W ? needed : EQ_MODAL_MIN_W;
+}
+
+/* Build hotkey map: returns count of assigned hotkeys (0-10).
+   hotkey_slots[0] = inv slot for key '1', ..., [9] = key '0'. */
+static int BuildHotkeyMap( int hotkey_slots[MAX_HOTKEYS] )
+{
+  int n = 0;
+  for ( int i = 0; i < MAX_INVENTORY && n < MAX_HOTKEYS; i++ )
+  {
+    InvSlot_t* s = &player.inventory[i];
+    if ( s->type != INV_CONSUMABLE ) continue;
+    if ( s->index < 0 || s->index >= g_num_consumables ) continue;
+    ConsumableInfo_t* c = &g_consumables[s->index];
+    if ( strcmp( c->type, "food" ) == 0
+      || strcmp( c->type, "gadget" ) == 0
+      || strcmp( c->type, "scroll" ) == 0 )
+      hotkey_slots[n++] = i;
+  }
+  return n;
 }
 
 /* ------------------------------------------------------------------ */
@@ -434,17 +456,38 @@ int InventoryUILogic( int mouse_moved )
       {
         if ( slot->type == INV_EQUIPMENT )
         {
-          int eq_slot = EquipSlotForKind( g_equipment[slot->index].slot );
+          EquipmentInfo_t* ei = &g_equipment[slot->index];
+          int eq_slot = ( strcmp( ei->kind, "trinket" ) == 0 )
+                        ? EquipSlotForTrinket( slot->index )
+                        : EquipSlotForKind( ei->slot );
           if ( eq_slot >= 0 )
           {
             if ( player.equipment[eq_slot] >= 0 )
             {
               int old = player.equipment[eq_slot];
               int new_idx = slot->index;
+              EquipmentInfo_t* old_e = &g_equipment[old];
+              EquipmentInfo_t* new_e = &g_equipment[new_idx];
+
+              /* Weapons/armor: destroy old if new is a straight upgrade */
+              int is_trinket = ( strcmp( ei->kind, "trinket" ) == 0 );
+              int is_upgrade = ( new_e->damage >= old_e->damage &&
+                                 new_e->defense >= old_e->defense );
+
               PlayerEquip( eq_slot, new_idx );
-              slot->type = INV_EQUIPMENT;
-              slot->index = old;
-              GameEventSwap( new_idx, old );
+
+              if ( !is_trinket && is_upgrade )
+              {
+                slot->type = INV_EMPTY;
+                slot->index = 0;
+                GameEvent( EVT_EQUIP, new_idx );
+              }
+              else
+              {
+                slot->type = INV_EQUIPMENT;
+                slot->index = old;
+                GameEventSwap( new_idx, old );
+              }
             }
             else
             {
@@ -796,6 +839,10 @@ static void DrawInventoryGrid( void )
   float ox = ( grid_w - total_grid_w ) / 2.0f;
   float oy = ( grid_h - total_grid_h ) / 2.0f;
 
+  /* Build hotkey map for labeling */
+  int hk_slots[MAX_HOTKEYS];
+  int num_hk = BuildHotkeyMap( hk_slots );
+
   for ( int row = 0; row < INV_ROWS; row++ )
   {
     for ( int col = 0; col < INV_COLS; col++ )
@@ -832,6 +879,22 @@ static void DrawInventoryGrid( void )
         float ix = cx + ( cell - 1 - isz ) / 2.0f;
         float iy = cy + ( cell - 1 - isz ) / 2.0f;
         DrawImageOrGlyph( m->image, m->glyph, m->color, ix, iy, isz );
+      }
+
+      /* Hotkey label in top-left corner */
+      for ( int k = 0; k < num_hk; k++ )
+      {
+        if ( hk_slots[k] == idx )
+        {
+          char hk_label[2] = { (k < 9) ? ('1' + k) : '0', '\0' };
+          aTextStyle_t hts = a_default_text_style;
+          hts.bg = (aColor_t){ 0, 0, 0, 0 };
+          hts.fg = GOLD;
+          hts.scale = 0.9f;
+          hts.align = TEXT_ALIGN_LEFT;
+          a_DrawText( hk_label, (int)( cx + 2 ), (int)( cy + 1 ), hts );
+          break;
+        }
       }
 
       /* Cursor highlight */
@@ -1249,4 +1312,58 @@ void InventoryUIDraw( void )
                        inv_action_cursor );
     }
   }
+}
+
+/* ------------------------------------------------------------------ */
+
+int InventoryUIHotkey( void )
+{
+  /* Map SDL scancodes 1-9,0 to hotkey index 0-9 */
+  int pressed = -1;
+  for ( int k = SDL_SCANCODE_1; k <= SDL_SCANCODE_9; k++ )
+  {
+    if ( app.keyboard[k] == 1 )
+    {
+      pressed = k - SDL_SCANCODE_1;   /* 0-8 */
+      app.keyboard[k] = 0;
+      break;
+    }
+  }
+  if ( pressed < 0 && app.keyboard[SDL_SCANCODE_0] == 1 )
+  {
+    pressed = 9;
+    app.keyboard[SDL_SCANCODE_0] = 0;
+  }
+  if ( pressed < 0 ) return 0;
+
+  int hk_slots[MAX_HOTKEYS];
+  int num_hk = BuildHotkeyMap( hk_slots );
+  if ( pressed >= num_hk ) return 0;
+
+  int slot_idx = hk_slots[pressed];
+  InvSlot_t* slot = &player.inventory[slot_idx];
+  ConsumableInfo_t* ci = &g_consumables[slot->index];
+
+  /* Targeted items (gadget, scroll, ranged food) → enter target mode */
+  if ( strcmp( ci->type, "gadget" ) == 0
+    || strcmp( ci->type, "scroll" ) == 0
+    || ( strcmp( ci->type, "food" ) == 0 && ci->range > 0 ) )
+  {
+    if ( GameEventsConsumableUsed() )
+    {
+      GameEventUseConsumable( slot->index );
+    }
+    else
+    {
+      TargetModeEnter( slot->index, slot_idx );
+    }
+  }
+  /* Instant-use (buffing food with range 0) */
+  else if ( GameEventUseConsumable( slot->index ) )
+  {
+    slot->type = INV_EMPTY;
+    slot->index = 0;
+  }
+
+  return 1;
 }

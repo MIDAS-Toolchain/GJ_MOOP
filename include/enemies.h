@@ -88,6 +88,13 @@ int  EnemyGridH( void );
 /* Shaman totem spawn helper (uses stored list/count) */
 int  EnemyShamanSpawnTotem( int row, int col, int (*walkable)(int,int),
                             Enemy_t* all, int count );
+
+/* Horror AI */
+void EnemyHorrorTick( Enemy_t* e, int player_row, int player_col,
+                      int (*walkable)(int,int),
+                      Enemy_t* all, int count );
+int  EnemyHorrorSpawnBaby( int row, int col, int (*walkable)(int,int),
+                            Enemy_t* all, int count );
 void EnemiesUpdate( float dt );
 int  EnemiesTurning( void );
 

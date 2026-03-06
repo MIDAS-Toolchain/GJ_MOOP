@@ -1,0 +1,136 @@
+@npc {
+    name: "Muri"
+    glyph: "M"
+    color: [180, 150, 130, 255]
+    image_path: "resources/assets/npcs/muri.png"
+    description: "An ex-cultist with cropped hair and steady hands. She does the talking."
+}
+
+# ==============================
+# GREETINGS
+# ==============================
+@greeting {
+    start: true
+    priority: 0
+    require_not_flag: "talked_muri"
+    text: "You're alive. That's something. Most people who make it this far are already listening to the hum. Sit down. Breathe."
+    set_flag: "talked_muri"
+    options: ["opt_who", "opt_cult", "opt_church", "opt_drem", "opt_greta", "opt_leave"]
+}
+@greeting_return {
+    start: true
+    priority: 1
+    require_flag: "talked_muri"
+    require_not_flag: "told_drem_rescued"
+    text: "Still breathing. Good."
+    options: ["opt_who", "opt_cult", "opt_church", "opt_naming", "opt_drem", "opt_greta", "opt_leave"]
+}
+@greeting_bloop_back {
+    start: true
+    priority: 5
+    require_flag: "told_drem_rescued"
+    text: "She ate my bedroll. Drem won't stop grinning. I should be furious. I'm not."
+    options: ["opt_who", "opt_cult", "opt_church", "opt_leave"]
+}
+
+# ==============================
+# WHO ARE YOU
+# ==============================
+@opt_who {
+    label: "Who are you people?"
+    goto: "who_reply"
+}
+@who_reply {
+    text: "Ex-cultists. We stopped listening. Took some doing. Murl here never really listened in the first place — horrors don't have ears. Well. Not ones that work like ours."
+    options: ["opt_memory", "opt_cult", "opt_naming", "opt_leave"]
+}
+@opt_memory {
+    label: "What does the hum do to you?"
+    goto: "memory_reply"
+}
+@memory_reply {
+    text: "Takes the edges off first. Names. Faces. Then the middle. What you liked. Who you were. By the end you're just... listening. And that's all you are."
+    options: ["opt_cult", "opt_church", "opt_leave"]
+}
+
+# ==============================
+# THE CULT
+# ==============================
+@opt_cult {
+    label: "Tell me about the cult."
+    color: "lore"
+    goto: "cult_reply"
+}
+@cult_reply {
+    text: "They worship the dungeon. Kneel until the hum chants back. The woman who leads them has been guiding adventurers down here for decades. Smiles a lot."
+    set_lore: "the_cult"
+    options: ["opt_naming", "opt_church", "opt_greta", "opt_leave"]
+}
+
+# ==============================
+# THE NAMING CONVENTION
+# ==============================
+@opt_naming {
+    label: "Why is the horror named Murl?"
+    color: "lore"
+    goto: "naming_reply"
+}
+@naming_reply {
+    text: "Most of us name them after ourselves. Easy to remember. Especially after what the hum does to your memory. Then you've got people like Drem who name theirs something different. Get attached. Drives them crazy when it goes wrong."
+    set_lore: "the_horrors"
+    options: ["opt_drem", "opt_cult", "opt_church", "opt_leave"]
+}
+
+# ==============================
+# THE CHURCH HALL
+# ==============================
+@opt_church {
+    label: "What's in the church hall?"
+    goto: "church_reply"
+}
+@church_reply {
+    text: "Cultists. The ones still listening. They'll come at you the moment they know you're not one of them."
+    options: ["opt_church_tactic", "opt_leave"]
+}
+@opt_church_tactic {
+    label: "Any advice?"
+    goto: "church_tactic_reply"
+}
+@church_tactic_reply {
+    text: "Fight. They're fragile. The hum keeps them together — hit hard enough and they come apart. Don't stop moving."
+    options: ["opt_cult", "opt_naming", "opt_leave"]
+}
+
+# ==============================
+# DREM
+# ==============================
+@opt_drem {
+    label: "What's wrong with Drem?"
+    require_not_flag: "told_drem_rescued"
+    require_not_flag: "drem_grieving"
+    goto: "drem_reply"
+}
+@drem_reply {
+    text: "His horror wandered off. Named her Bloop. Stupid name. He's a wreck about it. If you see a small horror out there that doesn't try to kill you... that's probably her."
+    options: ["opt_cult", "opt_church", "opt_leave"]
+}
+
+# ==============================
+# GRETA
+# ==============================
+@opt_greta {
+    label: "The woman in the robes?"
+    goto: "greta_reply"
+}
+@greta_reply {
+    text: "Don't trust the smile. She's been doing this longer than any of us have been alive. Every group she 'helps' ends up in the church. None of them come back out."
+    options: ["opt_cult", "opt_church", "opt_leave"]
+}
+
+# ==============================
+# LEAVE
+# ==============================
+@opt_leave {
+    label: "[Leave]"
+    goto: "end"
+}

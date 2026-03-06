@@ -63,7 +63,8 @@ int DialogueUILogic( void )
   int count = DialogueGetOptionCount();
   if ( count <= 0 ) return 1;
 
-  /* Mouse hover on option rows */
+  /* Mouse hover on option rows (only when mouse is active input) */
+  if ( InputModeGet() == INPUT_MOUSE )
   {
     int mx = app.mouse.x;
     int my = app.mouse.y;

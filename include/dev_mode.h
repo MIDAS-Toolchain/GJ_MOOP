@@ -9,5 +9,6 @@ void DevModeSetNPCs( NPC_t* list, int* count );
 int  DevModeActive( void );
 int  DevModeInput( void );
 void DevModeDraw( void );
+int  DevModeNoclip( void );
 
 #endif

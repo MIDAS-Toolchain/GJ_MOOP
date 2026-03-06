@@ -1,0 +1,45 @@
+@npc {
+    name: "Church Door"
+    glyph: "+"
+    color: [120, 90, 60, 255]
+    image_path: "resources/assets/npcs/goblin_door.png"
+    description: "A heavy wooden door. Scratch marks cover the inside."
+    action: "Open"
+    no_face: true
+    no_shadow: true
+}
+
+# ==============================
+# GREETINGS
+# ==============================
+@locked {
+    start: true
+    priority: 0
+    text: "The door is barred from the other side."
+    options: ["opt_leave"]
+}
+@unlocked {
+    start: true
+    priority: 5
+    require_flag: "greta_horror_spawned"
+    text: "The bar has splintered. The door swings freely."
+    options: ["opt_open", "opt_leave"]
+}
+
+# ==============================
+# OPTIONS
+# ==============================
+@opt_open {
+    label: "Open"
+    color: "complete"
+    action: "relocate:0,0"
+    goto: "end"
+}
+
+# ==============================
+# LEAVE
+# ==============================
+@opt_leave {
+    label: "[Step away]"
+    goto: "end"
+}

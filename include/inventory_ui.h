@@ -12,5 +12,6 @@ void InventoryUIDraw( void );
 int  InventoryUIFocused( void );
 void InventoryUIUnfocus( void );
 void InventoryUISetIntroOffset( float x_offset, float alpha );
+int  InventoryUIHotkey( void );
 
 #endif

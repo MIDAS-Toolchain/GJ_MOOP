@@ -1,5 +1,7 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <Archimedes.h>
 #include <Daedalus.h>
 
@@ -68,6 +70,12 @@ static void LoadCharacterData( void )
 
     if ( img_path && strlen( img_path->value_string ) > 0 )
     {
+      if ( access( img_path->value_string, F_OK ) != 0 )
+      {
+        fprintf( stderr, "FATAL: missing image '%s' for class '%s'\n",
+                 img_path->value_string, g_classes[i].name );
+        exit( 1 );
+      }
       g_classes[i].image = a_ImageLoad( img_path->value_string );
     }
   }
@@ -122,7 +130,15 @@ static void ParseConsumableEntry( dDUFValue_t* entry )
   if ( use_message ) strncpy( c->use_message, use_message->value_string, 255 );
 
   if ( img_path && strlen( img_path->value_string ) > 0 )
+  {
+    if ( access( img_path->value_string, F_OK ) != 0 )
+    {
+      fprintf( stderr, "FATAL: missing image '%s' for consumable '%s'\n",
+               img_path->value_string, c->name );
+      exit( 1 );
+    }
     c->image = a_ImageLoad( img_path->value_string );
+  }
 
   g_num_consumables++;
 }
@@ -187,7 +203,15 @@ static void LoadOpenableData( void )
     o->color = ParseDUFColor( color );
 
     if ( img_path && strlen( img_path->value_string ) > 0 )
+    {
+      if ( access( img_path->value_string, F_OK ) != 0 )
+      {
+        fprintf( stderr, "FATAL: missing image '%s' for openable '%s'\n",
+                 img_path->value_string, o->name );
+        exit( 1 );
+      }
       o->image = a_ImageLoad( img_path->value_string );
+    }
 
     g_num_openables++;
   }
@@ -242,7 +266,15 @@ static void LoadEquipmentDUF( const char* path )
     e->color = ParseDUFColor( color );
 
     if ( img_path && strlen( img_path->value_string ) > 0 )
+    {
+      if ( access( img_path->value_string, F_OK ) != 0 )
+      {
+        fprintf( stderr, "FATAL: missing image '%s' for equipment '%s'\n",
+                 img_path->value_string, e->name );
+        exit( 1 );
+      }
       e->image = a_ImageLoad( img_path->value_string );
+    }
 
     g_num_equipment++;
   }
@@ -377,9 +409,29 @@ int EquipSlotForKind( const char* kind )
   if ( strcmp( kind, "trinket" ) == 0 )
   {
     if ( player.equipment[EQUIP_TRINKET1] == -1 ) return EQUIP_TRINKET1;
+    if ( player.equipment[EQUIP_TRINKET2] == -1 ) return EQUIP_TRINKET2;
     return EQUIP_TRINKET2;
   }
   return -1;
+}
+
+int EquipSlotForTrinket( int equip_idx )
+{
+  EquipmentInfo_t* incoming = &g_equipment[equip_idx];
+
+  /* If an equipped trinket shares the same effect, replace it */
+  for ( int s = EQUIP_TRINKET1; s <= EQUIP_TRINKET2; s++ )
+  {
+    if ( player.equipment[s] < 0 ) continue;
+    EquipmentInfo_t* cur = &g_equipment[player.equipment[s]];
+    if ( strcmp( cur->effect, incoming->effect ) == 0 )
+      return s;
+  }
+
+  /* Otherwise first empty, or default to slot 2 */
+  if ( player.equipment[EQUIP_TRINKET1] == -1 ) return EQUIP_TRINKET1;
+  if ( player.equipment[EQUIP_TRINKET2] == -1 ) return EQUIP_TRINKET2;
+  return EQUIP_TRINKET2;
 }
 
 void EquipStarterGear( const char* class_key )
@@ -474,6 +526,8 @@ void PlayerFullReset( int class_index )
   player.first_strike_active = 1;
   player.fs_visited = 0;
   player.scroll_echo_counter = 0;
+  player.dodge_counter = 0;
+  player.attack_counter = 0;
   player.last_room_id = -1;
   for ( int i = 0; i < EQUIP_SLOTS; i++ )
     player.equipment[i] = -1;

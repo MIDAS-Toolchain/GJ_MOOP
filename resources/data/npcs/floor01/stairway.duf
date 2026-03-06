@@ -4,6 +4,7 @@
     color: [222, 158, 65, 255]
     description: "A stone stairway spiraling downward into darkness."
     action: "Walk"
+    no_face: true
 }
 
 # ==============================
@@ -34,6 +35,6 @@
 # BACK
 # ==============================
 @opt_back {
-    label: "[Step away]"
+    label: "[Continue]"
     goto: "end"
 }

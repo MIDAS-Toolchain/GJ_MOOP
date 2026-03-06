@@ -142,6 +142,9 @@
     text: "*long pause* ...okay FINE! We are rats! Three rats! In a coat! But we are BUSINESS rats! We are DIFFERENT! Please do not kill us! We have INVENTORY!"
     set_flag: "knows_shop_rats"
     set_lore: "shop_rats"
+    goto: "rat_quest_gotcha_shop"
+}
+@rat_quest_gotcha_shop {
     set_flag: "visited_shop"
     options: ["opt_three_of_you", "opt_wont_hurt", "opt_browse", "opt_leave"]
 }

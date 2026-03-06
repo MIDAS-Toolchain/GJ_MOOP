@@ -162,6 +162,42 @@ int HUDDrawTopBar( int in_combat )
     }
   }
 
+  /* dodge - green, show counter progress */
+  {
+    int dodge = PlayerEquipEffect( "dodge" );
+    if ( dodge > 0 )
+    {
+      ts.fg = (aColor_t){ 0x75, 0xa7, 0x43, 255 };
+      snprintf( buf, sizeof( buf ), "DODGE(%d/%d)", player.dodge_counter % dodge, dodge );
+      a_DrawText( buf, (int)sx, (int)( ty + 4 ), ts );
+      sx += strlen( buf ) * 8.0f * TB_STAT_SCALE + TB_STAT_GAP;
+    }
+  }
+
+  /* armor_break - red, show counter progress */
+  {
+    int ab = PlayerEquipEffect( "armor_break" );
+    if ( ab > 0 )
+    {
+      ts.fg = (aColor_t){ 0xcf, 0x57, 0x3c, 255 };
+      snprintf( buf, sizeof( buf ), "BREAK(%d/%d)", player.attack_counter % ab, ab );
+      a_DrawText( buf, (int)sx, (int)( ty + 4 ), ts );
+      sx += strlen( buf ) * 8.0f * TB_STAT_SCALE + TB_STAT_GAP;
+    }
+  }
+
+  /* mana_shield - blue, always active when equipped */
+  {
+    int ms = PlayerEquipEffect( "mana_shield" );
+    if ( ms > 0 )
+    {
+      ts.fg = (aColor_t){ 0x73, 0xbe, 0xd3, 255 };
+      snprintf( buf, sizeof( buf ), "SHIELD" );
+      a_DrawText( buf, (int)sx, (int)( ty + 4 ), ts );
+      sx += strlen( buf ) * 8.0f * TB_STAT_SCALE + TB_STAT_GAP;
+    }
+  }
+
   /* Combat indicator - red */
   if ( in_combat )
   {

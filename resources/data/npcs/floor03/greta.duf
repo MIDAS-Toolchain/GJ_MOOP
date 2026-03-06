@@ -1,0 +1,220 @@
+@npc {
+    name: "Greta"
+    glyph: "W"
+    color: [200, 180, 160, 255]
+    image_path: "resources/assets/npcs/greta.png"
+    description: "A woman in dark robes, smiling warmly."
+    idle_bark: "*hums softly*"
+    idle_cooldown: 6
+}
+
+# ==============================
+# GREETINGS
+# ==============================
+@greeting_merc {
+    start: true
+    priority: 1
+    require_class: "Mercenary"
+    require_not_lore: "mayor_greta"
+    text: "Oh my. Look at you. You must be exhausted. Please, rest a moment. There's no danger here. Not with me."
+    options: ["opt_who_are_you", "opt_robes", "opt_church_door", "opt_help_me", "opt_leave"]
+}
+@greeting_merc_knows {
+    start: true
+    priority: 2
+    require_class: "Mercenary"
+    require_lore: "mayor_greta"
+    text: "Oh my. Look at you. You must be exhausted. Please, rest a moment. There's no danger here. Not with me."
+    options: ["opt_who_are_you", "opt_robes", "opt_church_door", "opt_help_me", "opt_mayor_greta", "opt_leave"]
+}
+@greeting_rogue {
+    start: true
+    priority: 1
+    require_class: "Rogue"
+    require_not_lore: "mayor_greta"
+    text: "Quick eyes. I can tell. You've been careful getting here. Good. The careful ones make it the furthest."
+    options: ["opt_who_are_you", "opt_robes", "opt_church_door", "opt_help_me", "opt_leave"]
+}
+@greeting_rogue_knows {
+    start: true
+    priority: 2
+    require_class: "Rogue"
+    require_lore: "mayor_greta"
+    text: "Quick eyes. I can tell. You've been careful getting here. Good. The careful ones make it the furthest."
+    options: ["opt_who_are_you", "opt_robes", "opt_church_door", "opt_help_me", "opt_mayor_greta", "opt_leave"]
+}
+@greeting_mage {
+    start: true
+    priority: 1
+    require_class: "Mage"
+    require_not_lore: "mayor_greta"
+    text: "You feel it, don't you? The hum. It's so much clearer down here. Don't worry. I can help you through."
+    options: ["opt_who_are_you", "opt_robes", "opt_church_door", "opt_help_me", "opt_leave"]
+}
+@greeting_mage_knows {
+    start: true
+    priority: 2
+    require_class: "Mage"
+    require_lore: "mayor_greta"
+    text: "You feel it, don't you? The hum. It's so much clearer down here. Don't worry. I can help you through."
+    options: ["opt_who_are_you", "opt_robes", "opt_church_door", "opt_help_me", "opt_mayor_greta", "opt_leave"]
+}
+
+# ==============================
+# WHO ARE YOU
+# ==============================
+@opt_who_are_you {
+    label: "Who are you?"
+    goto: "who_reply"
+}
+@who_reply {
+    text: "Just a woman who's been here a long time. I help the ones who make it this far. Most don't. But you're still you. That's rare."
+    options: ["opt_how_long", "opt_help_me", "opt_church_door", "opt_mayor_greta", "opt_leave"]
+}
+@opt_how_long {
+    label: "How long have you been down here?"
+    goto: "how_long_reply"
+}
+@how_long_reply {
+    text: "Oh, I've lost count. But I don't mind. I have purpose here."
+    options: ["opt_worthy", "opt_help_me", "opt_leave"]
+}
+@opt_worthy {
+    label: "What purpose?"
+    goto: "worthy_reply"
+}
+@worthy_reply {
+    text: "Oh, you'll see. If you make it. Most don't."
+    options: ["opt_help_me", "opt_church_door", "opt_leave"]
+}
+
+# ==============================
+# THE ROBES
+# ==============================
+@opt_robes {
+    label: "Why are you dressed like that?"
+    goto: "robes_reply"
+}
+@robes_reply {
+    text: "Like what? Oh, the robes? It gets cold this deep. We all wear them down here."
+    options: ["opt_who_are_you", "opt_church_door", "opt_help_me", "opt_leave"]
+}
+
+# ==============================
+# THE CHURCH DOOR
+# ==============================
+@opt_church_door {
+    label: "What's behind the door to the north?"
+    goto: "church_door_reply"
+}
+@church_door_reply {
+    text: "Friends of mine. They're praying. I can take you through safely. They know me. Just stay close."
+    options: ["opt_help_me", "opt_who_praying", "opt_leave"]
+}
+@opt_who_praying {
+    label: "Who are they praying to?"
+    goto: "who_praying_reply"
+}
+@who_praying_reply {
+    text: "The dungeon. They've heard the hum so long it became a hymn. They're harmless. As long as you're with me."
+    options: ["opt_help_me", "opt_leave"]
+}
+
+# ==============================
+# TRUST PATH — ESCORT
+# ==============================
+@opt_help_me {
+    label: "Can you help me get through?"
+    color: "quest"
+    goto: "help_me_reply"
+}
+@help_me_reply {
+    text: "Of course, dear. Stay close. Don't stop walking."
+    set_flag: "greta_guide"
+    options: ["opt_lets_go", "opt_leave"]
+}
+@opt_lets_go {
+    label: "Let's go."
+    color: "quest"
+    goto: "lets_go_reply"
+}
+@lets_go_reply {
+    text: "Good. Follow me."
+    action: "relocate:42,49"
+    set_flag: "church_escort"
+    goto: "end"
+}
+
+# ==============================
+# TRUST PATH — BETRAYAL
+# ==============================
+@betrayal_merc {
+    start: true
+    priority: 10
+    require_class: "Mercenary"
+    require_flag: "church_escort"
+    text: "I'm sorry, dear. I liked Aldric too. He was stronger than you, actually. It didn't help."
+    options: ["opt_what_talking", "opt_betrayed_silence"]
+}
+@betrayal_rogue {
+    start: true
+    priority: 10
+    require_class: "Rogue"
+    require_flag: "church_escort"
+    text: "I'm sorry, dear. I liked Vessa too. She was quicker than you, actually. She still didn't make it out."
+    options: ["opt_what_talking", "opt_betrayed_silence"]
+}
+@betrayal_mage {
+    start: true
+    priority: 10
+    require_class: "Mage"
+    require_flag: "church_escort"
+    text: "I'm sorry, dear. I liked R. too. He understood more than you, actually. The hum took him anyway."
+    options: ["opt_what_talking", "opt_betrayed_silence"]
+}
+@opt_what_talking {
+    label: "What are you talking about?"
+    goto: "betrayal_end"
+}
+@opt_betrayed_silence {
+    label: "..."
+    goto: "betrayal_end"
+}
+@betrayal_end {
+    text: "Every group thinks they're different. You're not."
+    action: "relocate:0,0"
+    set_flag: "greta_betrayed"
+    goto: "end"
+}
+
+# ==============================
+# DEFY PATH — MAYOR REVEAL
+# ==============================
+@opt_mayor_greta {
+    label: "...Mayor Greta?"
+    color: "danger"
+    require_lore: "mayor_greta"
+    goto: "mayor_greta_reply"
+}
+@mayor_greta_reply {
+    text: "..."
+    options: ["opt_it_is_you"]
+}
+@opt_it_is_you {
+    label: "It is you!"
+    color: "danger"
+    goto: "defy_final"
+}
+@defy_final {
+    action: "relocate:0,0"
+    set_flag: "greta_defied"
+    goto: "end"
+}
+
+# ==============================
+# LEAVE
+# ==============================
+@opt_leave {
+    label: "[Leave]"
+    goto: "end"
+}

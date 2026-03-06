@@ -1,0 +1,44 @@
+@horror {
+    name: "Horror"
+    glyph: "H"
+    hp: 20
+    damage: 4
+    defense: 2
+    ai: "basic"
+    sight_range: 7
+    gold_drop: 2
+    color: [120, 50, 90, 255]
+    image_path: "resources/assets/enemies/horror.png"
+    description: "A twisted thing of flesh and shadow. Slower than its elder kin, but no less hungry."
+}
+
+@cultist {
+    name: "Cultist"
+    glyph: "c"
+    hp: 14
+    damage: 3
+    defense: 1
+    ai: "basic"
+    sight_range: 6
+    gold_drop: 1
+    color: [160, 140, 120, 255]
+    image_path: "resources/assets/enemies/cultist.png"
+    description: "A robed figure, no longer praying. Its eyes are wrong."
+}
+
+@void_slime {
+    name: "Void Slime"
+    glyph: "S"
+    hp: 16
+    damage: 3
+    defense: 1
+    ai: "basic"
+    sight_range: 5
+    on_death: "poison_pool"
+    pool_duration: 5
+    pool_damage: 3
+    gold_drop: 2
+    color: [140, 40, 160, 255]
+    image_path: "resources/assets/enemies/void_slime.png"
+    description: "A bloated purple mass. Leaves a pool of caustic ichor when it dies."
+}

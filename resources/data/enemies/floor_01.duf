@@ -24,7 +24,7 @@
     description: "A bloated rat draped in filth. Its tangled crown of tails marks it as king."
     gold_drop: 8
     drop_item: ""
-    image_path: ""
+    image_path: "resources/assets/enemies/rat_king.png"
     color: [200, 170, 80, 255]
 }
 

@@ -1,0 +1,47 @@
+@npc {
+    name: "Murl"
+    glyph: "h"
+    color: [120, 80, 100, 255]
+    image_path: "resources/assets/npcs/murl.png"
+    description: "A horror. It sits perfectly still behind a collection of items arranged on a rug. Its eyes follow you."
+    idle_bark: "*gurgle*"
+    idle_cooldown: 8
+}
+
+# ==============================
+# GREETINGS
+# ==============================
+@greeting {
+    start: true
+    priority: 0
+    text: "[Muri calls over] She doesn't talk. Not with words. But she's good. Honest. Better merchant than most humans I've met. Just browse the rug."
+    options: ["opt_how", "opt_leave"]
+}
+
+# ==============================
+# OPTIONS
+# ==============================
+@opt_how {
+    label: "How does a horror run a shop?"
+    goto: "how_reply"
+}
+@how_reply {
+    text: "[Muri] She collects things. Adventurer gear, mostly. Things people dropped before the hum got them. She arranges them on the rug. If you take something, leave gold. She counts."
+    options: ["opt_counts", "opt_leave"]
+}
+@opt_counts {
+    label: "She counts?"
+    goto: "counts_reply"
+}
+@counts_reply {
+    text: "[Muri] Better than I do. Don't ask me how. She just... knows. Shortchange her and she'll remember. You don't want that."
+    options: ["opt_leave"]
+}
+
+# ==============================
+# LEAVE
+# ==============================
+@opt_leave {
+    label: "[Step away]"
+    goto: "end"
+}

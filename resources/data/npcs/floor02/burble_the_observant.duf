@@ -5,6 +5,7 @@
     image_path: "resources/assets/npcs/burble_the_observant.png"
     description: "A goblin in guard armor, standing beside an open gate."
     idle_bark: "*observes*"
+    idle_cooldown: 5
 }
 
 # ==============================
@@ -14,7 +15,7 @@
     start: true
     priority: 0
     text: "Halt! Or don't. I'm not going to do anything either way."
-    options: ["opt_guard", "opt_stop_me", "opt_peace_tribe", "opt_about_raid", "opt_leave"]
+    options: ["opt_guard", "opt_stop_me", "opt_peace_tribe", "opt_spider_quest", "opt_spider_quest_active", "opt_about_raid", "opt_leave"]
 }
 @greeting_has_relic {
     start: true
@@ -22,7 +23,7 @@
     require_flag: "has_relic"
     require_not_flag: "relic_returned"
     text: "Is that... the Hearthstone?! Thistlewick will want to see you! I would escort you but that feels too aggressive. He's inside. Just... walk in. Like everyone does."
-    options: ["opt_thistlewick_where", "opt_leave"]
+    options: ["opt_thistlewick_where", "opt_spider_quest", "opt_spider_quest_active", "opt_leave"]
 }
 
 # ==============================
@@ -140,6 +141,105 @@
     text: "We are goblins of stillness. Of thought. Of deeply held convictions that sometimes get us robbed. Thistlewick leads us. Glorbnax teaches us. I guard the gate."
     set_lore: "peace_tribe"
     options: ["opt_thistlewick_where", "opt_guard", "opt_about_raid", "opt_leave"]
+}
+
+# ==============================
+# SPIDER QUEST
+# ==============================
+@opt_spider_quest {
+    label: "What creature do you hate the most?"
+    color: "quest"
+    require_not_flag: "quest_spiders"
+    goto: "spider_hate_reply"
+}
+@spider_hate_reply {
+    text: "The spiders. I have observed many terrible things from this gate. War goblins. Slimes. A rat that looked at me with genuine malice. But the spiders are the worst. They are fast. They are quiet. And they do not respect the concept of a gate."
+    options: ["opt_spider_lore", "opt_spider_accept", "opt_spider_accept_done", "opt_leave"]
+}
+@opt_spider_lore {
+    label: "Tell me about the cave spiders."
+    color: "lore"
+    goto: "spider_lore_reply"
+}
+@spider_lore_reply {
+    text: "They came with the dark. When the deeper floors opened up, the spiders crawled out. Not the small ones you see above. These are cave spiders. They spin webs across corridors and wait. I have observed three goblins walk into the same web this week. The same web. I said nothing each time. It is not my place to intervene."
+    set_lore: "cave_spiders"
+    options: ["opt_spider_accept", "opt_spider_accept_done", "opt_leave"]
+}
+@opt_spider_accept {
+    label: "I'll take care of some spiders for you."
+    color: "quest"
+    set_flag: "quest_spiders"
+    goto: "spider_accept_reply"
+}
+@spider_accept_reply {
+    text: "You would do that? I have been observing them for weeks hoping they would leave on their own. They have not. Three would be enough. Three fewer spiders skittering past my gate."
+    options: ["opt_leave"]
+}
+@opt_spider_accept_done {
+    label: "I already killed them!"
+    color: "complete"
+    require_flag_min: "spider_kills:3"
+    require_not_flag: "quest_spiders"
+    set_flag: "quest_spiders"
+    goto: "spider_accept_done_reply"
+}
+@spider_accept_done_reply {
+    text: "You... already? I observed nothing. I heard nothing. And yet three spiders are gone? This is either a miracle or a deeply concerning gap in my observation skills. I choose to believe the former."
+    set_flag: "quest_spiders"
+    options: ["opt_spider_turnin", "opt_leave"]
+}
+@opt_spider_quest_active {
+    label: "About the spiders..."
+    color: "quest"
+    require_flag: "quest_spiders"
+    require_not_flag: "quest_spiders_done"
+    goto: "spider_quest_check"
+}
+@spider_quest_check {
+    text: "Have you dealt with the spider situation? I have been trying not to think about it. Unsuccessfully."
+    options: ["opt_spider_turnin", "opt_spider_not_yet", "opt_leave"]
+}
+@opt_spider_not_yet {
+    label: "Not yet."
+    goto: "spider_not_yet_reply"
+}
+@spider_not_yet_reply {
+    text: "I understand. They are fast. And unsettling. Take your time. I will be here. Observing. Trying not to look at the ceiling."
+    options: ["opt_leave"]
+}
+@opt_spider_turnin {
+    label: "Three spiders are dead."
+    color: "complete"
+    require_flag_min: "spider_kills:3"
+    goto: "spider_turnin_reply"
+}
+@spider_turnin_reply {
+    text: "Three fewer spiders in the world. I observed the difference immediately. The corridors feel calmer. My gate feels safer. Take this. I have been holding onto it for a while. Hard to use things when your job is to stand still and observe."
+    set_flag: "quest_spiders_done"
+    options: ["opt_spider_reward_merc", "opt_spider_reward_rogue", "opt_spider_reward_mage"]
+}
+@opt_spider_reward_merc {
+    label: "Thank you."
+    require_class: "Mercenary"
+    give_item: "Dragon Pepper"
+    goto: "spider_reward_end"
+}
+@opt_spider_reward_rogue {
+    label: "Thank you."
+    require_class: "Rogue"
+    give_item: "Smoke Bomb"
+    goto: "spider_reward_end"
+}
+@opt_spider_reward_mage {
+    label: "Thank you."
+    require_class: "Mage"
+    give_item: "Scroll of Teleport"
+    goto: "spider_reward_end"
+}
+@spider_reward_end {
+    text: "You have done this gate a great service. I will observe the remaining spiders with significantly less dread. Only moderate dread now."
+    options: ["opt_leave"]
 }
 
 # ==============================

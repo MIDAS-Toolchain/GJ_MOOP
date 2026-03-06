@@ -236,8 +236,8 @@ static void cs_Logic( float dt )
     }
   }
 
-  /* Mouse hovering on item lists - check both panels */
-  if ( num_filtered > 0 && last_class_idx >= 0 )
+  /* Mouse hovering on item lists - check both panels (only when mouse active) */
+  if ( num_filtered > 0 && last_class_idx >= 0 && InputModeGet() == INPUT_MOUSE )
   {
     int mx = app.mouse.x;
     int my = app.mouse.y;

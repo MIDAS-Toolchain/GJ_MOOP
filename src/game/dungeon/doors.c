@@ -108,6 +108,11 @@ int DoorTryOpen( World_t* w, int x, int y )
     return 1;
   }
 
+  static uint32_t last_fail_tick = 0;
+  uint32_t now = SDL_GetTicks();
+  if ( now - last_fail_tick < 1000 ) return 0;
+  last_fail_tick = now;
+
   a_AudioPlaySound( &sfx_door_fail, NULL );
   ConsolePush( console, "The door is locked.", door->glyph_fg );
   return 0;

@@ -1,0 +1,22 @@
+# ==============================
+# FLOOR 3 LORE ENTRIES
+# Discovered through NPC dialogue on Floor 3.
+# ==============================
+
+# ==============================
+# PEOPLE
+# ==============================
+@the_cult {
+    title: "The Cult of the Hum"
+    category: "People"
+    description: "Worshippers of the dungeon. They knelt until the hum chanted back. The woman who leads them has been guiding adventurers to the feast table for decades. She smiles a lot."
+}
+
+# ==============================
+# ENEMIES
+# ==============================
+@the_horrors {
+    title: "The Horrors"
+    category: "Enemies"
+    description: "What the hum makes out of people who stop resisting and start worshipping. The cultists each had one. They named them after themselves — easy to remember when the hum eats everything else. Some named theirs differently. Those ones got attached."
+}

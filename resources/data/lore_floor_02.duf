@@ -16,6 +16,21 @@
     category: "People"
     description: "Red clay on their faces, axes in their hands. Led by a warlord named Kragthar who thinks the answer to every problem is hitting it. Two generations ago they split from the peace goblins and followed Kragthar's grandfather to the eastern caves. The hum gave them rage, purpose, direction - all pointing the wrong way."
 }
+@laura {
+    title: "Laura"
+    category: "People"
+    description: "A goblin who used to be peace tribe until she picked up a weapon. When the war goblins raided, she chose to fight back. The peace tribe called it 'choosing violence.' She called it 'not wanting to die.' Exiled. Stands alone in the hallway between both tribes, armed and angry and trying to warn anyone who will listen that something terrible is coming from below. Nobody listens."
+}
+@thistlewick {
+    title: "Thistlewick the Still"
+    category: "People"
+    description: "Peacelord of the peace tribe. Has sat in the same room for three years, listening to the hum. Speaks only when he decides something is worth hearing - which is almost never. Knows exactly what is coming from below. Has known for a long time. Will not pick up a weapon because it would make everything he taught his people a lie. Exiled Laura for doing what he could not."
+}
+@kragthar {
+    title: "Kragthar"
+    category: "People"
+    description: "Warlord of the war tribe. Big goblin, red paint, big axe. Stole the peace tribe's Hearthstone because he knew it would hurt. Grishnak challenged him to a fight once. Grishnak said no. Kragthar got confused and left. Would charge headfirst into whatever lurks below and get everyone killed. Bravely. Stupidly."
+}
 
 # ==============================
 # HISTORY
@@ -26,14 +41,28 @@
     description: "Goblins came underground generations ago, long before the miners or the colored doors. The overworld was cruel - hunted, burned, driven out. The dungeon was supposed to be safe. Then it started changing them. Some grew angry, some grew still. Families broke apart. The elders called it 'The Fracture.'."
 }
 @goblin_origins {
-    title: "Before the Miners"
+    title: "The Goblin Refugees"
     category: "History"
-    description: "The goblins were here first. Generations before the miners cracked open the wrong wall, goblin families were already living in the tunnels. The colored doors were already glowing - three colors, pulsing like a heartbeat. The hum was already humming. The goblins didn't build any of it. They just moved in and tried not to touch anything."
+    description: "They came from the overworld with nothing. Hunted, burned out of every forest and field they tried to settle. The elders led them underground because there was nowhere else left. The tunnels were already here - doors glowing, hum already humming. They didn't ask questions. They just needed somewhere that wasn't trying to kill them. For a while, it worked."
 }
 @dungeon_origins {
     title: "The Doors Were Already Here"
     category: "History"
     description: "The colored doors, the hum, the stone table - all of it predates the goblins. When the first goblin families arrived underground, the dungeon was already built. Already waiting. The goblins didn't create the thing that split them apart. They just moved into it."
+}
+
+# ==============================
+# CREATURES
+# ==============================
+@red_slimes {
+    title: "The Red Slimes"
+    category: "Enemies"
+    description: "Not the mindless green runoff from floor one. The red slimes have been here longer than the goblins. They fed on the hum itself - it cooked them from the inside. Faster, angrier, hotter. When one dies it leaves a burning pool that eats through stone. The peace tribe lost two meditation chambers to them."
+}
+@cave_spiders {
+    title: "Cave Spiders"
+    category: "Creatures"
+    description: "When the deeper floors opened up, the spiders crawled out. Not the small ones from above - cave spiders. Fast, aggressive, and silent. They spin webs across corridors and wait. They do not respect the concept of a gate, a wall, or personal space."
 }
 
 # ==============================

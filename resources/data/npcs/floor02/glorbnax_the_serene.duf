@@ -3,9 +3,7 @@
     glyph: "P"
     color: [100, 140, 180, 255]
     image_path: "resources/assets/npcs/glorbnax_the_serene.png"
-    description: "A goblin in dark robes with blue chalk on his face. He is standing perfectly still."
-    idle_bark: "*breathes deeply*"
-    idle_cooldown: 5
+    description: "A goblin in dark robes, blue chalk on his face. Perfectly still."
 }
 
 # ==============================
@@ -15,35 +13,35 @@
     start: true
     priority: 0
     text: "Be still. You are safe here. Well, not safe. But still."
-    options: ["opt_who_are_you", "opt_why_standing", "opt_peace_tribe", "opt_about_laura", "opt_leave"]
+    options: ["opt_who_are_you", "opt_why_standing", "opt_peace_tribe", "opt_slime_quest", "opt_slime_quest_active", "opt_about_laura", "opt_leave"]
 }
 @greeting_merc {
     start: true
     priority: 1
     require_class: "Mercenary"
     text: "A warrior. I sense great violence in you. I do not judge. I observe. ...please do not hit me."
-    options: ["opt_who_are_you", "opt_why_standing", "opt_peace_tribe", "opt_about_laura", "opt_leave"]
+    options: ["opt_who_are_you", "opt_why_standing", "opt_peace_tribe", "opt_slime_quest", "opt_slime_quest_active", "opt_about_laura", "opt_leave"]
 }
 @greeting_rogue {
     start: true
     priority: 1
     require_class: "Rogue"
     text: "I saw you arrive. I also saw you steal a glance at my pockets. I have nothing worth taking. Only wisdom. And a small rock I find calming."
-    options: ["opt_who_are_you", "opt_why_standing", "opt_peace_tribe", "opt_about_laura", "opt_leave"]
+    options: ["opt_who_are_you", "opt_why_standing", "opt_peace_tribe", "opt_slime_quest", "opt_slime_quest_active", "opt_about_laura", "opt_leave"]
 }
 @greeting_mage {
     start: true
     priority: 1
     require_class: "Mage"
     text: "A mage. You hear the hum too, don't you? We hear it always. We have learned to listen without answering."
-    options: ["opt_who_are_you", "opt_the_hum", "opt_peace_tribe", "opt_about_laura", "opt_leave"]
+    options: ["opt_who_are_you", "opt_the_hum", "opt_peace_tribe", "opt_slime_quest", "opt_slime_quest_active", "opt_about_laura", "opt_leave"]
 }
 @greeting_post_combat {
     start: true
     priority: 2
     require_flag: "quest_relic"
     text: "You have chosen to help Laura. I do not agree with her methods. But I respect your path."
-    options: ["opt_directions", "opt_why_standing", "opt_peace_tribe", "opt_about_laura", "opt_leave"]
+    options: ["opt_directions", "opt_why_standing", "opt_peace_tribe", "opt_slime_quest", "opt_slime_quest_active", "opt_about_laura", "opt_leave"]
 }
 @greeting_has_relic {
     start: true
@@ -51,14 +49,14 @@
     require_flag: "has_relic"
     require_not_flag: "relic_returned"
     text: "The Hearthstone. You recovered it. Thistlewick will want to see you. Follow the western corridor. He will be... still."
-    options: ["opt_directions", "opt_thistlewick_expect", "opt_leave"]
+    options: ["opt_directions", "opt_thistlewick_expect", "opt_slime_quest", "opt_slime_quest_active", "opt_leave"]
 }
 @greeting_warning_done {
     start: true
     priority: 4
     require_flag: "warning_delivered"
     text: "Thistlewick has heard the warning. He meditates on it. This is the appropriate response."
-    options: ["opt_appropriate", "opt_the_hum", "opt_leave"]
+    options: ["opt_appropriate", "opt_the_hum", "opt_slime_quest", "opt_slime_quest_active", "opt_leave"]
 }
 
 # ==============================
@@ -106,7 +104,7 @@
     goto: "could_have_died_reply"
 }
 @could_have_died_reply {
-    text: "Yes. And I would have mourned. Peacefully. With great stillness. ...I understand this is frustrating. Many people find it frustrating. Laura finds it especially frustrating. She has told me. Loudly. Several times."
+    text: "Yes. And I would have mourned. Peacefully. With great stillness. ...Laura finds this philosophy especially frustrating. She has told me. Loudly. Several times."
     options: ["opt_about_laura", "opt_peace_tribe", "opt_leave"]
 }
 
@@ -157,7 +155,7 @@
     goto: "how_long_reply"
 }
 @how_long_reply {
-    text: "Generations. Long before the miners. Long before the colored doors had names. The overworld was cruel to our kind. Hunted. Burned. Driven out. We came underground because there was nowhere else. This was supposed to be safe."
+    text: "Generations. Before the miners. Before the doors had names. The overworld hunted us, burned us, drove us out. We came underground because there was nowhere else."
     set_lore: "goblin_refuge"
     options: ["opt_supposed_to", "opt_the_hum", "opt_directions", "opt_leave"]
 }
@@ -166,7 +164,7 @@
     goto: "supposed_to_reply"
 }
 @supposed_to_reply {
-    text: "The dungeon changed. Or perhaps it was always changing and we only noticed when our people began to split. Some grew angry. Some grew still. Families broke apart. Friends stopped recognizing each other. Us elders called it 'The Fracture.'"
+    text: "The dungeon changed. Or perhaps it was always changing. Some of us grew angry. Some grew still. Families broke apart. The elders called it 'The Fracture.'"
     options: ["opt_war_split", "opt_the_hum", "opt_leave"]
 }
 @opt_war_split {
@@ -175,7 +173,7 @@
     goto: "war_split_reply"
 }
 @war_split_reply {
-    text: "Two generations ago. Goblin generations are short. The angry ones followed Kragthar's grandfather to the eastern caves. We stayed west. Built a place of quiet. They built a place of noise. We've been shouting across the gap ever since. Well. They shout."
+    text: "Two generations ago. Goblin generations are short. The angry ones followed Kragthar's grandfather east. We stayed west. We've been shouting across the gap ever since. Well. They shout."
     set_lore: "war_tribe"
     options: ["opt_the_hum", "opt_directions", "opt_leave"]
 }
@@ -217,7 +215,7 @@
     goto: "directions_reply"
 }
 @directions_reply {
-    text: "Follow the western corridor. You will know you are close when it becomes very quiet and several goblins are standing perfectly still and staring at you. Do not be alarmed. That is how we say hello."
+    text: "Follow the western corridor. You will know you are close when several goblins are standing perfectly still and staring at you. That is how we say hello."
     options: ["opt_war_directions", "opt_leave"]
 }
 @opt_war_directions {
@@ -237,7 +235,7 @@
     goto: "thistlewick_expect_reply"
 }
 @thistlewick_expect_reply {
-    text: "He will be still. He will listen. He will thank you. He will then do nothing for a very long time and call it wisdom. I say this with love. He is a great leader. He is also the most stubborn goblin alive."
+    text: "He will be still. He will listen. He will then do nothing for a very long time and call it wisdom. He is a great leader. Also the most stubborn goblin alive."
     options: ["opt_directions", "opt_leave"]
 }
 
@@ -249,8 +247,117 @@
     goto: "appropriate_reply"
 }
 @appropriate_reply {
-    text: "And panic would help? Thistlewick processes. He considers. He weighs all paths. ...he also once considered whether to eat a mushroom for six hours and it rotted in his hand. But the principle is sound."
+    text: "And panic would help? Thistlewick processes. He weighs all paths. ...he once considered whether to eat a mushroom for six hours. It rotted in his hand. But the principle is sound."
     options: ["opt_the_hum", "opt_leave"]
+}
+
+# ==============================
+# RED SLIME QUEST
+# ==============================
+@opt_slime_quest {
+    label: "What creature do you hate the most?"
+    color: "quest"
+    require_not_flag: "quest_slimes"
+    goto: "slime_hate_reply"
+}
+@slime_hate_reply {
+    text: "Hate is a strong word. I use it precisely. The red slimes. Worse than the war goblins. The goblins at least have reasons. The slimes have nothing. Only hunger and heat."
+    options: ["opt_why_red", "opt_slime_accept", "opt_slime_accept_done", "opt_leave"]
+}
+@opt_why_red {
+    label: "Why are they red?"
+    color: "lore"
+    goto: "why_red_reply"
+}
+@why_red_reply {
+    text: "The green ones above are dungeon runoff. Mindless. The red ones fed on the hum itself. It cooked them from the inside. Faster, angrier, hotter. When one dies it leaves a pool that burns through stone. We lost two meditation chambers."
+    set_lore: "red_slimes"
+    options: ["opt_slime_older", "opt_slime_accept", "opt_slime_accept_done", "opt_leave"]
+}
+@opt_slime_older {
+    label: "How old are they?"
+    color: "lore"
+    goto: "slime_older_reply"
+}
+@slime_older_reply {
+    text: "Older than us. Older than anything living down here. Green when the first goblins arrived. The dungeon changed them the way it changes everything. Slowly. Then all at once."
+    set_lore: "slime_origins"
+    options: ["opt_slime_accept", "opt_slime_accept_done", "opt_leave"]
+}
+@opt_slime_accept {
+    label: "I'll kill some red slimes for you."
+    color: "quest"
+    set_flag: "quest_slimes"
+    goto: "slime_accept_reply"
+}
+@opt_slime_accept_done {
+    label: "I already killed them!"
+    color: "complete"
+    require_flag_min: "red_slime_kills:3"
+    require_not_flag: "quest_slimes"
+    set_flag: "quest_slimes"
+    goto: "slime_accept_done_reply"
+}
+@slime_accept_reply {
+    text: "I would never ask someone to commit violence. But if three of them happened to stop existing, I would feel a profound sense of inner peace. More than usual."
+    options: ["opt_leave"]
+}
+@slime_accept_done_reply {
+    text: "...Already? I... felt those deaths and assumed it was indigestion. You have brought peace to this floor before I even asked. The stillness is strong in you."
+    set_flag: "quest_slimes"
+    options: ["opt_slime_turnin", "opt_leave"]
+}
+@opt_slime_quest_active {
+    label: "About the red slimes..."
+    color: "quest"
+    require_flag: "quest_slimes"
+    require_not_flag: "quest_slimes_done"
+    goto: "slime_quest_check"
+}
+@slime_quest_check {
+    text: "Have you found peace through violence? I will not judge. Much."
+    options: ["opt_slime_turnin", "opt_slime_not_yet", "opt_leave"]
+}
+@opt_slime_not_yet {
+    label: "Still working on it."
+    goto: "slime_not_yet_reply"
+}
+@slime_not_yet_reply {
+    text: "Take your time. They have been here for centuries. A few more hours will not matter. Although every hour they exist is an affront to serenity."
+    options: ["opt_leave"]
+}
+@opt_slime_turnin {
+    label: "Three red slimes are dead."
+    color: "complete"
+    require_flag_min: "red_slime_kills:3"
+    goto: "slime_turnin_reply"
+}
+@slime_turnin_reply {
+    text: "I felt a disturbance in the stillness. A good one. Like a knot loosening. Take this. Things collect around you when you do not move for long enough."
+    set_flag: "quest_slimes_done"
+    options: ["opt_slime_reward_merc", "opt_slime_reward_rogue", "opt_slime_reward_mage"]
+}
+@opt_slime_reward_merc {
+    label: "Thank you."
+    require_class: "Mercenary"
+    give_item: "Dragon Pepper"
+    goto: "slime_reward_end"
+}
+@opt_slime_reward_rogue {
+    label: "Thank you."
+    require_class: "Rogue"
+    give_item: "Smoke Bomb"
+    goto: "slime_reward_end"
+}
+@opt_slime_reward_mage {
+    label: "Thank you."
+    require_class: "Mage"
+    give_item: "Scroll of Teleport"
+    goto: "slime_reward_end"
+}
+@slime_reward_end {
+    text: "May it serve you well. I return to my stillness now. Please do not tell anyone I asked you to kill things. It would ruin my reputation."
+    options: ["opt_leave"]
 }
 
 # ==============================

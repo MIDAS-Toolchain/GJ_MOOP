@@ -26,8 +26,9 @@ typedef struct
 static int skel_blocked( int r, int c, void* ctx )
 {
   SkelPathCtx_t* p = ctx;
-  if ( !p->walkable( r, c ) )      return 1;
-  if ( EnemyBlockedByNPC( r, c ) ) return 1;
+  if ( !p->walkable( r, c ) )              return 1;
+  if ( EnemyBlockedByNPC( r, c ) )         return 1;
+  if ( EnemyAt( p->all, p->count, r, c ) ) return 1;
   return 0;
 }
 
@@ -87,7 +88,8 @@ static void move_toward( Enemy_t* e, int target_r, int target_c,
                            EnemyGridW(), EnemyGridH(),
                            skel_blocked, &ctx, path );
   if ( len >= 2
-       && !EnemyAt( all, count, path[1].row, path[1].col ) )
+       && !EnemyAt( all, count, path[1].row, path[1].col )
+       && !EnemyBlockedByNPC( path[1].row, path[1].col ) )
   {
     e->row = path[1].row;
     e->col = path[1].col;

@@ -80,7 +80,7 @@
     goto: "unyielding_reply"
 }
 @unyielding_reply {
-    text: "Everything. My seat. My opinions. My beer. My belief that mushroom stew should be served hot. My conviction that Thistlewick stands still too much. My position that mornings are a mistake. My certainty that the color blue is the best color. All of these are facts and I will not be moved."
+    text: "Everything. My seat. My beer. My position that mornings are a mistake. All of these are facts and I will not be moved."
     options: ["opt_mornings", "opt_peace_tribe", "opt_laura_said", "opt_leave"]
 }
 
@@ -112,7 +112,7 @@
     goto: "any_good_reply"
 }
 @any_good_reply {
-    text: "It is the best ale in this dungeon. This is not a matter of opinion. This is a fact I have decided, and I will not be argued with."
+    text: "It is the best ale in this dungeon. This is not a matter of opinion."
     options: ["opt_try_ale", "opt_who_are_you", "opt_peace_tribe", "opt_leave"]
 }
 
@@ -136,7 +136,7 @@
     goto: "opinions_magic_reply"
 }
 @opinions_magic_reply {
-    text: "One: magic is just violence that went to school. Two: anyone who shoots fire from their hands and calls it 'scholarship' is lying to themselves. Three: the glowy ones are the worst."
+    text: "One: magic is just violence that went to school. Two: the glowy ones are the worst."
     options: ["opt_who_are_you", "opt_what_drinking", "opt_peace_tribe", "opt_leave"]
 }
 
@@ -149,7 +149,7 @@
     goto: "peace_tribe_reply"
 }
 @peace_tribe_reply {
-    text: "Best tribe. Only tribe worth being in. We don't fight, we don't raid, we don't yell. Well. I yell sometimes. But I yell peacefully. There's a difference. Thistlewick disagrees. He's wrong. I've told him. He stood there and said nothing for three hours. I took that as agreement."
+    text: "Best tribe. Only tribe worth being in. We don't fight, we don't raid, we don't yell. Well. I yell sometimes. But I yell peacefully."
     set_lore: "peace_tribe"
     options: ["opt_thistlewick", "opt_how_long_here", "opt_war_goblins", "opt_laura_said", "opt_leave"]
 }
@@ -158,7 +158,7 @@
     goto: "thistlewick_reply"
 }
 @thistlewick_reply {
-    text: "Good leader. Stands a little too still. Terrible at making decisions in under a week. I once asked him where we should dig a new latrine. He meditated on it for four days. I dug it myself on day two. He hasn't forgiven me. I haven't apologized. We are at peace about it."
+    text: "Good leader. Terrible at making decisions in under a week. I once asked him where to dig a latrine. He meditated on it for four days. I dug it myself on day two."
     options: ["opt_war_goblins", "opt_laura_said", "opt_leave"]
 }
 
@@ -193,7 +193,7 @@
     goto: "doors_glowing_reply"
 }
 @doors_glowing_reply {
-    text: "Obviously. You think goblins built magic color-coded doors? We can barely build a latrine. The doors were here. The hum was here. The table was here. We just moved in and tried not to touch anything. Most of us succeeded. Some didn't. Those ones are the war tribe now."
+    text: "Obviously. You think goblins built magic color-coded doors? We can barely build a latrine. The doors were here. The hum was here. We just moved in and tried not to touch anything."
     set_lore: "dungeon_origins"
     options: ["opt_table", "opt_peace_tribe", "opt_leave"]
 }
@@ -212,7 +212,7 @@
     goto: "opinions_table_reply"
 }
 @opinions_table_reply {
-    text: "One: three plates means three guests. Two: no one has ever sat down. Three: the dungeon has been waiting for a very long time and it is very patient. Four: patience is a virtue I respect. Five: I still think it needs chairs. This is the hill I will die on. Peacefully."
+    text: "One: three plates means three guests. Two: no one has ever sat down. Three: it needs chairs. This is the hill I will die on."
     options: ["opt_leave"]
 }
 
@@ -233,7 +233,7 @@
     goto: "laura_wrong_reply"
 }
 @laura_wrong_reply {
-    text: "And now she's standing alone in a hallway. Defended her way right out of a community. I'm not saying she's wrong. I'm saying I'm not saying she's right either. That's my position, and I'm not moving from it. Like this chair."
+    text: "And now she's standing alone in a hallway. Defended her way right out of a community."
     options: ["opt_miss_her", "opt_leave"]
 }
 @opt_laura_point {
@@ -249,7 +249,7 @@
     goto: "miss_her_reply"
 }
 @miss_her_reply {
-    text: "...I'm not answering that. Not because I don't have an answer. I have several answers. I'm just choosing not to yield any of them."
+    text: "...next question."
     options: ["opt_leave"]
 }
 
@@ -291,6 +291,7 @@
 }
 @give_mushrooms_reply {
     text: "...you actually brought mushrooms. I'm not going to thank you. But I will brew you the strongest ale this dungeon has ever seen. *aggressive brewing noises* ...here. Unyielding Ale. Drink it before a fight. You'll hit like you mean it."
+    take_item: "Cave Mushroom:3"
     give_item: "Unyielding Ale"
     set_flag: "bought_ale"
     clear_flag: "quest_mushrooms"

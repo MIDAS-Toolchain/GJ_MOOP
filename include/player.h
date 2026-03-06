@@ -60,6 +60,8 @@ typedef struct
   int first_strike_active;              /* 1 = ready, 0 = used this room */
   uint32_t fs_visited;                  /* bitfield: rooms that already gave first strike */
   int scroll_echo_counter;              /* scrolls used toward next free cast */
+  int dodge_counter;                    /* incoming hits toward next dodge   */
+  int attack_counter;                   /* outgoing attacks toward armor break */
   int last_room_id;                     /* detect room changes */
 } Player_t;
 

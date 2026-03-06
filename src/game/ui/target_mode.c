@@ -58,10 +58,11 @@ void TargetModeInit( World_t* w, Console_t* con, GameCamera_t* c,
 static int style_from_consumable( ConsumableInfo_t* c )
 {
   if ( strcmp( c->effect, "smoke" ) == 0 )
-    return TGT_SELF;
+    return TGT_ADJACENT;
   if ( c->place_range > 0 )
     return TGT_ADJACENT;
-  if ( strcmp( c->effect, "shoot" ) == 0 || strcmp( c->effect, "poison" ) == 0 )
+  if ( strcmp( c->effect, "shoot" ) == 0 || strcmp( c->effect, "poison" ) == 0
+       || strcmp( c->effect, "pierce" ) == 0 || strcmp( c->effect, "stew_throw" ) == 0 )
     return TGT_CARDINAL;
   if ( strcmp( c->effect, "reach" ) == 0 )
     return TGT_CARDINAL;
@@ -174,7 +175,7 @@ int TargetModeLogic( Enemy_t* enemies, int num_enemies )
     return 1;
   }
 
-  /* Mouse hover - move cursor to hovered tile if valid */
+  /* Mouse hover - move cursor to hovered tile if valid (only when mouse active) */
   {
     aContainerWidget_t* vp = a_GetContainerFromWidget( "game_viewport" );
     int mx = app.mouse.x;
@@ -186,7 +187,8 @@ int TargetModeLogic( Enemy_t* enemies, int num_enemies )
       int mr = (int)( wx / world->tile_w );
       int mc = (int)( wy / world->tile_h );
 
-      if ( valid_tile( mr, mc ) && ( mr != cursor_row || mc != cursor_col ) )
+      if ( InputModeGet() == INPUT_MOUSE
+           && valid_tile( mr, mc ) && ( mr != cursor_row || mc != cursor_col ) )
       {
         cursor_row = mr;
         cursor_col = mc;

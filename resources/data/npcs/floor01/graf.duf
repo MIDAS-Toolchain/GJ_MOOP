@@ -94,6 +94,7 @@
 }
 @friendly_reply {
     text: "Be careful down there. And if you find a way out... tell me. Please."
+    set_flag: "quest_help_graf"
     options: ["opt_whats_up", "opt_ask_rats", "opt_about_rats_followup", "opt_leave"]
 }
 @opt_hostile {
@@ -115,6 +116,7 @@
 }
 @whats_up_reply {
     text: "Guard duty. 'Stand by the dungeon entrance,' they said. 'Nothing ever happens,' they said. I don't even know where the entrance is anymore."
+    set_flag: "quest_help_graf"
     options: ["opt_lost", "opt_why_not_leave", "opt_wait_three_weeks", "opt_about_town", "opt_leave"]
 }
 @opt_wait_three_weeks {
@@ -132,6 +134,7 @@
 }
 @lost_reply {
     text: "Lost is a strong word. I prefer 'geographically uncertain.' The entrance was definitely... One of the directions."
+    set_flag: "quest_help_graf"
     options: ["opt_help_him", "opt_why_not_leave", "opt_about_town", "opt_leave"]
 }
 @opt_help_him {
@@ -445,7 +448,7 @@
     start: true
     priority: 4
     require_flag: "has_mayors_note"
-    require_not_flag: "guard_leaving"
+    require_not_flag: "got_sandwich"
     text: "You again! What's that you've got there?"
     options: ["opt_show_note", "opt_whats_up", "opt_ask_rats", "opt_about_rats_followup", "opt_claim_reward", "opt_leave"]
 }
@@ -456,7 +459,6 @@
 }
 @show_note_reply {
     text: "Let me see that. 'To whom it may concern... permission to leave... signed, Mayor Greta.' This is... this is REAL. I'm being RELIEVED! Here, take my sandwich. I won't need it. I'm going HOME. I'm going to sleep in a BED."
-    set_flag: "guard_leaving"
     set_flag: "got_sandwich"
     clear_flag: "has_mayors_note"
     take_item: "Mayor's Note"
@@ -469,6 +471,7 @@
 }
 @guard_goodbye_reply {
     text: "I will! First thing I'm doing is sleeping. Second thing is eating. Third thing is telling Mayor Greta she owes me three weeks of overtime. Goodbye, friend!"
+    set_flag: "guard_leaving"
     options: ["opt_ask_rats", "opt_about_rats_followup", "opt_leave"]
 }
 
@@ -478,9 +481,9 @@
 @greeting_leaving {
     start: true
     priority: 5
-    require_flag: "guard_leaving"
+    require_flag: "got_sandwich"
     text: "Just let me... recalibrate myself. Haven't walked with purpose in three weeks. My legs forgot how."
-    options: ["opt_offer_help_leave", "opt_claim_reward", "opt_ask_rats", "opt_about_rats_followup", "opt_leave"]
+    options: ["opt_offer_help_leave","opt_about_town", "opt_claim_reward", "opt_ask_rats", "opt_about_rats_followup", "opt_leave"]
 }
 @opt_offer_help_leave {
     label: "Want me to help you find the way out?"

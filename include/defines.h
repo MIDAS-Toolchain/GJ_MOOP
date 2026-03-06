@@ -7,6 +7,13 @@
 #define GFX_IMAGE  0
 #define GFX_ASCII  1
 
+/* Input mode: last device to MOVE wins */
+#define INPUT_MOUSE    0
+#define INPUT_KEYBOARD 1
+
+void InputModeUpdate( void );
+int  InputModeGet( void );
+
 #define WORLD_WIDTH   512.0f
 #define WORLD_HEIGHT  512.0f
 

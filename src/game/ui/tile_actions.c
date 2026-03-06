@@ -322,7 +322,15 @@ int TileActionsLogic( int mouse_moved, Enemy_t* enemies, int num_enemies )
     }
     else if ( strcmp( action, "Open" ) == 0 )
     {
-      if ( TileAdjacent( tile_action_row, tile_action_col ) )
+      /* NPC with "Open" action (e.g. goblin door) → dialogue */
+      NPC_t* on = NPCAt( ta_npcs, *ta_num_npcs,
+                          tile_action_row, tile_action_col );
+      if ( on )
+      {
+        PlayerSetFacing( on->world_x < player.world_x );
+        DialogueStart( on->type_idx );
+      }
+      else if ( TileAdjacent( tile_action_row, tile_action_col ) )
       {
         if ( TileActionsTryOpen( tile_action_row, tile_action_col ) )
           PlayerStartMove( tile_action_row, tile_action_col );

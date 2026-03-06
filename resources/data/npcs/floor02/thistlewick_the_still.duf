@@ -82,10 +82,12 @@
 @opt_return_relic {
     label: "Laura sent me. The Hearthstone is yours."
     color: "quest"
+    set_flag: "quest_return_laura"
     goto: "return_relic_reply"
 }
 @return_relic_reply {
     text: "Thank you. Put it there."
+    take_item: "Hearthstone"
     clear_flag: "has_relic"
     set_flag: "relic_returned"
     options: ["opt_thats_it", "opt_warn_him", "opt_leave"]
@@ -104,7 +106,6 @@
 # ==============================
 @opt_warn_him {
     label: "Laura says something is coming from below."
-    color: "quest"
     goto: "warn_reply"
 }
 @warn_reply {
@@ -114,7 +115,6 @@
 @opt_yes_what {
     label: "...yes? That's it?"
     color: "quest"
-    set_flag: "quest_return_laura"
     goto: "yes_what_reply"
 }
 @yes_what_reply {
@@ -124,8 +124,6 @@
 }
 @opt_she_saw {
     label: "She saw things. Chanting. Kneeling. Something down there."
-    color: "quest"
-    set_flag: "quest_return_laura"
     goto: "she_saw_reply"
 }
 @she_saw_reply {
@@ -175,10 +173,12 @@
 }
 @opt_laura_right {
     label: "Laura was right, wasn't she?"
+    color: "lore"
     goto: "laura_right_reply"
 }
 @laura_right_reply {
     text: "Laura picked up a weapon because she saw what I saw and chose to act. I saw what she saw and chose to sit."
+    set_lore: "thistlewick"
     options: ["opt_forgive_laura", "opt_leave"]
 }
 @opt_forgive_laura {

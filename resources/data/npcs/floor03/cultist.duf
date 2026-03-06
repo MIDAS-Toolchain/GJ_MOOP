@@ -1,0 +1,87 @@
+@npc {
+    name: "Hooded Figure"
+    glyph: "c"
+    color: [160, 140, 120, 255]
+    image_path: "resources/assets/enemies/cultist.png"
+    description: "A figure in dark robes, swaying slightly. Their lips move but no sound comes out."
+    idle_bark: "*murmurs*"
+    idle_cooldown: 8
+}
+
+# ==============================
+# GREETINGS
+# ==============================
+@greeting {
+    start: true
+    priority: 0
+    require_not_flag: "greta_guide"
+    text: "...do not be afraid. We are listening. The hum provides."
+    options: ["opt_who", "opt_what_hum", "opt_leave"]
+}
+@greeting_guide {
+    start: true
+    priority: 1
+    require_flag: "greta_guide"
+    text: "...you are with her. Good. She will show you the way. She always does."
+    options: ["opt_who", "opt_always", "opt_leave"]
+}
+
+# ==============================
+# OPTIONS
+# ==============================
+@opt_who {
+    label: "Who are you?"
+    goto: "who_reply"
+}
+@who_reply {
+    text: "We were like you once. Lost. Afraid. She found us. Taught us to listen. Now we hear it clearly."
+    options: ["opt_what_hum", "opt_what_happened", "opt_leave"]
+}
+@opt_what_hum {
+    label: "What are you listening to?"
+    goto: "hum_reply"
+}
+@hum_reply {
+    text: "The hum. It speaks if you are still enough. It says... wonderful things. Stay. Listen with us."
+    options: ["opt_no_thanks", "opt_what_happened", "opt_leave"]
+}
+@opt_no_thanks {
+    label: "I'll pass."
+    goto: "no_thanks_reply"
+}
+@no_thanks_reply {
+    text: "You will hear it eventually. Everyone does."
+    options: ["opt_leave"]
+}
+@opt_what_happened {
+    label: "What happened to the others she brought?"
+    goto: "what_happened_reply"
+}
+@what_happened_reply {
+    text: "They listened. They became part of it. The dungeon remembers them, even if they don't remember themselves."
+    options: ["opt_below", "opt_leave"]
+}
+@opt_below {
+    label: "What's below this floor?"
+    goto: "below_reply"
+}
+@below_reply {
+    text: "We need not speak of it. It has always been waiting."
+    options: ["opt_leave"]
+}
+@opt_always {
+    label: "'Always?'"
+    goto: "always_reply"
+}
+@always_reply {
+    text: "She brings them down. One by one. They all come willingly."
+    options: ["opt_what_happened", "opt_leave"]
+}
+
+# ==============================
+# LEAVE
+# ==============================
+@opt_leave {
+    label: "[Leave]"
+    goto: "end"
+}

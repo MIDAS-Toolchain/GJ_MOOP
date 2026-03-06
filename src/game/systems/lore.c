@@ -60,6 +60,7 @@ void LoreLoadDefinitions( void )
 
   lore_load_file( "resources/data/lore_floor_01.duf", 1 );
   lore_load_file( "resources/data/lore_floor_02.duf", 2 );
+  lore_load_file( "resources/data/lore_floor_03.duf", 3 );
 
   printf( "LORE: %d total definitions.\n", g_num_lore );
 }

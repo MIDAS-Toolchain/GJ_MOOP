@@ -57,7 +57,19 @@ void FloorCutsceneRegister( NPC_t* npcs, int num_npcs,
   cs_glorbnax = NULL;
 
   if ( g_current_floor < 2 ) { cs_started = 0; return; }
-  if ( cs_started )          return;
+  if ( cs_started == g_current_floor ) return;
+
+  /* Floor 3+: silent drop — bounce but no barks */
+  if ( g_current_floor >= 3 )
+  {
+    cs_started = g_current_floor;
+    cs_phase   = CS_DROP;
+    cs_timer   = 0.0f;
+    InitTweenManager( &cs_tweens );
+    cs_player_oy = -40.0f;
+    TweenFloat( &cs_tweens, &cs_player_oy, 0.0f, 0.7f, TWEEN_EASE_OUT_BOUNCE );
+    return;
+  }
 
   /* Scan NPCs for laura and glorbnax */
   int laura_idx    = NPCTypeByKey( "laura" );
@@ -82,7 +94,7 @@ void FloorCutsceneRegister( NPC_t* npcs, int num_npcs,
   }
 
   /* Start the cutscene */
-  cs_started = 1;
+  cs_started = g_current_floor;
   cs_phase   = CS_DROP;
   cs_timer   = 0.0f;
 
@@ -108,6 +120,17 @@ int FloorCutsceneUpdate( float dt )
 
   cs_timer += dt;
   UpdateTweens( &cs_tweens, dt );
+
+  /* Floor 3+: silent hold, release after 1.5s */
+  if ( g_current_floor >= 3 )
+  {
+    if ( cs_timer >= 1.5f )
+    {
+      cs_phase = CS_NONE;
+      return 0;
+    }
+    return 1;
+  }
 
   /* Spawn text bubbles at the right moments */
   if ( cs_phase == CS_DROP && cs_timer >= T_LAURA )

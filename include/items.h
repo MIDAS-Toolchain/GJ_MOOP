@@ -93,6 +93,7 @@ void ItemsLoadAll( void );
 int  ItemsBuildFiltered( int class_idx, FilteredItem_t* out, int max_out, int include_universal );
 
 int  EquipSlotForKind( const char* kind );
+int  EquipSlotForTrinket( int equip_idx );
 void EquipStarterGear( const char* class_key );
 int  InventoryAdd( int item_type, int index );
 void InventoryRemove( int slot );

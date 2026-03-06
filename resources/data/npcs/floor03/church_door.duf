@@ -1,0 +1,69 @@
+@npc {
+    name: "Church Door"
+    glyph: "+"
+    color: [120, 90, 60, 255]
+    image_path: "resources/assets/npcs/goblin_door.png"
+    description: "A heavy wooden door. Strange symbols are carved into the frame."
+    action: "Open"
+    no_face: true
+    no_shadow: true
+}
+
+# ==============================
+# GREETINGS
+# ==============================
+@locked {
+    start: true
+    priority: 0
+    text: "The door won't budge. A pinned note reads 'Session in session, do not disturb'."
+    options: ["opt_knock", "opt_leave"]
+}
+@unlocked {
+    start: true
+    priority: 5
+    require_flag: "church_door_unlocked"
+    require_not_flag: "greta_defied"
+    text: "The door is unlocked."
+    options: ["opt_open", "opt_leave"]
+}
+@unlocked_hostile {
+    start: true
+    priority: 6
+    require_flag: "church_door_unlocked"
+    require_flag: "greta_defied"
+    text: "The door is unlocked. The murmuring inside has grown frantic."
+    options: ["opt_open_hostile", "opt_leave"]
+}
+
+# ==============================
+# OPTIONS
+# ==============================
+@opt_knock {
+    label: "Knock"
+    goto: "knock_reply"
+}
+@knock_reply {
+    text: "The murmuring stops. Then resumes, louder."
+    options: ["opt_leave"]
+}
+@opt_open {
+    label: "Open"
+    color: "complete"
+    action: "relocate:0,0"
+    goto: "end"
+}
+@opt_open_hostile {
+    label: "Open"
+    color: "danger"
+    set_flag: "church_hostile_open"
+    action: "relocate:0,0"
+    goto: "end"
+}
+
+# ==============================
+# LEAVE
+# ==============================
+@opt_leave {
+    label: "[Step away]"
+    goto: "end"
+}

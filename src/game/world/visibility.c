@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "visibility.h"
+#include "dev_mode.h"
 
 #define VIS_RADIUS 8
 
@@ -125,6 +126,7 @@ void VisibilityUpdate( int pr, int pc )
 
 float VisibilityGet( int r, int c )
 {
+  if ( DevModeNoclip() ) return 1.0f;
   if ( r < 0 || r >= world->width || c < 0 || c >= world->height )
     return 0.0f;
   return vis[c * world->width + r];

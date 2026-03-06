@@ -112,14 +112,15 @@ void NPCsDrawAll( aRectf_t vp_rect, GameCamera_t* cam,
     if ( !list[i].alive ) continue;
     NPCType_t* nt = &g_npc_types[list[i].type_idx];
 
-    /* Face toward the player */
-    int face_left = ( player.world_x < list[i].world_x );
+    /* Face toward the player (unless no_face) */
+    int face_left = nt->no_face ? 0 : ( player.world_x < list[i].world_x );
 
     /* Shadow */
-    GV_DrawFilledRect( vp_rect, cam,
-                       list[i].world_x, list[i].world_y + 8.0f,
-                       10.0f, 3.0f,
-                       (aColor_t){ 0, 0, 0, 80 } );
+    if ( !nt->no_shadow )
+      GV_DrawFilledRect( vp_rect, cam,
+                         list[i].world_x, list[i].world_y + 8.0f,
+                         10.0f, 3.0f,
+                         (aColor_t){ 0, 0, 0, 80 } );
 
     if ( nt->image && gfx_mode == GFX_IMAGE )
     {

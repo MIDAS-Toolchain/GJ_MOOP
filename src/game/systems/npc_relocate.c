@@ -2,6 +2,7 @@
 
 #include "npc_relocate.h"
 #include "dialogue.h"
+#include "room_enumerator.h"
 
 /* ---- Phase enum ---- */
 enum {
@@ -55,8 +56,8 @@ void NPCRelocate( int npc_type_idx, int new_row, int new_col, int fade )
       {
         rl_npcs[i].row     = new_row;
         rl_npcs[i].col     = new_col;
-        rl_npcs[i].world_x = new_col * 16 + 8.0f;
-        rl_npcs[i].world_y = new_row * 16 + 8.0f;
+        rl_npcs[i].world_x = new_row * 16 + 8.0f;
+        rl_npcs[i].world_y = new_col * 16 + 8.0f;
         break;
       }
     }
@@ -84,8 +85,8 @@ int NPCRelocateUpdate( float dt )
       {
         rl_npcs[i].row     = rl_dest_row;
         rl_npcs[i].col     = rl_dest_col;
-        rl_npcs[i].world_x = rl_dest_col * 16 + 8.0f;
-        rl_npcs[i].world_y = rl_dest_row * 16 + 8.0f;
+        rl_npcs[i].world_x = rl_dest_row * 16 + 8.0f;
+        rl_npcs[i].world_y = rl_dest_col * 16 + 8.0f;
         break;
       }
     }
@@ -112,16 +113,27 @@ int NPCRelocateUpdate( float dt )
         rl_phase = RL_HOLD;
 
         /* Move the NPC while screen is black */
-        for ( int i = 0; i < *rl_num_npcs; i++ )
         {
-          if ( rl_npcs[i].alive && rl_npcs[i].type_idx == rl_npc_type )
+          int found = 0;
+          for ( int i = 0; i < *rl_num_npcs; i++ )
           {
-            rl_npcs[i].row     = rl_dest_row;
-            rl_npcs[i].col     = rl_dest_col;
-            rl_npcs[i].world_x = rl_dest_col * 16 + 8.0f;
-            rl_npcs[i].world_y = rl_dest_row * 16 + 8.0f;
-            break;
+            if ( rl_npcs[i].alive && rl_npcs[i].type_idx == rl_npc_type )
+            {
+              printf( "RELOCATE: npc[%d] type=%d  old=(%d,%d)  new=(%d,%d)  alive=%d\n",
+                      i, rl_npc_type,
+                      rl_npcs[i].row, rl_npcs[i].col,
+                      rl_dest_row, rl_dest_col, rl_npcs[i].alive );
+              rl_npcs[i].row     = rl_dest_row;
+              rl_npcs[i].col     = rl_dest_col;
+              rl_npcs[i].world_x = rl_dest_row * 16 + 8.0f;
+              rl_npcs[i].world_y = rl_dest_col * 16 + 8.0f;
+              rl_npcs[i].home_room = RoomAt( rl_dest_row, rl_dest_col );
+              found = 1;
+              break;
+            }
           }
+          if ( !found )
+            printf( "RELOCATE: ERROR - no alive NPC with type_idx=%d found!\n", rl_npc_type );
         }
       }
       break;
