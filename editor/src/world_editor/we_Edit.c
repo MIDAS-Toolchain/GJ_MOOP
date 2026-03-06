@@ -93,6 +93,11 @@ static void we_EditLogic( float dt )
   
   a_DoWidget();
   
+  if ( g_map != NULL )
+  {
+    we_MapMouseCheck( &highlighted_pos, edit_menu_rect );
+  }
+
   if ( app.keyboard[A_ESCAPE] == 1 )
   {
     app.keyboard[A_ESCAPE] = 0;
@@ -117,6 +122,8 @@ static void we_EditLogic( float dt )
     e_TilesetMouseCheck( tile_x, tile_y,
                          &tile_index, &selected_tile.x, &selected_tile.y, 0 );
     
+    we_MapMouseCheck( &selected_pos, edit_menu_rect );
+
     if ( g_map != NULL )
     {
       int grid_x = 0, grid_y = 0;

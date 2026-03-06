@@ -116,5 +116,6 @@ void wel_LoadNo( void );
 void we_DrawColorPalette( int originx, int originy, int fg_index, int bg_index );
 void we_DrawGlyphPalette( int originx, int originy, int glyph_index );
 void we_DrawTilePalette( int originx, int originy, int tile_index, int tileset );
+void we_MapMouseCheck( dVec2_t* pos, aRectf_t menu_rect );
 
 #endif
