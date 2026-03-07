@@ -4,9 +4,11 @@
 
 #include "dungeon.h"
 #include "dungeon_spawner.h"
+#include "spawn_data.h"
 #include "dialogue.h"
 #include "player.h"
 #include "items.h"
+#include "maps.h"
 #include "movement.h"
 #include "shop.h"
 
@@ -185,6 +187,156 @@ void DungeonDeferredSpawns( NPC_t* npcs, int num_npcs,
       }
     }
   }
+}
+
+/* ====== DUF-driven item spawner ====== */
+
+static void SpawnOnePoint( SpawnPoint_t* pt,
+                           GroundItem_t* items, int* num_items,
+                           int tw, int th )
+{
+  switch ( pt->type )
+  {
+    case SPAWN_RANDOM_T1:
+      SpawnRandomConsumable( items, num_items, pt->row, pt->col, tw, th );
+      break;
+
+    case SPAWN_RANDOM_T2:
+      SpawnRandomT2Consumable( items, num_items, pt->row, pt->col, tw, th );
+      break;
+
+    case SPAWN_CONSUMABLE:
+    {
+      int idx = ConsumableByKey( pt->key );
+      if ( idx >= 0 )
+        GroundItemSpawn( items, num_items, idx, pt->row, pt->col, tw, th );
+      break;
+    }
+
+    case SPAWN_EQUIPMENT:
+    {
+      int idx = EquipmentByKey( pt->key );
+      if ( idx >= 0 )
+        GroundItemSpawnEquipment( items, num_items, idx,
+                                  pt->row, pt->col, tw, th );
+      break;
+    }
+
+    case SPAWN_MAP:
+    {
+      int idx = MapByKey( pt->key );
+      if ( idx >= 0 )
+        GroundItemSpawnMap( items, num_items, idx,
+                            pt->row, pt->col, tw, th );
+      break;
+    }
+
+    case SPAWN_CLASS_RARE:
+    {
+      const char* cls = PlayerClassKey();
+      const char* key = pt->class_keys[2]; /* default mage */
+      if ( strcmp( cls, "mercenary" ) == 0 ) key = pt->class_keys[0];
+      else if ( strcmp( cls, "rogue" ) == 0 ) key = pt->class_keys[1];
+
+      int idx = ConsumableByKey( key );
+      if ( idx >= 0 )
+        GroundItemSpawn( items, num_items, idx, pt->row, pt->col, tw, th );
+      break;
+    }
+
+    case SPAWN_CLASS_EQUIPMENT:
+    {
+      const char* cls = PlayerClassKey();
+      const char* key = pt->class_keys[2];
+      if ( strcmp( cls, "mercenary" ) == 0 ) key = pt->class_keys[0];
+      else if ( strcmp( cls, "rogue" ) == 0 ) key = pt->class_keys[1];
+
+      int idx = EquipmentByKey( key );
+      if ( idx >= 0 )
+        GroundItemSpawnEquipment( items, num_items, idx,
+                                  pt->row, pt->col, tw, th );
+      break;
+    }
+
+    default:
+      break;
+  }
+}
+
+void DungeonSpawnFromDUF( const char* path,
+                          GroundItem_t* items, int* num_items,
+                          World_t* world )
+{
+  SpawnList_t list;
+  SpawnListInit( &list );
+
+  if ( !SpawnDUFLoad( path, &list ) )
+  {
+    SpawnListDestroy( &list );
+    return;
+  }
+
+  int tw = world->tile_w, th = world->tile_h;
+
+  /* Process pool spawns: collect members, shuffle, assign items */
+  for ( int p = 0; p < list.num_pools; p++ )
+  {
+    SpawnPool_t* pool = &list.pools[p];
+    int members[32];
+    int nm = 0;
+
+    for ( int i = 0; i < list.count && nm < 32; i++ )
+    {
+      if ( list.points[i].type == SPAWN_POOL && list.points[i].pool_id == p )
+        members[nm++] = i;
+    }
+
+    if ( nm == 0 ) continue;
+
+    /* Pick one random member for the special item */
+    int pick = rand() % nm;
+
+    for ( int m = 0; m < nm; m++ )
+    {
+      SpawnPoint_t* pt = &list.points[members[m]];
+
+      if ( m == pick )
+      {
+        /* Spawn the pick item */
+        if ( strcmp( pool->pick_type, "equipment" ) == 0 )
+        {
+          int idx = EquipmentByKey( pool->pick_key );
+          if ( idx >= 0 )
+            GroundItemSpawnEquipment( items, num_items, idx,
+                                      pt->row, pt->col, tw, th );
+        }
+        else if ( strcmp( pool->pick_type, "consumable" ) == 0 )
+        {
+          int idx = ConsumableByKey( pool->pick_key );
+          if ( idx >= 0 )
+            GroundItemSpawn( items, num_items, idx,
+                             pt->row, pt->col, tw, th );
+        }
+      }
+      else
+      {
+        /* Spawn the fill item */
+        if ( strcmp( pool->fill_type, "random_t1" ) == 0 )
+          SpawnRandomConsumable( items, num_items, pt->row, pt->col, tw, th );
+        else if ( strcmp( pool->fill_type, "random_t2" ) == 0 )
+          SpawnRandomT2Consumable( items, num_items, pt->row, pt->col, tw, th );
+      }
+    }
+  }
+
+  /* Process non-pool spawns */
+  for ( int i = 0; i < list.count; i++ )
+  {
+    if ( list.points[i].type == SPAWN_POOL ) continue;
+    SpawnOnePoint( &list.points[i], items, num_items, tw, th );
+  }
+
+  SpawnListDestroy( &list );
 }
 
 /* ====== Dispatcher ====== */

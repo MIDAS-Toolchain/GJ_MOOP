@@ -923,8 +923,8 @@ int GameEventResolveTarget( int consumable_idx, int inv_slot,
           hit->hp -= fd;
           hit->turns_since_hit = 0;
           CombatVFXSpawnNumber( hit->world_x, hit->world_y, fd, hit_color );
-          ConsolePushF( con, hit_color, "%s scorches %s for %d damage!",
-                        player.name, t->name, fd );
+          ConsolePushF( con, hit_color, "You scorch %s for %d damage!",
+                        t->name, fd );
 
           /* Apply burn DOT */
           if ( c->ticks > 0 )
@@ -942,12 +942,11 @@ int GameEventResolveTarget( int consumable_idx, int inv_slot,
 
     if ( hits > 0 )
       ConsolePushF( con, hit_color,
-                    "%s breathes fire! %d enemies scorched!",
-                    player.name, hits );
+                    "You breathe fire! %d enemies scorched!",
+                    hits );
     else
       ConsolePushF( con, hit_color,
-                    "%s breathes fire! The flames lick at empty air.",
-                    player.name );
+                    "You breathe fire! The flames lick at empty air." );
 
     InventoryRemove( inv_slot );
     consumable_used = 1;

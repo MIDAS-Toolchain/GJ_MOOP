@@ -1,0 +1,307 @@
+@spawn_0 {
+    row: 54
+    col: 57
+    type: "random_t2"
+}
+@spawn_1 {
+    row: 64
+    col: 63
+    type: "random_t2"
+}
+@spawn_2 {
+    row: 70
+    col: 57
+    type: "random_t2"
+}
+@spawn_3 {
+    row: 52
+    col: 36
+    type: "random_t2"
+}
+@spawn_4 {
+    row: 49
+    col: 26
+    type: "random_t2"
+}
+@spawn_5 {
+    row: 48
+    col: 22
+    type: "random_t2"
+}
+@spawn_6 {
+    row: 48
+    col: 21
+    type: "random_t2"
+}
+@spawn_7 {
+    row: 45
+    col: 9
+    type: "random_t2"
+}
+@spawn_8 {
+    row: 55
+    col: 66
+    type: "random_t2"
+}
+@spawn_9 {
+    row: 53
+    col: 72
+    type: "random_t2"
+}
+@spawn_10 {
+    row: 67
+    col: 70
+    type: "random_t2"
+}
+@spawn_11 {
+    row: 42
+    col: 60
+    type: "random_t2"
+}
+@spawn_12 {
+    row: 42
+    col: 55
+    type: "random_t2"
+}
+@spawn_13 {
+    row: 42
+    col: 66
+    type: "random_t2"
+}
+@spawn_14 {
+    row: 49
+    col: 70
+    type: "random_t2"
+}
+@spawn_15 {
+    row: 60
+    col: 44
+    type: "random_t2"
+}
+@spawn_16 {
+    row: 54
+    col: 22
+    type: "random_t2"
+}
+@spawn_17 {
+    row: 65
+    col: 70
+    type: "random_t2"
+}
+@spawn_18 {
+    row: 14
+    col: 50
+    type: "random_t2"
+}
+@spawn_19 {
+    row: 10
+    col: 64
+    type: "random_t2"
+}
+@spawn_20 {
+    row: 14
+    col: 37
+    type: "random_t2"
+}
+@spawn_21 {
+    row: 17
+    col: 37
+    type: "random_t2"
+}
+@spawn_22 {
+    row: 25
+    col: 34
+    type: "random_t2"
+}
+@spawn_23 {
+    row: 20
+    col: 31
+    type: "random_t2"
+}
+@spawn_24 {
+    row: 32
+    col: 27
+    type: "random_t2"
+}
+@spawn_25 {
+    row: 35
+    col: 27
+    type: "random_t2"
+}
+@spawn_26 {
+    row: 59
+    col: 44
+    type: "random_t2"
+}
+@spawn_27 {
+    row: 61
+    col: 44
+    type: "random_t2"
+}
+@spawn_28 {
+    row: 35
+    col: 47
+    type: "random_t2"
+}
+@spawn_29 {
+    row: 35
+    col: 43
+    type: "random_t2"
+}
+@spawn_30 {
+    row: 40
+    col: 40
+    type: "random_t2"
+}
+@spawn_31 {
+    row: 26
+    col: 43
+    type: "random_t2"
+}
+@spawn_32 {
+    row: 49
+    col: 43
+    type: "random_t2"
+}
+@spawn_33 {
+    row: 16
+    col: 66
+    type: "random_t2"
+}
+@spawn_34 {
+    row: 57
+    col: 29
+    type: "random_t2"
+}
+@spawn_35 {
+    row: 66
+    col: 33
+    type: "random_t2"
+}
+@spawn_36 {
+    row: 13
+    col: 59
+    type: "random_t1"
+}
+@spawn_37 {
+    row: 61
+    col: 58
+    type: "consumable"
+    key: "small_health_potion"
+}
+@spawn_38 {
+    row: 61
+    col: 29
+    type: "consumable"
+    key: "small_health_potion"
+}
+@spawn_39 {
+    row: 67
+    col: 33
+    type: "consumable"
+    key: "bag"
+}
+@spawn_40 {
+    row: 60
+    col: 26
+    type: "consumable"
+    key: "max_health"
+}
+@spawn_41 {
+    row: 18
+    col: 66
+    type: "consumable"
+    key: "sack"
+}
+@spawn_42 {
+    row: 41
+    col: 44
+    type: "consumable"
+    key: "medium_health_potion"
+}
+@spawn_43 {
+    row: 42
+    col: 72
+    type: "consumable"
+    key: "medium_health_potion"
+}
+@spawn_44 {
+    row: 20
+    col: 60
+    type: "consumable"
+    key: "medium_health_potion"
+}
+@spawn_45 {
+    row: 56
+    col: 56
+    type: "consumable"
+    key: "medium_health_potion"
+}
+@spawn_46 {
+    row: 43
+    col: 20
+    type: "consumable"
+    key: "medium_health_potion"
+}
+@spawn_47 {
+    row: 17
+    col: 31
+    type: "consumable"
+    key: "medium_health_potion"
+}
+@spawn_48 {
+    row: 67
+    col: 45
+    type: "class_rare"
+    mercenary: "dragon_pepper"
+    rogue: "smoke_bomb"
+    mage: "scroll_teleport"
+}
+@spawn_49 {
+    row: 67
+    col: 39
+    type: "class_rare"
+    mercenary: "dragon_pepper"
+    rogue: "smoke_bomb"
+    mage: "scroll_teleport"
+}
+@spawn_50 {
+    row: 57
+    col: 38
+    type: "class_rare"
+    mercenary: "dragon_pepper"
+    rogue: "smoke_bomb"
+    mage: "scroll_teleport"
+}
+@spawn_51 {
+    row: 39
+    col: 14
+    type: "class_rare"
+    mercenary: "dragon_pepper"
+    rogue: "smoke_bomb"
+    mage: "scroll_teleport"
+}
+@spawn_52 {
+    row: 30
+    col: 11
+    type: "class_rare"
+    mercenary: "dragon_pepper"
+    rogue: "smoke_bomb"
+    mage: "scroll_teleport"
+}
+@spawn_53 {
+    row: 30
+    col: 7
+    type: "class_rare"
+    mercenary: "dragon_pepper"
+    rogue: "smoke_bomb"
+    mage: "scroll_teleport"
+}
+@spawn_54 {
+    row: 42
+    col: 52
+    type: "class_rare"
+    mercenary: "dragon_pepper"
+    rogue: "smoke_bomb"
+    mage: "scroll_teleport"
+}

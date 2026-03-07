@@ -402,6 +402,36 @@ void GameInputMovement( void )
     }
     turn_skipped = 1;
   }
+  else if ( ITileAt( tr, tc ) && ITileAt( tr, tc )->type == ITILE_VOID_PORTAL )
+  {
+    int gold = 0, horror = -1;
+    ITileVoidPortalCheck( gi_world, tr, tc, &gold, &horror );
+    PlayerWallBump( dr, dc );
+    if ( gold > 0 )
+    {
+      PlayerAddGold( gold );
+      ConsolePushF( gi_console, (aColor_t){ 0xda, 0xaf, 0x20, 255 },
+                    "You shatter the void portal. Found %d gold!", gold );
+      char vfx[8];
+      snprintf( vfx, sizeof( vfx ), "+%d", gold );
+      CombatVFXSpawnText( tr * gi_world->tile_w + gi_world->tile_w / 2.0f,
+                          tc * gi_world->tile_h + gi_world->tile_h / 2.0f,
+                          vfx, (aColor_t){ 0xda, 0xaf, 0x20, 255 } );
+    }
+    else
+    {
+      ConsolePushF( gi_console, (aColor_t){ 0x80, 0x20, 0xa0, 255 },
+                    "You shatter the void portal." );
+    }
+    if ( horror >= 0 )
+    {
+      EnemySpawn( gi_enemies, gi_num_enemies, horror,
+                  tr, tc, gi_world->tile_w, gi_world->tile_h );
+      ConsolePushF( gi_console, (aColor_t){ 0x80, 0x20, 0xa0, 255 },
+                    "A %s emerges from the rift!", g_enemy_types[horror].name );
+    }
+    turn_skipped = 1;
+  }
   else if ( TileWalkable( tr, tc ) || DevModeNoclip() )
     PlayerStartMove( tr, tc );
   else if ( TileHasDoor( tr, tc ) )
@@ -448,7 +478,32 @@ void GameInputMouse( void )
   {
     int fpr, fpc;
     GameTurnsGetPlayerTile( &fpr, &fpc );
-    if ( RapidMoveActive()
+
+    /* Rooted — only allow clicking adjacent enemies to attack */
+    if ( player.root_turns > 0 )
+    {
+      app.mouse.pressed = 0;
+      if ( TileAdjacent( hover_row, hover_col ) )
+      {
+        Enemy_t* bump = EnemyAt( gi_enemies, *gi_num_enemies,
+                                  hover_row, hover_col );
+        if ( bump )
+        {
+          int dr = hover_row - fpr;
+          int dc = hover_col - fpc;
+          PlayerLunge( dr, dc );
+          CombatAttack( bump );
+        }
+        else
+        {
+          player.root_turns--;
+          turn_skipped = 1;
+          ConsolePushF( gi_console, (aColor_t){ 0x9a, 0x8c, 0x7a, 255 },
+                        "You struggle against the web! (%d)", player.root_turns );
+        }
+      }
+    }
+    else if ( RapidMoveActive()
          && TileAdjacent( hover_row, hover_col )
          && !EnemyAt( gi_enemies, *gi_num_enemies, hover_row, hover_col )
          && !NPCAt( gi_npcs, *gi_num_npcs, hover_row, hover_col ) )

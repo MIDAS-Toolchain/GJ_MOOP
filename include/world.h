@@ -26,6 +26,7 @@ typedef struct
 } World_t;
 
 World_t* WorldCreate( int width, int height, int tile_w, int tile_h );
+void     WorldFree( World_t* w );
 void WorldDraw( int x_off, int y_off,
                 World_t* world, aTileset_t* tile_set,
                 uint8_t draw_ascii );

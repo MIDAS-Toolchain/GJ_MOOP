@@ -1,0 +1,49 @@
+@npc {
+    name: "Greta's Door"
+    glyph: "+"
+    color: [120, 90, 60, 255]
+    image_path: "resources/assets/npcs/goblin_door.png"
+    description: "A heavy iron door. Something scratches at it from the other side."
+    action: "Open"
+    no_face: true
+    no_shadow: true
+}
+
+# ==============================
+# LOCKED (default)
+# ==============================
+@locked {
+    start: true
+    priority: 0
+    text: "The door won't budge. You hear a faint humming from beyond."
+    options: ["opt_leave"]
+}
+
+# ==============================
+# GRETA DEAD — UNLOCKED
+# ==============================
+@unlocked {
+    start: true
+    priority: 5
+    require_flag: "greta_dead"
+    text: "The humming has stopped. The door swings open freely."
+    options: ["opt_open", "opt_leave"]
+}
+
+# ==============================
+# OPTIONS
+# ==============================
+@opt_open {
+    label: "Open"
+    color: "complete"
+    action: "relocate:0,0"
+    goto: "end"
+}
+
+# ==============================
+# LEAVE
+# ==============================
+@opt_leave {
+    label: "[Step away]"
+    goto: "end"
+}

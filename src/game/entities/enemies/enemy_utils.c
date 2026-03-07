@@ -76,6 +76,9 @@ static void EnemiesLoadFile( const char* path )
       strncpy( t->drop_item, drop_item->value_string, MAX_NAME_LENGTH - 1 );
     if ( gold_drop ) t->gold_drop = (int)gold_drop->value_int;
 
+    dDUFValue_t* death_flag_v    = d_DUFGetObjectItem( entry, "death_flag" );
+    if ( death_flag_v ) strncpy( t->death_flag, death_flag_v->value_string, MAX_NAME_LENGTH - 1 );
+
     dDUFValue_t* on_death_v      = d_DUFGetObjectItem( entry, "on_death" );
     dDUFValue_t* pool_duration_v = d_DUFGetObjectItem( entry, "pool_duration" );
     dDUFValue_t* pool_damage_v   = d_DUFGetObjectItem( entry, "pool_damage" );

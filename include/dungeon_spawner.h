@@ -39,4 +39,9 @@ void SpawnClassElite( Enemy_t* enemies, int* num_enemies,
 void SpawnT2Consumable( GroundItem_t* items, int* num_items,
                         int x, int y, int tw, int th );
 
+/* Load and dispatch consumable/item spawns from a DUF file */
+void DungeonSpawnFromDUF( const char* path,
+                          GroundItem_t* items, int* num_items,
+                          World_t* world );
+
 #endif

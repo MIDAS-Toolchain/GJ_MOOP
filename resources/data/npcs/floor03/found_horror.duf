@@ -30,7 +30,15 @@
     start: true
     priority: 10
     require_flag: "found_horror_rescued"
+    require_not_flag: "told_drem_rescued"
     text: "The room is empty. A wet patch on the floor is the only sign anything was here."
+    options: ["opt_leave"]
+}
+@greeting_home {
+    start: true
+    priority: 15
+    require_flag: "told_drem_rescued"
+    text: "Bloop chirps and headbutts your shin. Her tail leaves a damp streak on your boot."
     options: ["opt_leave"]
 }
 

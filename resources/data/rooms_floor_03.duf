@@ -134,3 +134,51 @@
   room_id: "f"
   name: "Stairwell"
 }
+@victory_chamber {
+  room_id: "v"
+  name: "Victory Chamber"
+}
+@sacellum {
+  room_id: "s"
+  name: "Sacellum"
+}
+@zenith_watch {
+  room_id: "z"
+  name: "Zenith Watch"
+}
+@atrium {
+  room_id: "a"
+  name: "Atrium"
+}
+@exorcists_cell {
+  room_id: "x"
+  name: "Exorcist's Cell"
+}
+@gatekeeper {
+  room_id: "c"
+  name: "Gatekeeper"
+}
+@dormitory {
+  room_id: "d"
+  name: "Dormitory"
+}
+@bell_tower {
+  room_id: "b"
+  name: "Bell Tower"
+}
+@narthex {
+  room_id: "_"
+  name: "Narthex"
+}
+@confessional {
+  room_id: "]"
+  name: "Confessional"
+}
+@transept {
+  room_id: "{"
+  name: "Transept"
+}
+@catacomb {
+  room_id: "["
+  name: "Catacomb"
+}

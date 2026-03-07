@@ -18,11 +18,17 @@
 #include "utils.h"
 #include "world.h"
 #include "world_editor.h"
+#include "spawn_data.h"
+
+extern SpawnList_t g_edit_spawns;
+extern int         g_spawns_loaded;
 
 static void wes_SaveLogic( float dt );
 static void wes_SaveDraw( float dt );
 
-int no = 0;
+static int no = 0;
+static int saved = 0;
+static float saved_timer = 0.0f;
 
 void we_Save( void )
 {
@@ -30,6 +36,8 @@ void we_Save( void )
   app.delegate.draw  = wes_SaveDraw;
   
   no = 0;
+  saved = 0;
+  saved_timer = 0.0f;
 
   app.active_widget = a_GetWidget( "save_menu" );
   aContainerWidget_t* container =
@@ -58,12 +66,30 @@ static void wes_SaveLogic( float dt )
 {
   a_DoInput();
 
+  if ( saved )
+  {
+    saved_timer += dt;
+    if ( saved_timer >= 1.5f
+         || app.keyboard[SDL_SCANCODE_ESCAPE] == 1
+         || app.keyboard[SDL_SCANCODE_RETURN] == 1
+         || app.mouse.button == SDL_BUTTON_LEFT )
+    {
+      app.keyboard[SDL_SCANCODE_ESCAPE] = 0;
+      app.keyboard[SDL_SCANCODE_RETURN] = 0;
+      e_WorldEditorDestroy();
+      we_Load();
+      return;
+    }
+    return;
+  }
+
   if ( app.keyboard[SDL_SCANCODE_ESCAPE] == 1 )
   {
     app.keyboard[SDL_SCANCODE_ESCAPE] = 0;
-    e_WorldEditorInit();
+    we_Edit();
+    return;
   }
-  
+
   a_DoWidget();
 }
 
@@ -79,36 +105,51 @@ static void wes_SaveDraw( float dt )
     .padding = 0
   };
   
-  if ( !no )
+  if ( saved )
+  {
+    aTextStyle_t green_style = fps_style;
+    green_style.fg = (aColor_t){ 80, 220, 80, 255 };
+    a_DrawText( "Save Successful!", 635, 270, green_style );
+  }
+  else if ( !no )
   {
     a_DrawText( "Save?", 635, 270, fps_style );
+    a_DrawWidgets();
   }
   else
   {
     a_DrawText( "Are you sure?", 635, 270, fps_style );
+    a_DrawWidgets();
   }
-
-  a_DrawWidgets();
 }
 
 void wes_SaveYes( void )
 {
   if( !no )
   {
-    if ( g_current_filename != NULL )
+    if ( g_map != NULL && g_current_filename != NULL )
     {
-      e_SaveWorld( g_map, g_map->filename );
-
+      e_SaveWorld( g_map, g_current_filename );
     }
+
+    if ( g_spawns_loaded && g_current_filename != NULL )
+    {
+      char duf_path[256];
+      SpawnDUFFilename( g_current_filename, duf_path, sizeof(duf_path) );
+      if ( SpawnDUFSave( duf_path, &g_edit_spawns ) )
+        printf( "EDITOR: saved %d spawns to %s\n", g_edit_spawns.count, duf_path );
+    }
+
+    saved = 1;
+    saved_timer = 0.0f;
+
+    aWidget_t* save_w = a_GetWidget( "save_menu" );
+    if ( save_w ) save_w->hidden = 1;
   }
   else
   {
-    EditorInit();
-  }
-
-  if ( g_map != NULL )
-  {
     e_WorldEditorDestroy();
+    EditorInit();
   }
 }
 

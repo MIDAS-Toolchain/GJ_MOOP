@@ -1,0 +1,339 @@
+@spawn_0 {
+    row: 50
+    col: 4
+    type: "random_t1"
+    note: "room 0"
+}
+
+@spawn_1 {
+    row: 46
+    col: 14
+    type: "random_t1"
+    note: "south corridor"
+}
+
+@spawn_2 {
+    row: 56
+    col: 14
+    type: "random_t1"
+    note: "south corridor"
+}
+
+@spawn_3 {
+    row: 30
+    col: 6
+    type: "random_t1"
+    note: "spider room"
+}
+
+@spawn_4 {
+    row: 62
+    col: 1
+    type: "random_t1"
+    note: "Goblin Barracks"
+}
+
+@spawn_5 {
+    row: 75
+    col: 2
+    type: "random_t1"
+    note: "Tunnel"
+}
+
+@spawn_6 {
+    row: 78
+    col: 1
+    type: "random_t1"
+    note: "Goblin Den"
+}
+
+@spawn_7 {
+    row: 92
+    col: 2
+    type: "random_t1"
+    note: "Goblin Warren"
+}
+
+@spawn_8 {
+    row: 90
+    col: 9
+    type: "random_t1"
+    note: "Boss room"
+}
+
+@spawn_9 {
+    row: 21
+    col: 9
+    type: "random_t2"
+    note: "room 2"
+}
+
+@spawn_10 {
+    row: 35
+    col: 9
+    type: "random_t2"
+    note: "room 1"
+}
+
+@spawn_11 {
+    row: 63
+    col: 9
+    type: "random_t2"
+    note: "room 3"
+}
+
+@spawn_12 {
+    row: 77
+    col: 9
+    type: "random_t2"
+    note: "room 4"
+}
+
+@spawn_13 {
+    row: 50
+    col: 8
+    type: "random_t2"
+    note: "corridor"
+}
+
+@spawn_14 {
+    row: 49
+    col: 17
+    type: "random_t2"
+    note: "corridor"
+}
+
+@spawn_15 {
+    row: 52
+    col: 29
+    type: "random_t2"
+    note: "corridor"
+}
+
+@spawn_16 {
+    row: 23
+    col: 19
+    type: "random_t2"
+    note: "room 5"
+}
+
+@spawn_17 {
+    row: 37
+    col: 19
+    type: "random_t2"
+    note: "room 7"
+}
+
+@spawn_18 {
+    row: 62
+    col: 19
+    type: "random_t2"
+    note: "room 8"
+}
+
+@spawn_19 {
+    row: 46
+    col: 25
+    type: "random_t2"
+    note: "room @"
+}
+
+@spawn_20 {
+    row: 53
+    col: 25
+    type: "random_t2"
+    note: "room ~"
+}
+
+@spawn_21 {
+    row: 76
+    col: 25
+    type: "random_t2"
+    note: "room !"
+}
+
+@spawn_22 {
+    row: 35
+    col: 22
+    type: "random_t2"
+    note: "bottom corridor left"
+}
+
+@spawn_23 {
+    row: 65
+    col: 22
+    type: "random_t2"
+    note: "bottom corridor right"
+}
+
+@spawn_24 {
+    row: 93
+    col: 11
+    type: "random_t2"
+    note: "Boss room rare"
+}
+
+@spawn_25 {
+    row: 22
+    col: 25
+    type: "consumable"
+    key: "bag"
+    note: "room 5"
+}
+
+@spawn_26 {
+    row: 33
+    col: 10
+    type: "consumable"
+    key: "bag"
+    note: "room 1"
+}
+
+@spawn_27 {
+    row: 42
+    col: 37
+    type: "consumable"
+    key: "sack"
+    note: "south passage"
+}
+
+@spawn_28 {
+    row: 47
+    col: 35
+    type: "consumable"
+    key: "max_health"
+    note: "south passage"
+}
+
+@spawn_29 {
+    row: 28
+    col: 20
+    type: "consumable"
+    key: "small_health_potion"
+    note: "left corridor"
+}
+
+@spawn_30 {
+    row: 50
+    col: 22
+    type: "consumable"
+    key: "small_health_potion"
+    note: "center corridor"
+}
+
+@spawn_31 {
+    row: 72
+    col: 20
+    type: "consumable"
+    key: "small_health_potion"
+    note: "right corridor"
+}
+
+@spawn_32 {
+    row: 47
+    col: 25
+    type: "consumable"
+    key: "small_health_potion"
+}
+
+@spawn_33 {
+    row: 55
+    col: 25
+    type: "consumable"
+    key: "small_health_potion"
+}
+
+@spawn_34 {
+    row: 53
+    col: 37
+    type: "consumable"
+    key: "medium_health_potion"
+}
+
+@spawn_35 {
+    row: 63
+    col: 18
+    type: "consumable"
+    key: "medium_health_potion"
+}
+
+@spawn_36 {
+    row: 77
+    col: 19
+    type: "consumable"
+    key: "medium_health_potion"
+}
+
+@spawn_37 {
+    row: 28
+    col: 24
+    type: "consumable"
+    key: "cave_mushroom"
+    note: "left corridor"
+}
+
+@spawn_38 {
+    row: 50
+    col: 27
+    type: "consumable"
+    key: "cave_mushroom"
+    note: "center corridor"
+}
+
+@spawn_39 {
+    row: 72
+    col: 24
+    type: "consumable"
+    key: "cave_mushroom"
+    note: "right corridor"
+}
+
+@spawn_40 {
+    row: 28
+    col: 17
+    type: "class_rare"
+    mercenary: "dragon_pepper"
+    rogue: "smoke_bomb"
+    mage: "scroll_teleport"
+    note: "B path"
+}
+
+@spawn_41 {
+    row: 42
+    col: 17
+    type: "class_rare"
+    mercenary: "dragon_pepper"
+    rogue: "smoke_bomb"
+    mage: "scroll_teleport"
+    note: "G path"
+}
+
+@spawn_42 {
+    row: 56
+    col: 17
+    type: "class_rare"
+    mercenary: "dragon_pepper"
+    rogue: "smoke_bomb"
+    mage: "scroll_teleport"
+    note: "W path"
+}
+
+@spawn_43 {
+    row: 70
+    col: 17
+    type: "class_rare"
+    mercenary: "dragon_pepper"
+    rogue: "smoke_bomb"
+    mage: "scroll_teleport"
+    note: "R path"
+}
+
+@spawn_44 {
+    row: 86
+    col: 1
+    type: "class_equipment"
+    mercenary: "war_hammer"
+    rogue: "blacksteel_knife"
+    mage: "conduit_staff"
+    note: "behind goblin door"
+}

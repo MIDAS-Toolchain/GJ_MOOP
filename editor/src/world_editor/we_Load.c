@@ -18,25 +18,46 @@
 #include "utils.h"
 #include "world.h"
 #include "world_editor.h"
+#include "spawn_data.h"
+
+extern SpawnList_t g_edit_spawns;
+extern int         g_spawns_loaded;
 
 static void wel_LoadLogic( float dt );
 static void wel_LoadDraw( float dt );
+static void load_file_action( void );
 
-#define BTN_H         42.0f
-#define BTN_SPACING   14.0f
-
-static size_t cursor = 0;
-static size_t num_buttons = 0;
+static int pending_load = 0;
 
 void we_Load( void )
 {
   app.delegate.logic = wel_LoadLogic;
   app.delegate.draw  = wel_LoadDraw;
-  
-  num_buttons = g_map_filenames->count;
-  app.active_widget = a_GetWidget( "load_menu" );
 
+  pending_load = 0;
+
+  a_ContainerClearComponents( "load_menu" );
+
+  for ( size_t i = 0; i < g_map_filenames->count; i++ )
+  {
+    char* name = (char*)d_ArrayGet( g_map_filenames, i );
+    char btn_name[64];
+    snprintf( btn_name, sizeof(btn_name), "load_%zu", i );
+    a_ContainerAddButton( "load_menu", btn_name, name, load_file_action );
+  }
+
+  aWidget_t* mode = a_GetWidget( "mode_bar" );
+  aWidget_t* toggle = a_GetWidget( "toggle_bar" );
+  if ( mode )   mode->hidden = 1;
+  if ( toggle ) toggle->hidden = 1;
+
+  app.active_widget = a_GetWidget( "load_menu" );
   app.active_widget->hidden = 0;
+}
+
+static void load_file_action( void )
+{
+  pending_load = 1;
 }
 
 static void wel_LoadLogic( float dt )
@@ -47,74 +68,26 @@ static void wel_LoadLogic( float dt )
   {
     app.keyboard[SDL_SCANCODE_ESCAPE] = 0;
     e_WorldEditorInit();
+    return;
   }
-  
-  aContainerWidget_t* bc = a_GetContainerFromWidget( "load_menu" );
-  aRectf_t r = bc->rect;
-  float btn_w = 500;
-  float total_h = num_buttons * BTN_H + ( num_buttons - 1 ) * BTN_SPACING;
-  float by = r.y + 100 + ( r.h - total_h ) / 2.0f;
-  
-  for ( size_t i = 0; i < num_buttons; i++ )
-  {
-    float bx = r.x - 200;
-    float byi = by + i * ( BTN_H + BTN_SPACING );
-    aRectf_t rect = { bx, byi, btn_w, BTN_H };
-    int hit = WithinRange( app.mouse.x, app.mouse.y, rect );
 
-    if ( hit )
-    {
-      cursor = i;
-    }
-
-    if ( hit && app.mouse.pressed && app.mouse.button == SDL_BUTTON_LEFT )
-    {
-      char* name = (char*)d_ArrayGet(g_map_filenames, i);
-      wel_LoadYes(name);
-      return;
-    }
-  }
-  
   a_DoWidget();
+
+  if ( pending_load )
+  {
+    pending_load = 0;
+    aContainerWidget_t* bc = a_GetContainerFromWidget( "load_menu" );
+    if ( bc && bc->focus_index >= 0 && bc->focus_index < bc->num_components )
+    {
+      char* name = (char*)d_ArrayGet( g_map_filenames, bc->focus_index );
+      if ( name )
+        wel_LoadYes( name );
+    }
+  }
 }
 
 static void wel_LoadDraw( float dt )
 {
-  aTextStyle_t fps_style = {
-    .type = FONT_CODE_PAGE_437,
-    .fg = white,
-    .bg = black,
-    .align = TEXT_ALIGN_CENTER,
-    .wrap_width = 0,
-    .scale = 1.0f,
-    .padding = 0
-  };
-
-  a_DrawText( "Load?", 635, 270, fps_style );
-  
-  aContainerWidget_t* bc = a_GetContainerFromWidget( "load_menu" );
-  aRectf_t r = bc->rect;
-  float btn_w = 500;
-  float total_h = num_buttons * BTN_H + ( num_buttons - 1 ) * BTN_SPACING;
-  float by = r.y + 100 + ( r.h - total_h ) / 2.0f;
-
-  aColor_t bg_norm  = { 0x10, 0x14, 0x1f, 255 };
-  aColor_t bg_hover = { 0x20, 0x2e, 0x37, 255 };
-  aColor_t fg_norm  = { 0x81, 0x97, 0x96, 255 };
-  aColor_t fg_hover = { 0xc7, 0xcf, 0xcc, 255 };
-  
-  for ( size_t i = 0; i < g_map_filenames->count; i++ )
-  {
-    float bx = r.x - 200;
-    float byi = by + i * ( BTN_H + BTN_SPACING );
-    int sel = ( cursor == i );
-    
-    char* name = (char*)d_ArrayGet( g_map_filenames, i );
-
-    DrawButton( bx, byi, btn_w, BTN_H, name, 1.5f, sel,
-               bg_norm, bg_hover, fg_norm, fg_hover );
-  }
-
   a_DrawWidgets();
 }
 
@@ -130,8 +103,19 @@ void wel_LoadYes( char* name )
     }
 
     g_map = convert_mats_worlds( g_current_filename );
+
+    /* Auto-load companion consumable spawns DUF if it exists */
+    if ( g_spawns_loaded )
+      SpawnListDestroy( &g_edit_spawns );
+
+    SpawnListInit( &g_edit_spawns );
+    char duf_path[256];
+    SpawnDUFFilename( g_current_filename, duf_path, sizeof(duf_path) );
+    if ( SpawnDUFLoad( duf_path, &g_edit_spawns ) )
+      printf( "EDITOR: loaded %d spawns from %s\n", g_edit_spawns.count, duf_path );
+    g_spawns_loaded = 1;
   }
-  
+
   e_WorldEditorInit();
 }
 
@@ -139,4 +123,3 @@ void wel_LoadNo( void )
 {
   e_WorldEditorInit();
 }
-

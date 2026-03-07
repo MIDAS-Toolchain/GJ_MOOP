@@ -9,6 +9,7 @@
 #define ITILE_SPIDER_WEB     2
 #define ITILE_OLD_CRATE      3
 #define ITILE_URN            4
+#define ITILE_VOID_PORTAL    5
 
 #define WEB_ROOT_TURNS       2
 #define WEB_COOLDOWN         6
@@ -18,6 +19,7 @@ typedef struct {
   int revealed;
   int cooldown;
   int gold;          /* hidden gold in web (0 = none, consumed on pickup) */
+  int horror_type;   /* enemy type_idx to spawn (void portal only, -1 = none) */
 } ITile_t;
 
 void         ITileInit( void );
@@ -44,5 +46,10 @@ void         ITileCrateScatterGold( void );
 /* Urns */
 int          ITileUrnCheck( World_t* world, int row, int col, int* out_gold );
 void         ITileUrnScatterGold( void );
+
+/* Void portals */
+int          ITileVoidPortalCheck( World_t* world, int row, int col,
+                                   int* out_gold, int* out_horror );
+void         ITileVoidPortalScatter( void );
 
 #endif

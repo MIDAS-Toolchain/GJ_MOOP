@@ -33,6 +33,8 @@ static int sidebar_cursor;
 static int entry_cursor;
 
 static int back_hovered;
+static int sidebar_hover;       /* last hovered sidebar index (-1 = none) */
+static float sidebar_scroll;    /* scroll offset in pixels */
 
 static aSoundEffect_t sfx_move;
 static aSoundEffect_t sfx_click;
@@ -127,6 +129,8 @@ void LoreSceneInit( void )
   sidebar_cursor  = 0;
   entry_cursor    = 0;
   back_hovered    = 0;
+  sidebar_hover   = -1;
+  sidebar_scroll  = 0;
 
   build_sidebar();
   sidebar_cursor = sidebar_first_selectable();
@@ -191,6 +195,11 @@ static void ls_Logic( float dt )
     {
       sidebar_cursor = sidebar_next_selectable( sidebar_cursor, -1 );
       entry_cursor = 0;
+      /* Auto-scroll to keep cursor visible */
+      float cy = 0;
+      for ( int i = 0; i < sidebar_cursor; i++ )
+        cy += ( sidebar[i].is_header ? HEADER_H : ITEM_H ) + ITEM_SPACING;
+      if ( cy < sidebar_scroll ) sidebar_scroll = cy;
     }
     else
     {
@@ -211,6 +220,13 @@ static void ls_Logic( float dt )
     {
       sidebar_cursor = sidebar_next_selectable( sidebar_cursor, 1 );
       entry_cursor = 0;
+      /* Auto-scroll to keep cursor visible */
+      aContainerWidget_t* cc = a_GetContainerFromWidget( "lore_categories" );
+      float cy = 0;
+      for ( int i = 0; i <= sidebar_cursor; i++ )
+        cy += ( sidebar[i].is_header ? HEADER_H : ITEM_H ) + ITEM_SPACING;
+      if ( cy > sidebar_scroll + cc->rect.h - 16 )
+        sidebar_scroll = cy - cc->rect.h + 16;
     }
     else
     {
@@ -261,12 +277,31 @@ static void ls_Logic( float dt )
     }
   }
 
-  /* Sidebar panel - mouse hover + click */
+  /* Sidebar panel - mouse hover selects, scroll wheel */
   {
     aContainerWidget_t* cc = a_GetContainerFromWidget( "lore_categories" );
     aRectf_t r = cc->rect;
-    float by = r.y + 8;
+    int in_sidebar = PointInRect( mx, my, r.x, r.y, r.w, r.h );
 
+    /* Scroll wheel within sidebar */
+    if ( in_sidebar && app.mouse.wheel != 0 )
+    {
+      sidebar_scroll -= app.mouse.wheel * ( ITEM_H + ITEM_SPACING );
+      app.mouse.wheel = 0;
+    }
+
+    /* Clamp scroll */
+    float content_h = 0;
+    for ( int i = 0; i < num_sidebar; i++ )
+      content_h += ( sidebar[i].is_header ? HEADER_H : ITEM_H ) + ITEM_SPACING;
+    float max_scroll = content_h - r.h + 16;
+    if ( max_scroll < 0 ) max_scroll = 0;
+    if ( sidebar_scroll < 0 ) sidebar_scroll = 0;
+    if ( sidebar_scroll > max_scroll ) sidebar_scroll = max_scroll;
+
+    /* Hover detection */
+    int new_hover = -1;
+    float by = r.y + 8 - sidebar_scroll;
     for ( int i = 0; i < num_sidebar; i++ )
     {
       float item_h = sidebar[i].is_header ? HEADER_H : ITEM_H;
@@ -274,29 +309,22 @@ static void ls_Logic( float dt )
       by += item_h + ITEM_SPACING;
 
       if ( sidebar[i].is_header ) continue;
+      if ( byi + item_h < r.y || byi > r.y + r.h ) continue;
 
-      int hit = PointInRect( mx, my, r.x + 4, byi, r.w - 8, item_h );
-      if ( hit )
-      {
-        if ( focus_panel != 0 || sidebar_cursor != i )
-        {
-          focus_panel = 0;
-          if ( sidebar_cursor != i )
-          {
-            sidebar_cursor = i;
-            entry_cursor = 0;
-          }
-          a_AudioPlaySound( &sfx_move, NULL );
-        }
-
-        if ( clicked )
-        {
-          focus_panel = 1;
-          entry_cursor = 0;
-          a_AudioPlaySound( &sfx_click, NULL );
-        }
-      }
+      if ( in_sidebar && PointInRect( mx, my, r.x + 4, byi, r.w - 8, item_h ) )
+        new_hover = i;
     }
+
+    if ( new_hover >= 0 && new_hover != sidebar_hover )
+    {
+      sidebar_hover = new_hover;
+      sidebar_cursor = new_hover;
+      entry_cursor = 0;
+      focus_panel = 0;
+      a_AudioPlaySound( &sfx_move, NULL );
+    }
+    if ( !in_sidebar )
+      sidebar_hover = -1;
   }
 
   /* Entries panel - mouse hover + click */
@@ -361,9 +389,19 @@ static void ls_Draw( float dt )
 
     a_DrawFilledRect( r, (aColor_t){ 0x08, 0x0a, 0x10, 200 } );
 
-    float by = r.y + 8;
+    a_SetClipRect( r );
+    float by = r.y + 8 - sidebar_scroll;
     for ( int i = 0; i < num_sidebar; i++ )
     {
+      float item_h = sidebar[i].is_header ? HEADER_H : ITEM_H;
+
+      /* Skip items fully outside the panel */
+      if ( by + item_h < r.y || by > r.y + r.h )
+      {
+        by += item_h + ITEM_SPACING;
+        continue;
+      }
+
       if ( sidebar[i].is_header )
       {
         /* Floor header - gold text with underline */
@@ -399,6 +437,22 @@ static void ls_Draw( float dt )
         DrawButton( r.x + 4, by, r.w - 8, ITEM_H, buf, 1.2f, sel,
                     active ? bg_hover : bg_norm, bg_hover, fg_norm, fg_hover );
         by += ITEM_H + ITEM_SPACING;
+      }
+    }
+    a_DisableClipRect();
+
+    /* Scroll indicator */
+    {
+      float content_h = 0;
+      for ( int i = 0; i < num_sidebar; i++ )
+        content_h += ( sidebar[i].is_header ? HEADER_H : ITEM_H ) + ITEM_SPACING;
+      if ( content_h > r.h )
+      {
+        float bar_h = ( r.h / content_h ) * r.h;
+        if ( bar_h < 16 ) bar_h = 16;
+        float bar_y = r.y + ( sidebar_scroll / ( content_h - r.h ) ) * ( r.h - bar_h );
+        aRectf_t bar = { r.x + r.w - 6, bar_y, 4, bar_h };
+        a_DrawFilledRect( bar, (aColor_t){ 0x81, 0x97, 0x96, 100 } );
       }
     }
 

@@ -9,7 +9,7 @@
 
 typedef struct Enemy_t Enemy_t;
 
-#define MAX_NPCS 16
+#define MAX_NPCS 32
 
 /* NPC instance - spawned in world */
 typedef struct

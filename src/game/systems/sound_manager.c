@@ -175,6 +175,7 @@ void SoundManagerSetSfxVolume( int pct )
   if ( pct < 0 ) pct = 0;
   if ( pct > 100 ) pct = 100;
   g_sfx_pct = pct;
+  a_AudioSetChannelVolume( -1, AUDIO_MAX_VOLUME * pct / 100 );
 }
 
 int SoundManagerGetSfxVolume( void )

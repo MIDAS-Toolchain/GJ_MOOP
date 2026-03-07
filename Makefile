@@ -38,6 +38,16 @@ OBJ_DIR_NPC      = obj/native/npc
 OBJ_DIR_GROUND   = obj/native/ground_items
 OBJ_DIR_DUNGEON  = obj/native/dungeon
 OBJ_DIR_EM     = obj/em
+OBJ_DIR_EM_SCENES  = obj/em/scenes
+OBJ_DIR_EM_UI      = obj/em/ui
+OBJ_DIR_EM_UTILS   = obj/em/utils
+OBJ_DIR_EM_PLAYER  = obj/em/player
+OBJ_DIR_EM_SYS     = obj/em/systems
+OBJ_DIR_EM_WORLD   = obj/em/world
+OBJ_DIR_EM_ENEMIES = obj/em/enemies
+OBJ_DIR_EM_NPC     = obj/em/npc
+OBJ_DIR_EM_GROUND  = obj/em/ground_items
+OBJ_DIR_EM_DUNGEON = obj/em/dungeon
 
 #Flags
 CINC = -I$(INC_DIR)/
@@ -49,7 +59,7 @@ DAEDALUS_INC   = ../Daedalus/include
 
 C_FLAGS = -std=c99 -Wall -Wextra $(CINC)
 NATIVE_C_FLAGS = $(C_FLAGS) -ggdb -lArchimedes -lDaedalus
-EMSCRIP_C_FLAGS = $(C_FLAGS) -I$(ARCHIMEDES_INC) -I$(DAEDALUS_INC) $(EFLAGS)
+EMSCRIP_C_FLAGS = -std=gnu99 -Wall -Wextra $(CINC) -I$(ARCHIMEDES_INC) -I$(DAEDALUS_INC) $(EFLAGS)
 
 # ====================================================================
 # GAME JAM MOOP LIBRARY OBJECTS (Core C Files)
@@ -128,7 +138,9 @@ DUNGEON_SRCS = dungeon_builder.c \
 							 doors.c \
 							 objects.c \
 							 room_enumerator.c \
-							 interactive_tile.c
+							 interactive_tile.c \
+							 spawn_data.c \
+							 spawn_duf.c
 
 NATIVE_LIB_OBJS = $(patsubst %.c, $(OBJ_DIR_NATIVE)/%.o, $(GJ_MOOP_SRCS))
 SCENES_LIB_OBJS = $(patsubst %.c, $(OBJ_DIR_SCENES)/%.o, $(SCENES_SRCS))
@@ -141,18 +153,24 @@ ENEMIES_LIB_OBJS  = $(patsubst %.c, $(OBJ_DIR_ENEMIES)/%.o, $(ENEMIES_SRCS))
 NPC_LIB_OBJS      = $(patsubst %.c, $(OBJ_DIR_NPC)/%.o, $(NPC_SRCS))
 GROUND_LIB_OBJS   = $(patsubst %.c, $(OBJ_DIR_GROUND)/%.o, $(GROUND_SRCS))
 DUNGEON_LIB_OBJS  = $(patsubst %.c, $(OBJ_DIR_DUNGEON)/%.o, $(DUNGEON_SRCS))
-EMCC_LIB_OBJS = $(patsubst %.c, $(OBJ_DIR_EM)/%.o, $(GJ_MOOP_SRCS))
-EMCC_SCENES_OBJS = $(patsubst %.c, $(OBJ_DIR_EM)/%.o, $(SCENES_SRCS))
-EMCC_UI_OBJS     = $(patsubst %.c, $(OBJ_DIR_EM)/%.o, $(UI_SRCS))
-EMCC_UTILS_OBJS  = $(patsubst %.c, $(OBJ_DIR_EM)/%.o, $(UTILS_SRCS))
-EMCC_PLAYER_OBJS = $(patsubst %.c, $(OBJ_DIR_EM)/%.o, $(PLAYER_SRCS))
-EMCC_SYS_OBJS   = $(patsubst %.c, $(OBJ_DIR_EM)/%.o, $(SYS_SRCS))
+EMCC_LIB_OBJS    = $(patsubst %.c, $(OBJ_DIR_EM)/%.o, $(GJ_MOOP_SRCS))
+EMCC_SCENES_OBJS = $(patsubst %.c, $(OBJ_DIR_EM_SCENES)/%.o, $(SCENES_SRCS))
+EMCC_UI_OBJS     = $(patsubst %.c, $(OBJ_DIR_EM_UI)/%.o, $(UI_SRCS))
+EMCC_UTILS_OBJS  = $(patsubst %.c, $(OBJ_DIR_EM_UTILS)/%.o, $(UTILS_SRCS))
+EMCC_PLAYER_OBJS = $(patsubst %.c, $(OBJ_DIR_EM_PLAYER)/%.o, $(PLAYER_SRCS))
+EMCC_SYS_OBJS    = $(patsubst %.c, $(OBJ_DIR_EM_SYS)/%.o, $(SYS_SRCS))
 
 MAIN_OBJ = $(OBJ_DIR_NATIVE)/main.o
 EM_MAIN_OBJ = $(OBJ_DIR_EM)/main.o
 
 NATIVE_EXE_OBJS = $(SCENES_LIB_OBJS) $(NATIVE_LIB_OBJS) $(UI_LIB_OBJS) $(UTILS_LIB_OBJS) $(PLAYER_LIB_OBJS) $(SYS_LIB_OBJS) $(WORLD_LIB_OBJS) $(ENEMIES_LIB_OBJS) $(NPC_LIB_OBJS) $(GROUND_LIB_OBJS) $(DUNGEON_LIB_OBJS) $(MAIN_OBJ)
-EMCC_EXE_OBJS = $(EMCC_SCENES_OBJS) $(EMCC_LIB_OBJS) $(EMCC_UI_OBJS) $(EMCC_UTILS_OBJS) $(EMCC_PLAYER_OBJS) $(EMCC_SYS_OBJS) $(EM_MAIN_OBJ)
+EMCC_WORLD_OBJS   = $(patsubst %.c, $(OBJ_DIR_EM_WORLD)/%.o, $(WORLD_SRCS))
+EMCC_ENEMIES_OBJS = $(patsubst %.c, $(OBJ_DIR_EM_ENEMIES)/%.o, $(ENEMIES_SRCS))
+EMCC_NPC_OBJS     = $(patsubst %.c, $(OBJ_DIR_EM_NPC)/%.o, $(NPC_SRCS))
+EMCC_GROUND_OBJS  = $(patsubst %.c, $(OBJ_DIR_EM_GROUND)/%.o, $(GROUND_SRCS))
+EMCC_DUNGEON_OBJS = $(patsubst %.c, $(OBJ_DIR_EM_DUNGEON)/%.o, $(DUNGEON_SRCS))
+
+EMCC_EXE_OBJS = $(EMCC_SCENES_OBJS) $(EMCC_LIB_OBJS) $(EMCC_UI_OBJS) $(EMCC_UTILS_OBJS) $(EMCC_PLAYER_OBJS) $(EMCC_SYS_OBJS) $(EMCC_WORLD_OBJS) $(EMCC_ENEMIES_OBJS) $(EMCC_NPC_OBJS) $(EMCC_GROUND_OBJS) $(EMCC_DUNGEON_OBJS) $(EM_MAIN_OBJ)
 
 # ====================================================================
 # PHONY TARGETS
@@ -169,7 +187,7 @@ em: $(INDEX_DIR)/index
 # ====================================================================
 
 # Ensure the directories exist before attempting to write files to them
-$(BIN_DIR) $(OBJ_DIR_NATIVE) $(OBJ_DIR_EM) $(INDEX_DIR) $(OBJ_DIR_SCENES) $(OBJ_DIR_UI) $(OBJ_DIR_UTILS) $(OBJ_DIR_PLAYER) $(OBJ_DIR_SYS) $(OBJ_DIR_WORLD) $(OBJ_DIR_ENEMIES) $(OBJ_DIR_NPC) $(OBJ_DIR_GROUND) $(OBJ_DIR_DUNGEON):
+$(BIN_DIR) $(OBJ_DIR_NATIVE) $(OBJ_DIR_EM) $(INDEX_DIR) $(OBJ_DIR_SCENES) $(OBJ_DIR_UI) $(OBJ_DIR_UTILS) $(OBJ_DIR_PLAYER) $(OBJ_DIR_SYS) $(OBJ_DIR_WORLD) $(OBJ_DIR_ENEMIES) $(OBJ_DIR_NPC) $(OBJ_DIR_GROUND) $(OBJ_DIR_DUNGEON) $(OBJ_DIR_EM_SCENES) $(OBJ_DIR_EM_UI) $(OBJ_DIR_EM_UTILS) $(OBJ_DIR_EM_PLAYER) $(OBJ_DIR_EM_SYS) $(OBJ_DIR_EM_WORLD) $(OBJ_DIR_EM_ENEMIES) $(OBJ_DIR_EM_NPC) $(OBJ_DIR_EM_GROUND) $(OBJ_DIR_EM_DUNGEON):
 	mkdir -p $@
 
 clean:
@@ -230,25 +248,34 @@ $(OBJ_DIR_NATIVE)/main.o: $(SRC_DIR)/main.c | $(OBJ_DIR_NATIVE)
 $(OBJ_DIR_EM)/%.o: $(GAME_DIR)/%.c | $(OBJ_DIR_EM)
 	$(ECC) -c $< -o $@ $(EMSCRIP_C_FLAGS)
 
-$(OBJ_DIR_EM)/%.o: $(UI_DIR)/%.c | $(OBJ_DIR_EM)
+$(OBJ_DIR_EM_UI)/%.o: $(UI_DIR)/%.c | $(OBJ_DIR_EM_UI)
 	$(ECC) -c $< -o $@ $(EMSCRIP_C_FLAGS)
 
-$(OBJ_DIR_EM)/%.o: $(UTILS_DIR)/%.c | $(OBJ_DIR_EM)
+$(OBJ_DIR_EM_UTILS)/%.o: $(UTILS_DIR)/%.c | $(OBJ_DIR_EM_UTILS)
 	$(ECC) -c $< -o $@ $(EMSCRIP_C_FLAGS)
 
-$(OBJ_DIR_EM)/%.o: $(PLAYER_DIR)/%.c | $(OBJ_DIR_EM)
+$(OBJ_DIR_EM_PLAYER)/%.o: $(PLAYER_DIR)/%.c | $(OBJ_DIR_EM_PLAYER)
 	$(ECC) -c $< -o $@ $(EMSCRIP_C_FLAGS)
 
-$(OBJ_DIR_EM)/%.o: $(SYS_DIR)/%.c | $(OBJ_DIR_EM)
+$(OBJ_DIR_EM_SYS)/%.o: $(SYS_DIR)/%.c | $(OBJ_DIR_EM_SYS)
 	$(ECC) -c $< -o $@ $(EMSCRIP_C_FLAGS)
 
-$(OBJ_DIR_EM)/%.o: $(WORLD_DIR)/%.c | $(OBJ_DIR_EM)
+$(OBJ_DIR_EM_WORLD)/%.o: $(WORLD_DIR)/%.c | $(OBJ_DIR_EM_WORLD)
 	$(ECC) -c $< -o $@ $(EMSCRIP_C_FLAGS)
 
-$(OBJ_DIR_EM)/%.o: $(ENEMIES_DIR)/%.c | $(OBJ_DIR_EM)
+$(OBJ_DIR_EM_ENEMIES)/%.o: $(ENEMIES_DIR)/%.c | $(OBJ_DIR_EM_ENEMIES)
 	$(ECC) -c $< -o $@ $(EMSCRIP_C_FLAGS)
 
-$(OBJ_DIR_EM)/%.o: $(SCENES_DIR)/%.c | $(OBJ_DIR_EM)
+$(OBJ_DIR_EM_SCENES)/%.o: $(SCENES_DIR)/%.c | $(OBJ_DIR_EM_SCENES)
+	$(ECC) -c $< -o $@ $(EMSCRIP_C_FLAGS)
+
+$(OBJ_DIR_EM_NPC)/%.o: $(NPC_DIR)/%.c | $(OBJ_DIR_EM_NPC)
+	$(ECC) -c $< -o $@ $(EMSCRIP_C_FLAGS)
+
+$(OBJ_DIR_EM_GROUND)/%.o: $(GROUND_DIR)/%.c | $(OBJ_DIR_EM_GROUND)
+	$(ECC) -c $< -o $@ $(EMSCRIP_C_FLAGS)
+
+$(OBJ_DIR_EM_DUNGEON)/%.o: $(DUNGEON_DIR)/%.c | $(OBJ_DIR_EM_DUNGEON)
 	$(ECC) -c $< -o $@ $(EMSCRIP_C_FLAGS)
 
 $(OBJ_DIR_EM)/main.o: $(SRC_DIR)/main.c | $(OBJ_DIR_EM)

@@ -93,6 +93,9 @@ void GameSceneInit( void )
   a_WidgetsInit( "resources/widgets/game_scene.auf" );
   app.active_widget = a_GetWidget( "inv_panel" );
 
+  /* ---- Free previous run (prevents leak on menu→play→menu→play) ---- */
+  if ( world ) { WorldFree( world ); world = NULL; }
+
   /* ---- Build dungeon ---- */
   tileset = a_TilesetCreate( "resources/assets/tiles/level01tilemap.png", 16, 16 );
   world   = WorldCreate( DUNGEON_W, DUNGEON_H, 16, 16 );

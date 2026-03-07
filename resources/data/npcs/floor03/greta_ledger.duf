@@ -1,0 +1,116 @@
+@npc {
+    name: "Worn Ledger"
+    glyph: "?"
+    color: [200, 180, 160, 255]
+    description: "A leather-bound ledger, open on the floor. The handwriting is neat and careful. Every page is a name."
+    action: "Read"
+    no_face: true
+}
+
+# ==============================
+# CLASS-SPECIFIC STARTS
+# ==============================
+@start_merc {
+    start: true
+    priority: 1
+    require_class: "Mercenary"
+    text: "The ledger is open to a page marked 'Soldiers.' Dozens of names, each with a date and a single word: 'Fed.' One near the bottom reads 'Aldric — strong, stubborn, fed.'"
+    options: ["opt_read_on", "opt_leave"]
+}
+@start_rogue {
+    start: true
+    priority: 1
+    require_class: "Rogue"
+    text: "The ledger is open to a page marked 'Thieves.' Dozens of names, each with a date and a single word: 'Fed.' One near the bottom reads 'Vessa — quick, careful, fed.'"
+    options: ["opt_read_on", "opt_leave"]
+}
+@start_mage {
+    start: true
+    priority: 1
+    require_class: "Mage"
+    text: "The ledger is open to a page marked 'Mages.' Dozens of names, each with a date and a single word: 'Fed.' One near the bottom reads 'R. — gifted, afraid, fed.'"
+    options: ["opt_read_on", "opt_leave"]
+}
+
+# ==============================
+# THE TOWN
+# ==============================
+@opt_read_on {
+    label: "[Read on]"
+    goto: "page_town"
+}
+@page_town {
+    text: "An early entry: 'The town works. Twelve residents, a bakery, a guard post. Enough to look real. Enough to make travelers stop. Old Thom doesn't know. Graf doesn't know. None of them know. They think they live in a town. They live in a lure.'"
+    set_lore: "millhaven_truth"
+    options: ["opt_continue_method", "opt_leave"]
+}
+
+# ==============================
+# THE METHOD
+# ==============================
+@opt_continue_method {
+    label: "[Continue]"
+    goto: "page_method"
+}
+@page_method {
+    text: "'Three doors. Three colors. The dungeon sorts them itself — I just make sure they arrive. A mercenary guild posting here, a rumor of treasure there, a bounty board at the tavern. They come in threes. They always come in threes. They never leave in threes.'"
+    options: ["opt_continue_feast", "opt_leave"]
+}
+
+# ==============================
+# THE FEAST
+# ==============================
+@opt_continue_feast {
+    label: "[Continue]"
+    goto: "page_feast"
+}
+@page_feast {
+    text: "'The table has been set since before I was born. Three plates. Three chairs. Red, green, blue. The dungeon wants them filled. Every group fails. They turn on each other, or the hum takes them, or they simply break. I guide them as far as I can. The rest is up to the dungeon.'"
+    set_lore: "final_feast"
+    options: ["opt_continue_purpose", "opt_leave"]
+}
+
+# ==============================
+# THE PURPOSE
+# ==============================
+@opt_continue_purpose {
+    label: "[Continue]"
+    goto: "page_purpose"
+}
+@page_purpose {
+    text: "'They ask me why. As if I chose this. The hum chose me the same way it chose them. I heard it first when I was a girl, standing above the mine entrance. It said: bring them. So I built a town, and I brought them. For forty years I have brought them.'"
+    options: ["opt_continue_final", "opt_leave"]
+}
+
+# ==============================
+# THE FINAL ENTRY
+# ==============================
+@opt_continue_final {
+    label: "[Continue]"
+    goto: "page_final"
+}
+@page_final {
+    text: "'I don't mourn them. I can't. If I mourned every name in this book I would have drowned in it years ago. They were brave. Some of them were kind. None of them reached the table. They broke before they got there. The dungeon keeps waiting. I keep feeding. That is the arrangement.'"
+    set_lore: "cult_leader_greta"
+    options: ["opt_close", "opt_leave"]
+}
+
+# ==============================
+# CLOSE
+# ==============================
+@opt_close {
+    label: "[Close the ledger]"
+    goto: "close_reply"
+}
+@close_reply {
+    text: "The last page has no name. Just a blank line, waiting for the next entry."
+    options: ["opt_leave"]
+}
+
+# ==============================
+# LEAVE
+# ==============================
+@opt_leave {
+    label: "[Put it down]"
+    goto: "end"
+}

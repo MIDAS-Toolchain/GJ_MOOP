@@ -15,7 +15,7 @@
     require_not_flag: "talked_muri"
     text: "You're alive. That's something. Most people who make it this far are already listening to the hum. Sit down. Breathe."
     set_flag: "talked_muri"
-    options: ["opt_who", "opt_cult", "opt_church", "opt_drem", "opt_greta", "opt_leave"]
+    options: ["opt_who", "opt_cult", "opt_church", "opt_drem", "opt_drem_close", "opt_greta", "opt_leave"]
 }
 @greeting_return {
     start: true
@@ -23,13 +23,13 @@
     require_flag: "talked_muri"
     require_not_flag: "told_drem_rescued"
     text: "Still breathing. Good."
-    options: ["opt_who", "opt_cult", "opt_church", "opt_naming", "opt_drem", "opt_greta", "opt_leave"]
+    options: ["opt_who", "opt_cult", "opt_church", "opt_naming", "opt_drem", "opt_drem_close", "opt_greta", "opt_leave"]
 }
 @greeting_bloop_back {
     start: true
     priority: 5
     require_flag: "told_drem_rescued"
-    text: "She ate my bedroll. Drem won't stop grinning. I should be furious. I'm not."
+    text: "She ate my bedroll. Drem won't stop grinning. I should be furious, but I'm not."
     options: ["opt_who", "opt_cult", "opt_church", "opt_leave"]
 }
 
@@ -50,6 +50,27 @@
 }
 @memory_reply {
     text: "Takes the edges off first. Names. Faces. Then the middle. What you liked. Who you were. By the end you're just... listening. And that's all you are."
+    options: ["opt_cult", "opt_church", "opt_leave"]
+}
+
+# ==============================
+# MURI AND DREM
+# ==============================
+@opt_drem_close {
+    label: "You and Drem seem close."
+    require_flag: "talked_drem"
+    goto: "drem_close_reply"
+}
+@drem_close_reply {
+    text: "Close? We share a bedroll and a horror that eats furniture. That's as close as it gets down here."
+    options: ["opt_drem_close_more", "opt_cult", "opt_church", "opt_leave"]
+}
+@opt_drem_close_more {
+    label: "How did you two end up together?"
+    goto: "drem_close_more_reply"
+}
+@drem_close_more_reply {
+    text: "He was the only one who didn't flinch when I told the cult to go to hell. Everyone else looked away. He looked at me. That was enough."
     options: ["opt_cult", "opt_church", "opt_leave"]
 }
 

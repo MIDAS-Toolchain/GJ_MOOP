@@ -6,6 +6,7 @@
     description: "A goblin girl with messy face paint. She's holding a weapon."
     idle_bark: "*sharpens blade*"
     idle_cooldown: 7
+    combat_bark: "Take that!"
     combat: true
     damage: 2
 }

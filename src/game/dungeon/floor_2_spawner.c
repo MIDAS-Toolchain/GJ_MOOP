@@ -92,13 +92,6 @@ void SpawnFloor2( NPC_t* npcs, int* num_npcs,
   EnemySpawn( enemies, num_enemies, sp, 44, 26, tw, th );  /* room @ */
   EnemySpawn( enemies, num_enemies, sp, 74, 26, tw, th );  /* room ! */
 
-  /* Small bag in room 5 */
-  {
-    int bag_idx = ConsumableByKey( "bag" );
-    if ( bag_idx >= 0 )
-      GroundItemSpawn( items, num_items, bag_idx, 22, 25, tw, th );
-  }
-
   /* Spider webs - near spider rooms */
   ITilePlace( world, 25, 20, ITILE_SPIDER_WEB );  /* room 5 */
   ITilePlace( world, 23, 20, ITILE_SPIDER_WEB );  /* room 5 */
@@ -112,54 +105,6 @@ void SpawnFloor2( NPC_t* npcs, int* num_npcs,
   ITilePlace( world, 74, 24, ITILE_SPIDER_WEB );  /* room ! */
   ITilePlace( world, 29, 6, ITILE_SPIDER_WEB );   /* before Burble */
   ITileWebScatterGold();
-
-  /* Tier 1 consumables - help player get started in floor02*/
-  SpawnRandomConsumable( items, num_items, 50, 4, tw, th );  /* \ room 0 */
-  SpawnRandomConsumable( items, num_items, 46, 14, tw, th );  /* \ south coor*/
-  SpawnRandomConsumable( items, num_items, 56, 14, tw, th );  /* \ south coor*/
-  SpawnRandomConsumable( items, num_items, 30, 6, tw, th );  /* \ spider room */
-
-  /* Tier 2 consumables - scattered in bottom rooms and corridors */
-  SpawnT2Consumable( items, num_items, 23, 19, tw, th );  /* room 5 */
-  SpawnT2Consumable( items, num_items, 37, 19, tw, th );  /* room 7 */
-  SpawnT2Consumable( items, num_items, 62, 19, tw, th );  /* room 8 */
-  SpawnT2Consumable( items, num_items, 46, 25, tw, th );  /* room @ */
-  SpawnT2Consumable( items, num_items, 53, 25, tw, th );  /* room ~ */
-  SpawnT2Consumable( items, num_items, 76, 25, tw, th );  /* room ! */
-  SpawnT2Consumable( items, num_items, 35, 22, tw, th );  /* bottom corridor left */
-  SpawnT2Consumable( items, num_items, 65, 22, tw, th );  /* bottom corridor right */
-
-  /* Rare tier 2 consumables - 1 universal, 3 class-gated */
-  {
-    const char* cls = PlayerClassKey();
-    const char* rare;
-    if ( strcmp( cls, "mercenary" ) == 0 )      rare = "dragon_pepper";
-    else if ( strcmp( cls, "rogue" ) == 0 )     rare = "smoke_bomb";
-    else                                         rare = "scroll_teleport";
-
-    int idx;
-    idx = ConsumableByKey( rare );
-    if ( idx >= 0 ) GroundItemSpawn( items, num_items, idx, 28, 17, tw, th ); /* B path */
-    idx = ConsumableByKey( rare );
-    if ( idx >= 0 ) GroundItemSpawn( items, num_items, idx, 42, 17, tw, th ); /* G path */
-    idx = ConsumableByKey( rare );
-    if ( idx >= 0 ) GroundItemSpawn( items, num_items, idx, 56, 17, tw, th ); /* W path */
-    idx = ConsumableByKey( rare );
-    if ( idx >= 0 ) GroundItemSpawn( items, num_items, idx, 70, 17, tw, th ); /* R path */
-  }
-
-  /* Health potions - hidden in bottom corridors (reachable by all classes) */
-  {
-    int hp = ConsumableByKey( "small_health_potion" );
-    if ( hp >= 0 )
-    {
-      GroundItemSpawn( items, num_items, hp, 28, 20, tw, th );  /* left corridor */
-      GroundItemSpawn( items, num_items, hp, 50, 22, tw, th );  /* center corridor */
-      GroundItemSpawn( items, num_items, hp, 72, 20, tw, th );  /* right corridor */
-      GroundItemSpawn( items, num_items, hp, 47, 25, tw, th );
-      GroundItemSpawn( items, num_items, hp, 55, 25, tw, th );
-    }
-  }
 
   /* === War Goblin Territory (top-right) === */
   {
@@ -185,19 +130,6 @@ void SpawnFloor2( NPC_t* npcs, int* num_npcs,
     NPCSpawn( npcs, num_npcs, NPCTypeByKey( "goblin_door" ),
               86, 2, tw, th );
 
-    /* Tier 3 weapon behind the goblin door (: room) */
-    {
-      const char* cls = PlayerClassKey();
-      const char* wep;
-      if ( strcmp( cls, "mercenary" ) == 0 )      wep = "war_hammer";
-      else if ( strcmp( cls, "rogue" ) == 0 )     wep = "blacksteel_knife";
-      else                                         wep = "conduit_staff";
-
-      int ei = EquipmentByKey( wep );
-      if ( ei >= 0 )
-        GroundItemSpawnEquipment( items, num_items, ei, 86, 1, tw, th );
-    }
-
     /* e room (Goblin Jail) - jailer + shaman */
     EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "goblin_jailer" ),
                 51, 17, tw, th );
@@ -212,15 +144,6 @@ void SpawnFloor2( NPC_t* npcs, int* num_npcs,
     EnemySpawn( enemies, num_enemies, gr, 89, 12, tw, th );
     EnemySpawn( enemies, num_enemies, sl, 92, 12, tw, th );
 
-    /* Consumable loot in each goblin room */
-    SpawnRandomConsumable( items, num_items, 62, 1, tw, th );  /* \ Barracks */
-    SpawnRandomConsumable( items, num_items, 75, 2, tw, th );  /* | Tunnel */
-    SpawnRandomConsumable( items, num_items, 78, 1, tw, th );  /* ; Den */
-    SpawnRandomConsumable( items, num_items, 92, 2, tw, th );  /* : Warren */
-
-    /* Boss room: 1 regular + 1 rare class consumable */
-    SpawnRandomConsumable( items, num_items, 90, 9, tw, th );  /* q Boss */
-    SpawnT2Consumable( items, num_items, 93, 11, tw, th );     /* q Boss (rare) */
   }
 
   /* Middle-band rooms (south): 1 goblin grunt + 1 random consumable each */
@@ -231,17 +154,6 @@ void SpawnFloor2( NPC_t* npcs, int* num_npcs,
     EnemySpawn( enemies, num_enemies, gr, 64, 10, tw, th );  /* room 3 */
     EnemySpawn( enemies, num_enemies, gr, 76, 10, tw, th );  /* room 4 */
 
-    SpawnRandomT2Consumable( items, num_items, 21, 9, tw, th );  /* room 2 */
-    SpawnRandomT2Consumable( items, num_items, 35, 9, tw, th );  /* room 1 */
-
-    /* Small bag in room 1 */
-    {
-      int bag_idx = ConsumableByKey( "bag" );
-      if ( bag_idx >= 0 )
-        GroundItemSpawn( items, num_items, bag_idx, 33, 10, tw, th );
-    }
-    SpawnRandomT2Consumable( items, num_items, 63, 9, tw, th );  /* room 3 */
-    SpawnRandomT2Consumable( items, num_items, 77, 9, tw, th );  /* room 4 */
   }
 
   EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "goblin_grunt" ),
@@ -260,28 +172,7 @@ void SpawnFloor2( NPC_t* npcs, int* num_npcs,
   NPCSpawn( npcs, num_npcs, NPCTypeByKey( "stairway" ),
             53, 47, tw, th );
 
-  /* Large sack - south passage */
-  {
-    int sack_idx = ConsumableByKey( "sack" );
-    if ( sack_idx >= 0 )
-      GroundItemSpawn( items, num_items, sack_idx, 42, 37, tw, th );
-  }
-
-  /* Max Health pickup */
-  {
-    int mh_idx = ConsumableByKey( "max_health" );
-    if ( mh_idx >= 0 )
-      GroundItemSpawn( items, num_items, mh_idx, 47, 35, tw, th );
-  }
-
-  /* Cave mushrooms for Nettle's quest - one per W-accessible path */
-  {
-    int cm = ConsumableByKey( "cave_mushroom" );
-    if ( cm >= 0 )
-    {
-      GroundItemSpawn( items, num_items, cm, 28, 24, tw, th );  /* left corridor */
-      GroundItemSpawn( items, num_items, cm, 50, 27, tw, th );  /* center corridor */
-      GroundItemSpawn( items, num_items, cm, 72, 24, tw, th );  /* right corridor */
-    }
-  }
+  /* Consumable/item spawns from DUF */
+  DungeonSpawnFromDUF( "resources/data/floors/floor_02_consumable_spawns.duf",
+                       items, num_items, world );
 }

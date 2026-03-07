@@ -21,8 +21,12 @@ OBJ_DIR_NATIVE = obj/native
 OBJ_DIR_EE     = obj/native/entity_editor
 OBJ_DIR_WE     = obj/native/world_editor
 
+# Parent project directories (for shared spawn data)
+GAME_INC_DIR   = ../include
+GAME_DUNGEON   = ../src/game/dungeon
+
 #Flags
-CINC = -I$(INC_DIR)/
+CINC = -I$(INC_DIR)/ -I$(GAME_INC_DIR)/
 LDLIBS = -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer -lm
 
 C_FLAGS = -std=c99 -Wall -Wextra $(CINC)
@@ -35,6 +39,7 @@ NATIVE_C_FLAGS = $(C_FLAGS) -ggdb -lArchimedes -lDaedalus
 
 EDITOR_SRCS = editor.c \
 							entity_editor.c\
+							item_catalog.c\
 							items_editor.c\
 							utils.c\
 							world.c\
@@ -53,9 +58,11 @@ NATIVE_LIB_OBJS = $(patsubst %.c, $(OBJ_DIR_NATIVE)/%.o, $(EDITOR_SRCS))
 ENTITY_EDITOR_LIB_OBJS = $(patsubst %.c, $(OBJ_DIR_EE)/%.o, $(ENTITY_EDITOR_SRCS))
 WORLD_EDITOR_LIB_OBJS = $(patsubst %.c, $(OBJ_DIR_WE)/%.o, $(WORLD_EDITOR_SRCS))
 
+SPAWN_OBJS = $(OBJ_DIR_NATIVE)/spawn_data.o $(OBJ_DIR_NATIVE)/spawn_duf.o
+
 MAIN_OBJ = $(OBJ_DIR_NATIVE)/main.o
 
-NATIVE_EXE_OBJS = $(ENTITY_EDITOR_LIB_OBJS) $(WORLD_EDITOR_LIB_OBJS) $(NATIVE_LIB_OBJS) $(MAIN_OBJ)
+NATIVE_EXE_OBJS = $(ENTITY_EDITOR_LIB_OBJS) $(WORLD_EDITOR_LIB_OBJS) $(NATIVE_LIB_OBJS) $(SPAWN_OBJS) $(MAIN_OBJ)
 
 
 # ====================================================================
@@ -99,6 +106,12 @@ $(OBJ_DIR_WE)/%.o: $(WE_DIR)/%.c | $(OBJ_DIR_WE)
 	$(CC) -c $< -o $@ $(NATIVE_C_FLAGS)
 
 $(OBJ_DIR_NATIVE)/main.o: $(SRC_DIR)/main.c | $(OBJ_DIR_NATIVE)
+	$(CC) -c $< -o $@ $(NATIVE_C_FLAGS)
+
+$(OBJ_DIR_NATIVE)/spawn_data.o: $(GAME_DUNGEON)/spawn_data.c | $(OBJ_DIR_NATIVE)
+	$(CC) -c $< -o $@ $(NATIVE_C_FLAGS)
+
+$(OBJ_DIR_NATIVE)/spawn_duf.o: $(GAME_DUNGEON)/spawn_duf.c | $(OBJ_DIR_NATIVE)
 	$(CC) -c $< -o $@ $(NATIVE_C_FLAGS)
 
 

@@ -113,6 +113,7 @@ void GroundItemsDrawAll( aRectf_t vp_rect, GameCamera_t* cam,
       EquipmentInfo_t* ei = &g_equipment[list[i].item_idx];
       glyph = ei->glyph;
       color = ei->color;
+      image = ei->image;
     }
     else
     {

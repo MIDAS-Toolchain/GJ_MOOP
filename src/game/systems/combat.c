@@ -181,6 +181,14 @@ void CombatHandleEnemyDeath( Enemy_t* e )
     GameTurnsShowSkipHint();
   }
 
+  /* Death flag: set a game flag when this enemy type dies */
+  if ( t->death_flag[0] != '\0' )
+    FlagSet( t->death_flag, 1 );
+
+  /* Greta death: spawn her ledger NPC */
+  if ( strcmp( t->key, "greta" ) == 0 )
+    EnemyOnGretaDeath( e->row, e->col );
+
   /* Linked death: shaman dies → totem crumbles */
   if ( strcmp( t->ai, "shaman" ) == 0
        && combat_enemies && combat_enemy_count )

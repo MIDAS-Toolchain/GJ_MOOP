@@ -14,10 +14,12 @@
 
 #include "ed_defines.h"
 #include "ed_structs.h"
+#include "spawn_data.h"
 
 extern World_t*   g_map;
 extern int        g_toggle_ascii;
 extern int        g_toggle_room;
+extern int        g_toggle_consumable;
 extern int        g_current_tileset;
 extern char*      g_current_filename;
 
@@ -25,7 +27,7 @@ enum
 {
   WEM_NONE,
   WEM_BRUSH,
-  WEM_COPY,
+  WEM_CONSUMABLE,
   WEM_PASTE,
   WEM_MASS_CHANGE,
   WEM_SELECT,
@@ -116,9 +118,23 @@ void wel_LoadNo( void );
 void we_DrawColorPalette( int originx, int originy, int fg_index, int bg_index );
 void we_DrawGlyphPalette( int originx, int originy, int glyph_index );
 void we_DrawTilePalette( int originx, int originy, int tile_index, int tileset );
+void we_TilePaletteMouseCheck( int originx, int originy, int* out_index, int tileset );
 void we_MapMouseCheck( dVec2_t* pos, aRectf_t menu_rect );
 void we_MassChange( World_t* world,
                  dVec2_t* selected_pos, dVec2_t* highlighted_pos,
                  uint16_t tile_index, uint8_t change_room, uint16_t room_id );
+
+/* Consumable spawn sidebar */
+int  we_DrawSpawnTypePalette( int ox, int oy, int selected_type );
+int  we_SpawnTypeMouseCheck( int ox, int oy, int* out_type );
+void we_DrawItemList( int ox, int oy, int max_h,
+                      int* indices, int count, int scroll,
+                      const char* selected_key );
+int  we_ItemListMouseCheck( int ox, int oy, int max_h,
+                            int* indices, int count,
+                            int* scroll, char* out_key );
+void we_DrawPoolList( int ox, int oy, SpawnList_t* spawns, int selected_pool );
+int  we_PoolListMouseCheck( int ox, int oy, SpawnList_t* spawns, int* out_pool );
+void we_BuildFilteredItems( int spawn_type, int* out_indices, int* out_count );
 
 #endif

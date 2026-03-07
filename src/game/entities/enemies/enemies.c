@@ -4,6 +4,8 @@
 
 #include "enemies.h"
 #include "npc.h"
+#include "player.h"
+#include "items.h"
 #include "combat.h"
 #include "combat_vfx.h"
 #include "world.h"
@@ -137,10 +139,19 @@ void EnemyBossGretaSpawn( int npc_type_idx )
 
   int tw = world->tile_w, th = world->tile_h;
 
-  /* Spawn Greta as enemy at her position */
+  /* Spawn Greta as enemy at her position, with class-based weapon drop */
   int gi = EnemyTypeByKey( "greta" );
   if ( gi >= 0 )
+  {
+    const char* cls = PlayerClassKey();
+    const char* wep;
+    if ( strcmp( cls, "mercenary" ) == 0 )      wep = "hum_cleaver";
+    else if ( strcmp( cls, "rogue" ) == 0 )     wep = "hum_fang";
+    else                                         wep = "hum_focus";
+    strncpy( g_enemy_types[gi].drop_item, wep, MAX_NAME_LENGTH - 1 );
+
     EnemySpawn( stored_list, stored_count, gi, row, col, tw, th );
+  }
 
   /* Spawn elder horror adjacent */
   int ei = EnemyTypeByKey( "elder_horror" );
@@ -156,6 +167,15 @@ void EnemyBossGretaSpawn( int npc_type_idx )
       if ( eh ) break;
     }
   }
+}
+
+void EnemyOnGretaDeath( int row, int col )
+{
+  if ( !npc_list || !npc_count || !world ) return;
+  int li = NPCTypeByKey( "greta_ledger" );
+  if ( li < 0 ) return;
+  NPCSpawn( npc_list, npc_count, li, row, col + 1,
+            world->tile_w, world->tile_h );
 }
 
 int EnemyBlockedByNPC( int row, int col )

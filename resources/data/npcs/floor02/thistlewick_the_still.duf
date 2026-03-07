@@ -81,7 +81,7 @@
 }
 @opt_return_relic {
     label: "Laura sent me. The Hearthstone is yours."
-    color: "quest"
+    color: "complete"
     set_flag: "quest_return_laura"
     goto: "return_relic_reply"
 }

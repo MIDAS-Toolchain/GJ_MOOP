@@ -59,7 +59,7 @@ typedef struct
   aImage_t* image;
 } OpenableInfo_t;
 
-#define MAX_EQUIPMENT     32
+#define MAX_EQUIPMENT     64
 
 typedef struct
 {

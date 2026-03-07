@@ -42,6 +42,10 @@ void SpawnFloor3( NPC_t* npcs, int* num_npcs,
   EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "cultist" ), 49, 22, tw, th );
   EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "cultist" ), 49, 21, tw, th );
 
+  /* Greta's Door - blocks passage until Greta is killed */
+  NPCSpawn( npcs, num_npcs, NPCTypeByKey( "gretas_door" ),
+            45, 16, tw, th );
+
   /* Ex-cultist town (room t) */
   NPCSpawn( npcs, num_npcs, NPCTypeByKey( "muri" ),
             60, 52, tw, th );
@@ -64,18 +68,14 @@ void SpawnFloor3( NPC_t* npcs, int* num_npcs,
               50, 70, tw, th );
   EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "horror" ),
               54, 58, tw, th );
-  SpawnRandomT2Consumable( items, num_items, 54, 57, tw, th );
   EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "horror" ),
               64, 64, tw, th );
-  SpawnRandomT2Consumable( items, num_items, 64, 63, tw, th );
   EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "horror" ),
               70, 58, tw, th );
-  SpawnRandomT2Consumable( items, num_items, 70, 57, tw, th );
   EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "horror" ),
               55, 35, tw, th );
   EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "lost_horror" ),
               54, 33, tw, th );
-  SpawnRandomT2Consumable( items, num_items, 52, 36, tw, th );
 
   /* Baby horrors */
   EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "lost_horror" ),
@@ -84,8 +84,6 @@ void SpawnFloor3( NPC_t* npcs, int* num_npcs,
               61, 26, tw, th );
   EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "lost_horror" ),
               43, 22, tw, th );
-
-  SpawnRandomT2Consumable( items, num_items, 49, 26, tw, th );
 
   /* Cultist enemies (room w) */
   int cult_e = EnemyTypeByKey( "cultist" );
@@ -106,89 +104,28 @@ void SpawnFloor3( NPC_t* npcs, int* num_npcs,
   EnemySpawn( enemies, num_enemies, vs, 9, 64, tw, th );
   EnemySpawn( enemies, num_enemies, vs, 68, 33, tw, th );
 
-  /* Small health potion */
-  {
-    int shp = ConsumableByKey( "small_health_potion" );
-    if ( shp >= 0 )
-    {
-      GroundItemSpawn( items, num_items, shp, 61, 58, tw, th );
-      GroundItemSpawn( items, num_items, shp, 61, 29, tw, th );
-    }
-  }
-
-  /* T2 consumables beside slimes */
-  SpawnRandomT2Consumable( items, num_items, 35, 47, tw, th );
-  SpawnRandomT2Consumable( items, num_items, 35, 43, tw, th );
-  SpawnRandomT2Consumable( items, num_items, 40, 40, tw, th );
-
-  /* Medium health potion */
-  {
-    int mhp = ConsumableByKey( "medium_health_potion" );
-    if ( mhp >= 0 )
-      GroundItemSpawn( items, num_items, mhp, 41, 44, tw, th );
-  }
-
-  SpawnRandomT2Consumable( items, num_items, 26, 43, tw, th );
-  SpawnRandomT2Consumable( items, num_items, 49, 43, tw, th );
-
-  /* Medium health potion - entry area */
-  {
-    int mhp2 = ConsumableByKey( "medium_health_potion" );
-    if ( mhp2 >= 0 )
-      GroundItemSpawn( items, num_items, mhp2, 42, 72, tw, th );
-  }
-
-  /* T2 consumables */
-  SpawnRandomT2Consumable( items, num_items, 55, 66, tw, th );
-  SpawnRandomT2Consumable( items, num_items, 53, 72, tw, th );
-  SpawnRandomT2Consumable( items, num_items, 67, 70, tw, th );
-  SpawnRandomT2Consumable( items, num_items, 42, 60, tw, th );
-  SpawnRandomConsumable( items, num_items, 13, 59, tw, th );
-  SpawnRandomT2Consumable( items, num_items, 57, 29, tw, th );
-  SpawnRandomT2Consumable( items, num_items, 66, 33, tw, th );
-  {
-    int bag_idx = ConsumableByKey( "bag" );
-    if ( bag_idx >= 0 )
-      GroundItemSpawn( items, num_items, bag_idx, 67, 33, tw, th );
-  }
-
-  /* Max Health pickup */
-  {
-    int mh_idx = ConsumableByKey( "max_health" );
-    if ( mh_idx >= 0 )
-      GroundItemSpawn( items, num_items, mh_idx, 60, 26, tw, th );
-  }
-
-  /* Lost horrors + class-based rare consumable */
+  /* Lost horrors (enemies only — consumable drops are in DUF) */
   {
     int lh = EnemyTypeByKey( "lost_horror" );
-    const char* cls = PlayerClassKey();
-    const char* rare;
-    if ( strcmp( cls, "mercenary" ) == 0 )      rare = "dragon_pepper";
-    else if ( strcmp( cls, "rogue" ) == 0 )     rare = "smoke_bomb";
-    else                                         rare = "scroll_teleport";
-
-    int idx;
     EnemySpawn( enemies, num_enemies, lh, 67, 46, tw, th );
-    idx = ConsumableByKey( rare );
-    if ( idx >= 0 ) GroundItemSpawn( items, num_items, idx, 67, 45, tw, th );
-
     EnemySpawn( enemies, num_enemies, lh, 67, 40, tw, th );
-    idx = ConsumableByKey( rare );
-    if ( idx >= 0 ) GroundItemSpawn( items, num_items, idx, 67, 39, tw, th );
-
     EnemySpawn( enemies, num_enemies, lh, 57, 39, tw, th );
-    idx = ConsumableByKey( rare );
-    if ( idx >= 0 ) GroundItemSpawn( items, num_items, idx, 57, 38, tw, th );
   }
 
-  /* Large sack */
-  {
-    int sack_idx = ConsumableByKey( "sack" );
-    if ( sack_idx >= 0 )
-      GroundItemSpawn( items, num_items, sack_idx, 18, 66, tw, th );
-  }
-  SpawnRandomT2Consumable( items, num_items, 16, 66, tw, th );
+  /* Consumable/item spawns from DUF */
+  DungeonSpawnFromDUF( "resources/data/floors/floor_03_consumable_spawns.duf",
+                       items, num_items, world );
+
+  /* Void portals */
+  ITilePlace( world, 38, 9, ITILE_VOID_PORTAL );
+  ITilePlace( world, 42, 13, ITILE_VOID_PORTAL );
+  ITilePlace( world, 47, 9, ITILE_VOID_PORTAL );
+  ITilePlace( world, 38, 4, ITILE_VOID_PORTAL );
+  ITilePlace( world, 17, 4, ITILE_VOID_PORTAL );
+  ITilePlace( world, 22, 5, ITILE_VOID_PORTAL );
+  ITilePlace( world, 50, 26, ITILE_VOID_PORTAL );
+  ITilePlace( world, 60, 31, ITILE_VOID_PORTAL );
+  ITileVoidPortalScatter();
 
   /* Urns - placed by the cult along corridors and flanking doorways */
   ITilePlace( world, 40, 53, ITILE_URN );   /* entry corridor, near top */

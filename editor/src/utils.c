@@ -165,9 +165,9 @@ Tileset_t* e_TilesetCreate( const char* filename,
   if ( new_set->img_array == NULL ) return NULL;
   
   new_set->glyph = malloc( sizeof( uint16_t ) * temp_sheet->img_count );
-  if ( new_set->glyph == NULL ) 
+  if ( new_set->glyph == NULL )
   {
-    free( new_set->glyph );
+    free( new_set->img_array );
     free( new_set );
     return NULL;
   }
@@ -306,6 +306,9 @@ World_t* convert_mats_worlds( const char* filename )
       d_StringSlice( height, d_StringPeek( line ), first_num_w+1, second_num_w );
       world_width  = atoi( d_StringPeek( width ) );
       world_height = atoi( d_StringPeek( height ) );
+      d_StringDestroy( line );
+      d_StringDestroy( width );
+      d_StringDestroy( height );
     }
 
     new_world->width  = world_width;
@@ -431,6 +434,9 @@ World_t* convert_mats_worlds( const char* filename )
     new_world->midground[door_index].glyph_index = tile_index-1;
   }
 
+  d_ArrayDestroy( door_positions );
+  free( lines );
+  free( file_string );
   e_GetOrigin( new_world, &new_world->originx, &new_world->originy );
   return new_world;
 }
@@ -485,8 +491,7 @@ dArray_t* FindMapFiles( const char* base_dir, dArray_t* array )
 {
   struct dirent* dir_p;
   DIR* dir = opendir( base_dir );
-  dArray_t* path_array = d_ArrayInit( 10, sizeof(dString_t) );
-  
+
   if ( !dir ) return NULL;
 
   while ( ( dir_p = readdir( dir ) ) != NULL )
@@ -494,13 +499,11 @@ dArray_t* FindMapFiles( const char* base_dir, dArray_t* array )
     if( dir_p->d_type == DT_DIR )
     {
       if ( strcmp(dir_p->d_name, ".") != 0 &&
-        strcmp( dir_p->d_name, ".." ) != 0 )
+        strcmp( dir_p->d_name, ".." ) != 0 &&
+        strcmp( dir_p->d_name, ".git" ) != 0 )
       {
         char new_path[1024];
         snprintf( new_path, sizeof(new_path), "%s/%s", base_dir, dir_p->d_name );
-        //printf("base: %s\n", base_dir);
-        //printf("dir name: %s\n", dir_p->d_name);
-        //printf("path: %s\n", new_path);
         FindMapFiles( new_path, array );
       }
     }
@@ -512,12 +515,13 @@ dArray_t* FindMapFiles( const char* base_dir, dArray_t* array )
         char new_path[1024];
         snprintf( new_path, sizeof(new_path), "%s/%s", base_dir, dir_p->d_name );
         d_ArrayAppend( array, new_path );
-        //printf( "%s\n", new_path );
       }
     }
   }
 
-  return path_array;
+  closedir( dir );
+
+  return array;
 }
 
 void GetSelectGridSize( dVec2_t* select_pos, dVec2_t* highlight_pos,

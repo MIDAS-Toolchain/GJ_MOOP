@@ -157,7 +157,7 @@
     goto: "who_built_reply"
 }
 @who_built_reply {
-    text: "The miners found it, but they didn't build it. The tunnels were already here. The doors were already here. Old Thom says his grandfather told stories about the doors glowing at night. That was before anyone went inside."
+    text: "The miners found it, but they didn't build it. The tunnels were already here. The doors were already here. Old Thom always told stories about the doors glowing at night. That was before anyone went inside."
     set_lore: "dungeon_origins"
     options: ["opt_doors_glow", "opt_feast_rumor", "opt_leave"]
 }

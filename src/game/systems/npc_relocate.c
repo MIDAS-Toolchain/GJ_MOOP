@@ -119,9 +119,10 @@ int NPCRelocateUpdate( float dt )
           {
             if ( rl_npcs[i].alive && rl_npcs[i].type_idx == rl_npc_type )
             {
-              printf( "RELOCATE: npc[%d] type=%d  old=(%d,%d)  new=(%d,%d)  alive=%d\n",
+              printf( "RELOCATE HOLD: npc[%d] type=%d  old=(%d,%d) old_wx=%.1f,wy=%.1f  new=(%d,%d)  alive=%d\n",
                       i, rl_npc_type,
                       rl_npcs[i].row, rl_npcs[i].col,
+                      rl_npcs[i].world_x, rl_npcs[i].world_y,
                       rl_dest_row, rl_dest_col, rl_npcs[i].alive );
               rl_npcs[i].row     = rl_dest_row;
               rl_npcs[i].col     = rl_dest_col;

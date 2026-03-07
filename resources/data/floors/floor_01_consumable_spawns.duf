@@ -1,0 +1,200 @@
+@pool_0 {
+    rule: "pick_one"
+    pick_type: "equipment"
+    pick_key: "golden_ring"
+    fill_type: "random_t2"
+}
+@spawn_0 {
+    row: 8
+    col: 27
+    type: "random_t1"
+    note: "New room southwest"
+}
+@spawn_1 {
+    row: 3
+    col: 31
+    type: "random_t1"
+    note: "Slimes room !"
+}
+@spawn_2 {
+    row: 3
+    col: 11
+    type: "random_t1"
+    note: "Slimes room 4 merc"
+}
+@spawn_3 {
+    row: 12
+    col: 45
+    type: "random_t1"
+    note: "red chamber"
+}
+@spawn_4 {
+    row: 22
+    col: 46
+    type: "random_t1"
+    note: "blue chamber"
+}
+@spawn_5 {
+    row: 31
+    col: 46
+    type: "random_t1"
+    note: "green chamber"
+}
+@spawn_6 {
+    row: 5
+    col: 45
+    type: "random_t1"
+    note: "white chamber reward"
+}
+@spawn_7 {
+    row: 30
+    col: 12
+    type: "random_t1"
+    note: "Rogue Annex"
+}
+@spawn_8 {
+    row: 31
+    col: 17
+    type: "random_t1"
+    note: "Merc Annex"
+}
+@spawn_9 {
+    row: 31
+    col: 2
+    type: "random_t1"
+    note: "Merc Upper Barracks"
+}
+@spawn_10 {
+    row: 31
+    col: 7
+    type: "random_t1"
+    note: "Merc Lower Barracks"
+}
+@spawn_11 {
+    row: 1
+    col: 8
+    type: "random_t1"
+    note: "left corridor"
+}
+@spawn_12 {
+    row: 9
+    col: 23
+    type: "random_t1"
+    note: "junction corridor"
+}
+@spawn_13 {
+    row: 29
+    col: 26
+    type: "random_t1"
+    note: "east corridor"
+}
+@spawn_14 {
+    row: 10
+    col: 42
+    type: "random_t1"
+    note: "side room off white corridor"
+}
+@spawn_15 {
+    row: 15
+    col: 2
+    type: "random_t1"
+    note: "Upper Passage"
+}
+@spawn_16 {
+    row: 16
+    col: 36
+    type: "random_t1"
+    note: "Lower Passage"
+}
+@spawn_17 {
+    row: 26
+    col: 5
+    type: "consumable"
+    key: "small_health_potion"
+    note: "merc barracks corridor"
+}
+@spawn_18 {
+    row: 22
+    col: 11
+    type: "consumable"
+    key: "small_health_potion"
+    note: "gallery rogue shortcut"
+}
+@spawn_19 {
+    row: 30
+    col: 24
+    type: "consumable"
+    key: "small_health_potion"
+    note: "east corridor mage shortcut"
+}
+@spawn_20 {
+    row: 21
+    col: 24
+    type: "consumable"
+    key: "small_health_potion"
+}
+@spawn_21 {
+    row: 18
+    col: 6
+    type: "consumable"
+    key: "small_health_potion"
+}
+@spawn_22 {
+    row: 10
+    col: 41
+    type: "consumable"
+    key: "bag"
+    note: "side room off white corridor"
+}
+@spawn_23 {
+    row: 4
+    col: 3
+    type: "consumable"
+    key: "bag"
+    note: "near upper passage"
+}
+@spawn_24 {
+    row: 14
+    col: 45
+    type: "consumable"
+    key: "sack"
+    note: "class-gated red"
+}
+@spawn_25 {
+    row: 24
+    col: 45
+    type: "consumable"
+    key: "sack"
+    note: "class-gated blue"
+}
+@spawn_26 {
+    row: 30
+    col: 45
+    type: "consumable"
+    key: "sack"
+    note: "class-gated green"
+}
+@spawn_27 {
+    row: 25
+    col: 11
+    type: "consumable"
+    key: "max_health"
+}
+@spawn_28 {
+    row: 5
+    col: 29
+    type: "pool"
+    pool: "pool_0"
+}
+@spawn_29 {
+    row: 33
+    col: 31
+    type: "pool"
+    pool: "pool_0"
+}
+@spawn_30 {
+    row: 18
+    col: 39
+    type: "pool"
+    pool: "pool_0"
+}

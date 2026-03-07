@@ -102,7 +102,7 @@
 @dungeon_origins {
     title: "Dungeon Origins"
     category: "History"
-    description: "The dungeon was not built by the miners who discovered it. The tunnels and colored doors were already there. Old Thom's grandfather spoke of the doors glowing at night, long before anyone ventured inside."
+    description: "The dungeon was not built by the miners who discovered it. The tunnels and colored doors were already there. Old Thom always spoke of the doors glowing at night, long before anyone ventured inside."
 }
 @the_feast {
     title: "The Feast Table"

@@ -20,6 +20,7 @@ typedef struct
   int      sight_range;                 /* aggro range (Manhattan), default 6 */
   char     drop_item[MAX_NAME_LENGTH];  /* DUF key of consumable to drop on death */
   int      gold_drop;                  /* gold dropped on death (0 = none) */
+  char     death_flag[MAX_NAME_LENGTH]; /* flag to set when this enemy dies */
   char     on_death[MAX_NAME_LENGTH];  /* death hazard, e.g. "poison_pool" */
   int      pool_duration;
   int      pool_damage;
@@ -92,6 +93,7 @@ int  EnemyShamanSpawnTotem( int row, int col, int (*walkable)(int,int),
 
 /* Boss spawn: Greta fight (despawns NPC, spawns Greta enemy + elder horror) */
 void EnemyBossGretaSpawn( int npc_type_idx );
+void EnemyOnGretaDeath( int row, int col );
 
 /* Horror AI */
 void EnemyHorrorTick( Enemy_t* e, int player_row, int player_col,

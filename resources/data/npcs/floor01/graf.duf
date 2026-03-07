@@ -112,6 +112,7 @@
 # ==============================
 @opt_whats_up {
     label: "What are you doing down here?"
+    color: "quest"
     goto: "whats_up_reply"
 }
 @whats_up_reply {

@@ -40,6 +40,18 @@
     description: "A crushing weight on a short handle. Bones don't stand a chance."
     color: [200, 100, 100, 255]
 }
+@hum_cleaver {
+    name: "Hum Cleaver"
+    kind: "weapon"
+    slot: "weapon"
+    glyph: "/"
+    damage: 4
+    defense: 0
+    effect: "none"
+    class: "mercenary"
+    description: "Fed on the essence of Aldric and every soldier before him. The blade hums with something borrowed. Something that was never given back."
+    color: [220, 110, 110, 255]
+}
 @iron_platemail {
     name: "Iron Platemail"
     kind: "armor"
@@ -133,6 +145,18 @@
     description: "Dark metal, wicked edge. Cuts before they see it coming."
     color: [100, 200, 100, 255]
 }
+@hum_fang {
+    name: "Hum Fang"
+    kind: "weapon"
+    slot: "weapon"
+    glyph: "/"
+    damage: 4
+    defense: 0
+    effect: "none"
+    class: "rogue"
+    description: "Fed on the essence of Vessa and every thief before her. The edge vibrates faintly, like a tuning fork struck once and never silenced."
+    color: [120, 220, 120, 255]
+}
 @ghost_leather {
     name: "Ghost Leather"
     kind: "armor"
@@ -223,6 +247,18 @@
     class: "mage"
     description: "Channels raw power. The air crackles around it."
     color: [100, 100, 200, 255]
+}
+@hum_focus {
+    name: "Hum Focus"
+    kind: "weapon"
+    slot: "weapon"
+    glyph: "/"
+    damage: 4
+    defense: 0
+    effect: "none"
+    class: "mage"
+    description: "Fed on the essence of R. and every mage before him. The runes still glow, casting spells no one taught it."
+    color: [120, 120, 220, 255]
 }
 @runecloth_vestments {
     name: "Runecloth Vestments"
@@ -333,5 +369,6 @@
     effect_value: 1
     class: ""
     description: "Grants +1 gold per enemy killed."
+    image_path: "resources/assets/equipment/golden_ring.png"
     color: [218, 175, 32, 255]
 }

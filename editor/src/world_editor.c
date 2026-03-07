@@ -24,12 +24,15 @@
 
 static void e_WorldEditorLogic( float );
 static void e_WorldEditorDraw( float );
+static void toggle_room_action( void );
+static void toggle_cons_action( void );
 
 char* g_current_filename = NULL;
 World_t* g_map        = NULL;
-int g_toggle_ascii    = 0;
-int g_toggle_room     = 0;
-int g_current_tileset = 0;
+int g_toggle_ascii      = 0;
+int g_toggle_room       = 0;
+int g_toggle_consumable = 0;
+int g_current_tileset   = 0;
 
 static dVec2_t selected_pos;
 static dVec2_t highlighted_pos;
@@ -48,7 +51,7 @@ void e_WorldEditorInit( void )
     if (g_current_filename == NULL ) return;
   }
 
-  float ratio = SCREEN_WIDTH/SCREEN_HEIGHT;
+  float ratio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
   float view_h = 50.0f;
   float view_w = view_h * ratio;
   app.g_viewport = (aRectf_t){ 1024.0f, 1024.0f, view_h, view_w };
@@ -80,6 +83,18 @@ void e_WorldEditorInit( void )
     }
   }
 
+  aContainerWidget_t* toggle_container = a_GetContainerFromWidget( "toggle_bar" );
+  for ( int i = 0; i < toggle_container->num_components; i++ )
+  {
+    aWidget_t* current = &toggle_container->components[i];
+
+    if ( strcmp( current->name, "toggle_room" ) == 0 )
+      current->action = toggle_room_action;
+
+    if ( strcmp( current->name, "toggle_cons" ) == 0 )
+      current->action = toggle_cons_action;
+  }
+
   aContainerWidget_t* world_menu_container = a_GetContainerFromWidget("world_menu_bar");
   for ( int i = 0; i < world_menu_container->num_components; i++ )
   {
@@ -101,6 +116,10 @@ void e_WorldEditorInit( void )
     }
   }
 
+  if ( g_map == NULL )
+    we_Load();
+  else
+    we_Edit();
 }
 
 static void e_WorldEditorLogic( float dt )
@@ -139,6 +158,16 @@ static void e_WorldEditorDraw( float dt )
   }
 
   a_DrawWidgets();
+}
+
+static void toggle_room_action( void )
+{
+  g_toggle_room = !g_toggle_room;
+}
+
+static void toggle_cons_action( void )
+{
+  g_toggle_consumable = !g_toggle_consumable;
 }
 
 void e_WorldEditorDestroy( void )

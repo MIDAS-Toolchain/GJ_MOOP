@@ -3,6 +3,7 @@
 
 #include "interactive_tile.h"
 #include "player.h"
+#include "enemies.h"
 
 extern Player_t player;
 
@@ -37,6 +38,10 @@ static const struct {
     19, "U", { 0x8a, 0x5c, 0x3e, 255 },
     "A clay urn. The cult placed these with care.", 1
   },
+  [ITILE_VOID_PORTAL] = {
+    20, "V", { 0x80, 0x20, 0xa0, 255 },
+    "A shimmering tear in the air. Something writhes inside.", 1
+  },
 };
 
 void ITileInit( void )
@@ -57,10 +62,11 @@ void ITilePlace( World_t* world, int x, int y, int type )
   world->midground[idx].glyph_fg = itile_types[type].color;
   world->midground[idx].solid    = itile_types[type].solid;
 
-  itiles[num_itiles].row    = x;
-  itiles[num_itiles].col    = y;
-  itiles[num_itiles].type   = type;
-  itiles[num_itiles].active = 1;
+  itiles[num_itiles].row         = x;
+  itiles[num_itiles].col         = y;
+  itiles[num_itiles].type        = type;
+  itiles[num_itiles].active      = 1;
+  itiles[num_itiles].horror_type = -1;
   num_itiles++;
 }
 
@@ -263,4 +269,61 @@ void ITileUrnScatterGold( void )
   itiles[urns[1]].gold = 1;
   itiles[urns[2]].gold = 1;
   itiles[urns[3]].gold = 2;
+}
+
+int ITileVoidPortalCheck( World_t* world, int row, int col,
+                           int* out_gold, int* out_horror )
+{
+  ITile_t* t = ITileAt( row, col );
+  if ( !t || t->type != ITILE_VOID_PORTAL ) return 0;
+
+  a_AudioPlaySound( &sfx_web_hit, NULL );
+  *out_gold   = t->gold;
+  *out_horror = t->horror_type;
+  t->gold = 0;
+  t->horror_type = -1;
+  ITileBreak( world, row, col );
+  return 1;
+}
+
+void ITileVoidPortalScatter( void )
+{
+  int portals[MAX_ITILES], np = 0;
+  for ( int i = 0; i < num_itiles; i++ )
+  {
+    if ( itiles[i].active && itiles[i].type == ITILE_VOID_PORTAL )
+      portals[np++] = i;
+  }
+  if ( np < 8 ) return;
+
+  /* Shuffle (Fisher-Yates) */
+  for ( int i = np - 1; i > 0; i-- )
+  {
+    int j = rand() % ( i + 1 );
+    int tmp = portals[i]; portals[i] = portals[j]; portals[j] = tmp;
+  }
+
+  /* Gold: 3 give 1 gold, 1 gives 2 gold */
+  itiles[portals[0]].gold = 1;
+  itiles[portals[1]].gold = 1;
+  itiles[portals[2]].gold = 1;
+  itiles[portals[3]].gold = 2;
+
+  /* Horror spawns: 4 baby, 2 normal, 1 lost, 1 elder */
+  int baby  = EnemyTypeByKey( "baby_horror" );
+  int norm  = EnemyTypeByKey( "horror" );
+  int lost  = EnemyTypeByKey( "lost_horror" );
+  int elder = EnemyTypeByKey( "elder_horror" );
+
+  int types[8] = { baby, baby, baby, baby, norm, norm, lost, elder };
+
+  /* Shuffle the horror assignments */
+  for ( int i = 7; i > 0; i-- )
+  {
+    int j = rand() % ( i + 1 );
+    int tmp = types[i]; types[i] = types[j]; types[j] = tmp;
+  }
+
+  for ( int i = 0; i < 8; i++ )
+    itiles[portals[i]].horror_type = types[i];
 }
