@@ -44,5 +44,14 @@ World_t* convert_mats_worlds( const char* filename );
 void e_SaveWorld( World_t* world, const char* filename );
 dArray_t* FindMapFiles( const char* base_dir, dArray_t* array );
 
+void GetSelectGridSize( dVec2_t* select_pos, dVec2_t* highlight_pos,
+                        int* grid_w, int* grid_h,
+                        dVec2_t* current );
+
+void DrawButton( float x, float y, float w, float h,
+                 const char* label, float text_scale, int hovered,
+                 aColor_t bg, aColor_t bg_hover,
+                 aColor_t fg, aColor_t fg_hover );
+
 #endif
 

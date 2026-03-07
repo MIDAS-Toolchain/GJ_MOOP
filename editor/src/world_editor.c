@@ -31,8 +31,8 @@ int g_toggle_ascii    = 0;
 int g_toggle_room     = 0;
 int g_current_tileset = 0;
 
-static aPoint2f_t selected_pos;
-static aPoint2f_t highlighted_pos;
+static dVec2_t selected_pos;
+static dVec2_t highlighted_pos;
 
 static int originx = 0;
 static int originy = 0;
@@ -54,7 +54,7 @@ void e_WorldEditorInit( void )
   app.g_viewport = (aRectf_t){ 1024.0f, 1024.0f, view_h, view_w };
   
   e_GetOrigin( g_map, &originx, &originy );
-  selected_pos = ( aPoint2f_t ){ .x = 0, .y = 0 };
+  selected_pos = ( dVec2_t ){ .x = 0, .y = 0 };
 
   a_WidgetsInit( "resources/widgets/editor/world.auf" );
   app.active_widget = a_GetWidget( "tab_bar" );

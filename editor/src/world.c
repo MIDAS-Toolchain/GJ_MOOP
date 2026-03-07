@@ -17,6 +17,7 @@
 #include "ed_defines.h"
 #include "ed_structs.h"
 #include "world.h"
+#include "utils.h"
 #include "world_editor.h"
 
 World_t* WorldCreate( const int width, const int height,
@@ -221,5 +222,27 @@ void WorldDraw( const int x_off, const int y_off,
 
     }
   }
+}
+
+void DrawSelected( World_t* world, dVec2_t* selected_pos,
+                   dVec2_t* highlighted_pos )
+{
+  if ( world == NULL ) return;
+
+  int grid_w = 0, grid_h = 0;
+  dVec2_t start_pos = {0};
+
+  GetSelectGridSize( selected_pos, highlighted_pos,
+                    &grid_w, &grid_h,
+                    &start_pos );
+  
+  aRectf_t select_rect = {
+    .x = (start_pos.x * world->tile_w) + world->originx,
+    .y = (start_pos.y * world->tile_h) + world->originy,
+    .w = grid_w * world->tile_w,
+    .h = grid_h * world->tile_h
+  };
+
+  a_ViewportDrawRect( select_rect, magenta );
 }
 

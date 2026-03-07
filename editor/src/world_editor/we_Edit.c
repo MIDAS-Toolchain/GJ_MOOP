@@ -20,8 +20,8 @@
 #include "world.h"
 #include "world_editor.h"
 
-static dVec2_t selected_pos;
-static dVec2_t highlighted_pos;
+static dVec2_t selected_pos = {.x = 0, .y = 0};
+static dVec2_t highlighted_pos = {.x = 0, .y = 0};
 static int glyph_index = 0;
 static int fg_index    = 0;
 static int bg_index    = 0;
@@ -30,15 +30,16 @@ static aPoint2i_t selected_glyph;
 static aPoint2i_t selected_fg;
 static aPoint2i_t selected_bg;
 static aPoint2i_t selected_tile;
-static int editor_mode = 0;
-static Tile_t* clipboard = NULL;
+static int editor_mode    = 0;
+static int selected       = 0;
+static Tile_t* clipboard  = NULL;
 static int clipbard_amout = 0;
 
 static int originx = 0;
 static int originy = 0;
 
 static int edit_menu_x = 1120;
-static int edit_menu_y = 100;
+static int edit_menu_y = 0;
 
 static int color_x = 0;
 static int color_y = 0;
@@ -50,7 +51,11 @@ static int tile_y  = 0;
 static void we_EditLogic( float dt );
 static void we_EditDraw( float dt );
 
+static dString_t* highlight_buf;
+static dString_t* select_buf;
+
 aRectf_t edit_menu_rect = {0};
+aRectf_t room_text_rect = {0};
 
 char* wem_strings[WEM_MAX+1] =
 {
@@ -67,6 +72,9 @@ void we_Edit( void )
 {
   app.delegate.logic = we_EditLogic;
   app.delegate.draw  = we_EditDraw;
+  
+  highlight_buf = d_StringInit();
+  select_buf    = d_StringInit();
 
   e_GetOrigin( g_map, &originx, &originy );
   
@@ -74,16 +82,27 @@ void we_Edit( void )
     .x = edit_menu_x,
     .y = edit_menu_y,
     .w = 155,
-    .h = 520
+    .h = SCREEN_HEIGHT
   };
   
+  float text_width, text_height;
+  
+  a_CalcTextDimensions( "ROOM", app.font_type, &text_width, &text_height );
+  
+  room_text_rect = (aRectf_t){
+    .x = edit_menu_x,
+    .y = 50,
+    .w = text_width+10,
+    .h = text_height+10,
+  };
+
   color_x = edit_menu_x + 5;
-  color_y = edit_menu_y + 5;
+  color_y = 100 + 5;
   
   tile_x  = edit_menu_x + 5;
-  tile_y  = (edit_menu_y + (8 * GLYPH_HEIGHT)) + 5;
+  tile_y  = (100 + (8 * GLYPH_HEIGHT)) + 5;
   glyph_x = edit_menu_x + 5;
-  glyph_y = edit_menu_y + tile_y +
+  glyph_y = 100 + tile_y +
     (g_tile_sets[g_current_tileset]->col + g_tile_sets[g_current_tileset]->tile_h) + 5;
 }
 
@@ -96,6 +115,9 @@ static void we_EditLogic( float dt )
   if ( g_map != NULL )
   {
     we_MapMouseCheck( &highlighted_pos, edit_menu_rect );
+    //printf("high: %f, %f\n", highlighted_pos.x, highlighted_pos.y);
+    d_StringClear(highlight_buf);
+    d_StringFormat( highlight_buf, "hig: %.01f, %.01f", highlighted_pos.x, highlighted_pos.y );
   }
 
   if ( app.keyboard[A_ESCAPE] == 1 )
@@ -109,6 +131,7 @@ static void we_EditLogic( float dt )
     else
     {
       editor_mode = WEM_NONE;
+      selected = 0;
     }
   }
   
@@ -123,6 +146,14 @@ static void we_EditLogic( float dt )
                          &tile_index, &selected_tile.x, &selected_tile.y, 0 );
     
     we_MapMouseCheck( &selected_pos, edit_menu_rect );
+    d_StringClear(select_buf);
+    d_StringFormat( select_buf, "sel: %.01f, %.01f", selected_pos.x, selected_pos.y );
+    selected = 1;
+    
+    if ( WithinRange( app.mouse.x, app.mouse.y, room_text_rect ) )
+    {
+      g_toggle_room = !g_toggle_room;
+    }
 
     if ( g_map != NULL )
     {
@@ -141,8 +172,8 @@ static void we_EditLogic( float dt )
       {
 
       }
-
-      if ( editor_mode == WEM_NONE )
+      
+      else if ( editor_mode == WEM_NONE )
       {
         int index = grid_y * g_map->width + grid_x;
         
@@ -193,8 +224,14 @@ static void we_EditLogic( float dt )
       {
 
       }
+      
+      else if ( editor_mode == WEM_MASS_CHANGE )
+      {
+        we_MassChange( g_map, &selected_pos, &highlighted_pos,
+                       tile_index, g_toggle_room, glyph_index );
+      }
 
-      if ( editor_mode == WEM_NONE )
+      else if ( editor_mode == WEM_NONE )
       {
         int index = grid_y * g_map->width + grid_x;
         
@@ -279,11 +316,13 @@ static void we_EditDraw( float dt )
     .align = TEXT_ALIGN_CENTER,
     .wrap_width = 0,
     .scale = 1.0f,
-    .padding = 0
+    .padding = 0,
+    .bg = black,
+    .fg = white
   };
   
-  ts.bg = master_colors[APOLLO_PALETE][bg_index];
-  ts.fg = master_colors[APOLLO_PALETE][fg_index];
+  //ts.bg = master_colors[APOLLO_PALETE][bg_index];
+  //ts.fg = master_colors[APOLLO_PALETE][fg_index];
 
   a_Blit( g_tile_sets[g_current_tileset]->img_array[tile_index].img,
           1100, color_y );
@@ -298,10 +337,46 @@ static void we_EditDraw( float dt )
   a_DrawGlyph_special( glyph_index, glyph_rect,
                        ts.fg, ts.bg, FONT_CODE_PAGE_437 );
 
-
   we_DrawColorPalette( color_x, color_y, fg_index, bg_index );
   we_DrawGlyphPalette( glyph_x, glyph_y, glyph_index );
   we_DrawTilePalette(  tile_x, tile_y, tile_index, g_current_tileset );
+  
+  a_DrawText( "B:BRUSH", 1215, 100, ts );
+  a_DrawText( "C: COPY", 1215, 116, ts );
+  a_DrawText( "P:PASTE", 1215, 132, ts );
+  a_DrawText( "X: MASS", 1215, 148, ts );
+  a_DrawText( "S:SELEC", 1215, 164, ts );
+  
+  if ( editor_mode != WEM_NONE )
+  {
+    aRectf_t editor_mode_select_rect = (aRectf_t){
+      .x = 1183,
+      .y = ( 100 + ( GLYPH_HEIGHT * ( editor_mode - 1 ) ) ),
+      .w = ( GLYPH_WIDTH * 7 ),
+      .h = GLYPH_HEIGHT };
+    a_DrawRect( editor_mode_select_rect, yellow );
+  }
+
+  a_DrawText(d_StringPeek(highlight_buf), edit_menu_x+80, 620, ts );
+  a_DrawText(d_StringPeek(select_buf), edit_menu_x+80, 640, ts );
+
+  if ( editor_mode == WEM_SELECT || editor_mode == WEM_MASS_CHANGE )
+  {
+    if ( selected )
+    {
+      DrawSelected( g_map, &selected_pos, &highlighted_pos );
+    }
+  }
+  
+  aColor_t room_color = gray0;
+
+  if ( g_toggle_room )
+  {
+    room_color = green;
+  }
+
+  a_DrawFilledRect( room_text_rect, room_color );
+  a_DrawText( "ROOM", room_text_rect.x+23, room_text_rect.y+5, ts );
 
   a_DrawWidgets();
 }

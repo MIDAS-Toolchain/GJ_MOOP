@@ -110,12 +110,15 @@ void wec_GenerateWorld( void );
 
 void wes_SaveYes( void );
 void wes_SaveNo( void );
-void wel_LoadYes( void );
+void wel_LoadYes( char* name );
 void wel_LoadNo( void );
 
 void we_DrawColorPalette( int originx, int originy, int fg_index, int bg_index );
 void we_DrawGlyphPalette( int originx, int originy, int glyph_index );
 void we_DrawTilePalette( int originx, int originy, int tile_index, int tileset );
 void we_MapMouseCheck( dVec2_t* pos, aRectf_t menu_rect );
+void we_MassChange( World_t* world,
+                 dVec2_t* selected_pos, dVec2_t* highlighted_pos,
+                 uint16_t tile_index, uint8_t change_room, uint16_t room_id );
 
 #endif

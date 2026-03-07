@@ -431,6 +431,7 @@ World_t* convert_mats_worlds( const char* filename )
     new_world->midground[door_index].glyph_index = tile_index-1;
   }
 
+  e_GetOrigin( new_world, &new_world->originx, &new_world->originy );
   return new_world;
 }
 
@@ -519,6 +520,30 @@ dArray_t* FindMapFiles( const char* base_dir, dArray_t* array )
   return path_array;
 }
 
+void GetSelectGridSize( dVec2_t* select_pos, dVec2_t* highlight_pos,
+                        int* grid_w, int* grid_h,
+                        dVec2_t* current )
+{
+  if ( select_pos == NULL || highlight_pos == NULL ) return;
+
+  *grid_w    = ( highlight_pos->x - select_pos->x );
+  *grid_h    = ( highlight_pos->y - select_pos->y );
+  current->x = select_pos->x;
+  current->y = select_pos->y;
+
+  if ( *grid_w < 0 )
+  {
+    *grid_w = ( select_pos->x - highlight_pos->x );
+    current->x = highlight_pos->x;
+  }
+
+  if ( *grid_h < 0 )
+  {
+    *grid_h = ( select_pos->y - highlight_pos->y );
+    current->y = highlight_pos->y;
+  }
+}
+
 uint16_t GlyphTileConverter( int glyph_index, int rotated )
 {
   switch ( glyph_index )
@@ -589,5 +614,24 @@ uint16_t TileGlyphConverter( int tile_index )
   }
 
   return TILE_EMPTY;
+}
+
+void DrawButton( float x, float y, float w, float h,
+                 const char* label, float text_scale, int hovered,
+                 aColor_t bg, aColor_t bg_hover,
+                 aColor_t fg, aColor_t fg_hover )
+{
+  aColor_t bg_col = hovered ? bg_hover : bg;
+  aColor_t fg_col = hovered ? fg_hover : fg;
+
+  a_DrawFilledRect( (aRectf_t){ x, y, w, h }, bg_col );
+  a_DrawRect( (aRectf_t){ x, y, w, h }, fg_col );
+
+  aTextStyle_t ts = a_default_text_style;
+  ts.fg = fg_col;
+  ts.bg = (aColor_t){ 0, 0, 0, 0 };
+  ts.scale = text_scale;
+  ts.align = TEXT_ALIGN_CENTER;
+  a_DrawText( label, (int)( x + w / 2.0f ), (int)( y + h * 0.25f ), ts );
 }
 

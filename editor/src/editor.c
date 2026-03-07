@@ -40,12 +40,6 @@ void EditorInit( void )
     char temp_filename[1024];
     g_map_filenames = d_ArrayInit( 10, sizeof(temp_filename) );
     FindMapFiles( "..", g_map_filenames );
-    for ( size_t i = 0; i < g_map_filenames->count; i++ )
-    {
-      char* temp;
-      temp = d_ArrayGet( g_map_filenames, i );
-      printf("%s\n", temp);
-    }
   }
   
   e_LoadColorPalette( master_colors, "resources/colorpalette/colors.hex" );

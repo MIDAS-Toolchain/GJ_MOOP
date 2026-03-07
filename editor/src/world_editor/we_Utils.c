@@ -15,6 +15,7 @@
 #include "ed_structs.h"
 
 #include "editor.h"
+#include "tile.h"
 #include "utils.h"
 #include "world.h"
 #include "world_editor.h"
@@ -132,81 +133,60 @@ void we_DrawTilePalette( int originx, int originy, int tile_index, int tileset )
 void we_MapMouseCheck( dVec2_t* pos, aRectf_t menu_rect )
 {
   if ( g_map == NULL || pos == NULL ) return;
-  int originx = 0, originy = 0;
   int grid_x = 0, grid_y =0;
-  int clicked = 0;
-  e_GetOrigin( g_map, &originx, &originy );
-  clicked = e_GetCellAtMouseInViewport( g_map->width, g_map->height,
-                                        g_map->tile_w, g_map->tile_h,
-                                        menu_rect, 
-                                        originx, originy,
-                                        &grid_x, &grid_y );
-  if ( clicked )
-  {
-    pos->x = grid_x;
-    pos->y = grid_y;
-  }
+  e_GetCellAtMouseInViewport( g_map->width, g_map->height,
+                              g_map->tile_w, g_map->tile_h,
+                              menu_rect, 
+                              g_map->originx, g_map->originy,
+                              &grid_x, &grid_y );
+  pos->x = grid_x;
+  pos->y = grid_y;
 }
 
-/*static void GetSelectGridSize( dVec2_t* select_pos, dVec2_t* highlight_pos,
-                               int* grid_w, int* grid_h,
-                               int* current_x, int* current_y )
+void we_MassChange( World_t* world,
+                    dVec2_t* selected_pos, dVec2_t* highlighted_pos,
+                    uint16_t tile_index, uint8_t change_room, uint16_t room_id )
 {
-  aPoint2f_t scale = a_ViewportCalculateScale();
-  float view_x = app.g_viewport.x - app.g_viewport.w;
-  float view_y = app.g_viewport.y - app.g_viewport.h;
 
-  float world_mouse_x = ( select_pos->x / scale.y ) + view_x;
-  float world_mouse_y = ( select_pos->y / scale.y ) + view_y;
+  int grid_w, grid_h;
+  dVec2_t start_pos;
 
-  float r_select_x = world_mouse_x - originx;
-  float r_select_y = world_mouse_y - originy;
-  
-  float world_highlight_x = ( highlight_pos->x / scale.y ) + view_x;
-  float world_highlight_y = ( highlight_pos->y / scale.y ) + view_y;
+  GetSelectGridSize( selected_pos, highlighted_pos,
+                     &grid_w, &grid_h, &start_pos );
 
-  float r_highlight_x = world_highlight_x - originx;
-  float r_highlight_y = world_highlight_y - originy;
-
-  *current_x = global_pos_x;
-  *current_y = global_pos_y;
-  *current_z = pos.local_z;
-
-  *grid_w = ( global_highlight_x - global_pos_x );
-  *grid_h = ( global_highlight_y - global_pos_y );
-
-  if ( *grid_w < 0 )
+  for ( int y = (int)start_pos.y; y < (int)start_pos.y + grid_h; y++ )
   {
-    *grid_w = ( global_pos_x - global_highlight_x );
-    *current_x = global_highlight_x;
-  }
-
-  if ( *grid_h < 0 )
-  {
-    *grid_h = ( global_pos_y - global_highlight_y );
-    *current_y = global_highlight_y;
-  }
-  }
-  
-  else
-  {
-    *grid_w    = ( highlight.x - pos.x );
-    *grid_h    = ( highlight.y - pos.y );
-    *current_x = pos.x;
-    *current_y = pos.y;
-    *current_z = pos.local_z;
-
-    if ( *grid_w < 0 )
+    for ( int x = (int)start_pos.x; x < (int)start_pos.x + grid_w; x++ )
     {
-      *grid_w = ( pos.x - highlight.x );
-      *current_x = highlight.x;
-    }
+      if( x >= 0 && x <= world->width && y >= 0 && y <= world->height )
+      {
+        int index = y * world->width + x;
+        
+        if ( !change_room )
+        {
+          if ( tile_index == TILE_LVL1_WALL || tile_index == TILE_LVL1_FLOOR )
+          {
+            e_UpdateTile( index, tile_index, TILE_EMPTY, TILE_EMPTY );
+          }
 
-    if ( *grid_h < 0 )
-    {
-      *grid_h = ( pos.y - highlight.y );
-      *current_y = highlight.y;
+          else if( tile_index < TILE_LVL1_FLOOR )
+          {
+            e_UpdateTile( index, TILE_LVL1_FLOOR, tile_index, TILE_EMPTY );
+          }
+
+          else
+          {
+            e_UpdateTile( index, tile_index, TILE_EMPTY, TILE_EMPTY );
+          }
+        }
+
+        else
+        {
+          world->room_ids[index] = room_id;
+        }
+      }
     }
   }
-}*/
+
+}
 
