@@ -186,6 +186,8 @@ int EnemyBlockedByNPC( int row, int col )
 
 int EnemyGridW( void ) { return world ? world->width  : 0; }
 int EnemyGridH( void ) { return world ? world->height : 0; }
+int EnemyTileW( void ) { return world ? world->tile_w : 16; }
+int EnemyTileH( void ) { return world ? world->tile_h : 16; }
 
 /* --- Lunge callback data --- */
 
@@ -225,6 +227,20 @@ static void tick_and_move( int i )
 
   /* Static enemies (totems) never move */
   if ( strcmp( t->ai, "static" ) == 0 ) return;
+
+  /* Humming stones: tick AI but never move */
+  if ( strcmp( t->ai, "stone_healer" ) == 0 )
+  {
+    EnemyStoneHealerTick( &turn_list[i], turn_pr, turn_pc,
+                          turn_walkable, turn_list, turn_count );
+    return;
+  }
+  if ( strcmp( t->ai, "stone_ranged" ) == 0 )
+  {
+    EnemyStoneRangedTick( &turn_list[i], turn_pr, turn_pc,
+                          turn_walkable, turn_list, turn_count );
+    return;
+  }
 
   if ( strcmp( t->ai, "basic" ) == 0 )
     EnemyBasicAITick( &turn_list[i], turn_pr, turn_pc,
@@ -363,7 +379,9 @@ static void start_next_attack( void )
          && turn_list[move_idx].stun_turns <= 0 )
     {
       EnemyType_t* at = &g_enemy_types[turn_list[move_idx].type_idx];
-      if ( strcmp( at->ai, "static" ) == 0 ) { move_idx++; continue; }
+      if ( strcmp( at->ai, "static" ) == 0
+           || strcmp( at->ai, "stone_healer" ) == 0
+           || strcmp( at->ai, "stone_ranged" ) == 0 ) { move_idx++; continue; }
       if ( at->range > 0 ) { move_idx++; continue; } /* ranged - no melee */
       int dr = abs( turn_pr - turn_list[move_idx].row );
       int dc = abs( turn_pc - turn_list[move_idx].col );

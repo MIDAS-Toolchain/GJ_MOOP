@@ -426,7 +426,8 @@ void we_DrawPoolList( int ox, int oy, SpawnList_t* spawns, int selected_pool )
 
   for ( int i = 0; i < spawns->num_pools; i++ )
   {
-    int ry = oy + i * SP_ITEM_ROW_H;
+    int row_h = SP_ITEM_ROW_H + 10;
+    int ry = oy + i * row_h;
     SpawnPool_t* pool = &spawns->pools[i];
 
     /* Orange swatch */
@@ -438,16 +439,19 @@ void we_DrawPoolList( int ox, int oy, SpawnList_t* spawns, int selected_pool )
     snprintf( label, sizeof(label), "Pool %d", i );
     a_DrawText( label, ox + 16, ry + 2, ts );
 
-    /* Pick key on second line */
+    /* Pick info on second line */
     aTextStyle_t sub_ts = ts;
     sub_ts.fg = (aColor_t){ 150, 150, 150, 255 };
-    char pick_buf[20];
-    snprintf( pick_buf, sizeof(pick_buf), " %.14s", pool->pick_key );
+    char pick_buf[32];
+    if ( strcmp( pool->pick_type, "class_equipment" ) == 0 )
+      snprintf( pick_buf, sizeof(pick_buf), " class_equip" );
+    else
+      snprintf( pick_buf, sizeof(pick_buf), " %.14s", pool->pick_key );
     a_DrawText( pick_buf, ox + 16, ry + 12, sub_ts );
 
     if ( i == selected_pool )
     {
-      aRectf_t sel = { ox - 1, ry, 145, SP_ITEM_ROW_H + 10 };
+      aRectf_t sel = { ox - 1, ry, 145, row_h };
       a_DrawRect( sel, magenta );
     }
   }

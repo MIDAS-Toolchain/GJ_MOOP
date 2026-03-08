@@ -69,7 +69,8 @@ void EnemiesDrawTelegraph( aRectf_t vp_rect, GameCamera_t* cam,
   {
     if ( !list[i].alive ) continue;
     EnemyType_t* et = &g_enemy_types[list[i].type_idx];
-    if ( strcmp( et->ai, "ranged_telegraph" ) != 0 ) continue;
+    if ( strcmp( et->ai, "ranged_telegraph" ) != 0
+         && strcmp( et->ai, "stone_ranged" ) != 0 ) continue;
     if ( list[i].ai_state != 1 ) continue;
 
     int tw = world->tile_w;

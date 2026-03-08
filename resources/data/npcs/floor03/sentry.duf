@@ -1,0 +1,130 @@
+@npc {
+    name: "The Sentry"
+    glyph: "S"
+    color: [180, 170, 140, 255]
+    image_path: "resources/assets/npcs/sentry.png"
+    description: "A stone figure with glowing eyes. It has been standing here longer than anything else in the dungeon."
+    idle_bark: "*hums in harmony with the walls*"
+    idle_cooldown: 8
+    no_face: true
+}
+
+# ==============================
+# CLASS-SPECIFIC GREETINGS
+# ==============================
+@start_merc {
+    start: true
+    priority: 1
+    require_class: "Mercenary"
+    text: "Candidate detected. Soldier class. You are the first to arrive. Two seats remain."
+    options: ["opt_what_are_you", "opt_the_test", "opt_how_long", "opt_ready", "opt_leave"]
+}
+@start_rogue {
+    start: true
+    priority: 1
+    require_class: "Rogue"
+    text: "Candidate detected. Thief class. You are the first to arrive. Two seats remain."
+    options: ["opt_what_are_you", "opt_the_test", "opt_how_long", "opt_ready", "opt_leave"]
+}
+@start_mage {
+    start: true
+    priority: 1
+    require_class: "Mage"
+    text: "Candidate detected. Mage class. You are the first to arrive. Two seats remain."
+    options: ["opt_what_are_you", "opt_the_test", "opt_how_long", "opt_ready", "opt_leave"]
+}
+
+# ==============================
+# WHAT ARE YOU
+# ==============================
+@opt_what_are_you {
+    label: "What are you?"
+    goto: "what_reply"
+}
+@what_reply {
+    text: "Sentry. Placed here before the doors. Before the hum had words. I count. I wait. I open the gate when the worthy arrive."
+    options: ["opt_who_built", "opt_the_test", "opt_ready", "opt_leave"]
+}
+@opt_who_built {
+    label: "Who built you?"
+    color: "lore"
+    goto: "who_built_reply"
+}
+@who_built_reply {
+    text: "Unknown. My memory begins with the hum. The doors were already here. The table was already set. I was already standing. There is no before."
+    set_lore: "the_sentry"
+    options: ["opt_the_test", "opt_ready", "opt_leave"]
+}
+
+# ==============================
+# THE TEST
+# ==============================
+@opt_the_test {
+    label: "What is this place?"
+    goto: "test_reply"
+}
+@test_reply {
+    text: "A filter. Three doors. Three candidates. Most fail. The hum accelerates. The weak turn. The strong reach me. Beyond me is the Gatekeeper. Beyond the Gatekeeper is the table."
+    options: ["opt_gatekeeper", "opt_how_many", "opt_ready", "opt_leave"]
+}
+@opt_gatekeeper {
+    label: "What is the Gatekeeper?"
+    color: "lore"
+    goto: "gatekeeper_reply"
+}
+@gatekeeper_reply {
+    text: "The final test. It does not think. It does not bargain. It was placed here the same day I was. I count the candidates. It judges them."
+    set_lore: "the_gatekeeper"
+    options: ["opt_how_many", "opt_ready", "opt_leave"]
+}
+@opt_how_many {
+    label: "How many have made it this far?"
+    goto: "how_many_reply"
+}
+@how_many_reply {
+    text: "To me: four hundred and twelve. Past the Gatekeeper: none."
+    options: ["opt_ready", "opt_leave"]
+}
+
+# ==============================
+# HOW LONG
+# ==============================
+@opt_how_long {
+    label: "How long have you been here?"
+    goto: "how_long_reply"
+}
+@how_long_reply {
+    text: "I do not measure time. I measure attempts. You are attempt four hundred and thirteen."
+    options: ["opt_the_test", "opt_ready", "opt_leave"]
+}
+
+# ==============================
+# READY
+# ==============================
+@opt_ready {
+    label: "I'm ready."
+    color: "quest"
+    goto: "ready_reply"
+}
+@ready_reply {
+    text: "The Gatekeeper does not speak. It does not bargain. Survive, and the table is yours. Fail, and you are four hundred and thirteen."
+    options: ["opt_enter", "opt_leave"]
+}
+@opt_enter {
+    label: "[Enter the gate]"
+    color: "quest"
+    goto: "enter_reply"
+}
+@enter_reply {
+    text: "Acknowledged. Gate opening. Good luck, candidate. I am not programmed to say that. I chose to."
+    set_flag: "gate_opened"
+    goto: "end"
+}
+
+# ==============================
+# LEAVE
+# ==============================
+@opt_leave {
+    label: "[Leave]"
+    goto: "end"
+}

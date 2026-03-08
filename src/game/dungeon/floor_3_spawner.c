@@ -42,6 +42,31 @@ void SpawnFloor3( NPC_t* npcs, int* num_npcs,
   EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "cultist" ), 49, 22, tw, th );
   EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "cultist" ), 49, 21, tw, th );
 
+  int cult_e = EnemyTypeByKey( "cultist" );
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "void_slime" ), 37, 10, tw, th );
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "cult_caster" ), 16, 36, tw, th );
+  EnemySpawn( enemies, num_enemies, cult_e, 21, 28, tw, th );
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "cult_caster" ), 31, 27, tw, th );
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "cult_caster" ), 36, 27, tw, th );
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "elder_horror" ), 28, 3, tw, th );
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "void_slime" ), 20, 4, tw, th );
+
+  /* The Sentry - automaton before the Gatekeeper's chamber */
+  NPCSpawn( npcs, num_npcs, NPCTypeByKey( "sentry" ),
+            16, 12, tw, th );
+
+  /* The Gatekeeper - final boss */
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "gatekeeper" ),
+              7, 11, tw, th );
+
+  /* Humming Stones - red (healer), green (buff), blue (ranged) */
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "hum_stone_red" ),
+              5, 9, tw, th );
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "hum_stone_green" ),
+              9, 9, tw, th );
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "hum_stone_blue" ),
+              7, 7, tw, th );
+
   /* Greta's Door - blocks passage until Greta is killed */
   NPCSpawn( npcs, num_npcs, NPCTypeByKey( "gretas_door" ),
             45, 16, tw, th );
@@ -86,12 +111,11 @@ void SpawnFloor3( NPC_t* npcs, int* num_npcs,
               43, 22, tw, th );
 
   /* Cultist enemies (room w) */
-  int cult_e = EnemyTypeByKey( "cultist" );
   EnemySpawn( enemies, num_enemies, cult_e, 20, 44, tw, th );
   EnemySpawn( enemies, num_enemies, cult_e, 22, 44, tw, th );
   EnemySpawn( enemies, num_enemies, cult_e, 54, 40, tw, th );
   EnemySpawn( enemies, num_enemies, cult_e, 59, 43, tw, th );
-  EnemySpawn( enemies, num_enemies, cult_e, 61, 43, tw, th );
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "cult_caster" ), 61, 43, tw, th );
 
   /* Void slimes */
   int vs = EnemyTypeByKey( "void_slime" );
@@ -113,7 +137,7 @@ void SpawnFloor3( NPC_t* npcs, int* num_npcs,
   }
 
   /* Consumable/item spawns from DUF */
-  DungeonSpawnFromDUF( "resources/data/floors/floor_03_consumable_spawns.duf",
+  DungeonSpawnFromDUF( "resources/data/floors/floor_03/floor_03_consumable_spawns.duf",
                        items, num_items, world );
 
   /* Void portals */

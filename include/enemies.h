@@ -86,6 +86,8 @@ void EnemiesSetList( Enemy_t* list, int* count );
 int  EnemyBlockedByNPC( int row, int col );
 int  EnemyGridW( void );
 int  EnemyGridH( void );
+int  EnemyTileW( void );
+int  EnemyTileH( void );
 
 /* Shaman totem spawn helper (uses stored list/count) */
 int  EnemyShamanSpawnTotem( int row, int col, int (*walkable)(int,int),
@@ -94,6 +96,14 @@ int  EnemyShamanSpawnTotem( int row, int col, int (*walkable)(int,int),
 /* Boss spawn: Greta fight (despawns NPC, spawns Greta enemy + elder horror) */
 void EnemyBossGretaSpawn( int npc_type_idx );
 void EnemyOnGretaDeath( int row, int col );
+
+/* Humming Stone AI */
+void EnemyStoneHealerTick( Enemy_t* e, int player_row, int player_col,
+                           int (*walkable)(int,int),
+                           Enemy_t* all, int count );
+void EnemyStoneRangedTick( Enemy_t* e, int player_row, int player_col,
+                           int (*walkable)(int,int),
+                           Enemy_t* all, int count );
 
 /* Horror AI */
 void EnemyHorrorTick( Enemy_t* e, int player_row, int player_col,

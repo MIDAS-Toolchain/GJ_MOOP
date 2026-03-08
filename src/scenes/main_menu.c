@@ -303,7 +303,7 @@ static void mm_load_bg( void )
 
   memset( mm_solid, 1, sizeof( mm_solid ) );
 
-  FILE* fp = fopen( "resources/data/floors/floor_01.map", "r" );
+  FILE* fp = fopen( "resources/data/floors/floor_01/floor_01.map", "r" );
   if ( !fp ) return;
 
   char buf[256];

@@ -53,6 +53,12 @@ int SpawnDUFLoad( const char* path, SpawnList_t* list )
         SafeCopy( pool.pick_type, v->value_string, 32 );
       if ( ( v = d_DUFGetObjectItem( entry, "pick_key" ) ) )
         SafeCopy( pool.pick_key, v->value_string, 64 );
+      if ( ( v = d_DUFGetObjectItem( entry, "mercenary" ) ) )
+        SafeCopy( pool.pick_class_keys[0], v->value_string, 64 );
+      if ( ( v = d_DUFGetObjectItem( entry, "rogue" ) ) )
+        SafeCopy( pool.pick_class_keys[1], v->value_string, 64 );
+      if ( ( v = d_DUFGetObjectItem( entry, "mage" ) ) )
+        SafeCopy( pool.pick_class_keys[2], v->value_string, 64 );
       if ( ( v = d_DUFGetObjectItem( entry, "fill_type" ) ) )
         SafeCopy( pool.fill_type, v->value_string, 32 );
 
@@ -118,7 +124,16 @@ int SpawnDUFSave( const char* path, SpawnList_t* list )
     fprintf( fp, "@pool_%d {\n", i );
     fprintf( fp, "    rule: \"pick_one\"\n" );
     fprintf( fp, "    pick_type: \"%s\"\n", p->pick_type );
-    fprintf( fp, "    pick_key: \"%s\"\n", p->pick_key );
+    if ( strcmp( p->pick_type, "class_equipment" ) == 0 )
+    {
+      fprintf( fp, "    mercenary: \"%s\"\n", p->pick_class_keys[0] );
+      fprintf( fp, "    rogue: \"%s\"\n", p->pick_class_keys[1] );
+      fprintf( fp, "    mage: \"%s\"\n", p->pick_class_keys[2] );
+    }
+    else
+    {
+      fprintf( fp, "    pick_key: \"%s\"\n", p->pick_key );
+    }
     fprintf( fp, "    fill_type: \"%s\"\n", p->fill_type );
     fprintf( fp, "}\n" );
   }
@@ -161,8 +176,8 @@ int SpawnDUFSave( const char* path, SpawnList_t* list )
 
 void SpawnDUFFilename( const char* map_path, char* out, int out_size )
 {
-  /* "resources/data/floors/floor_01.map" ->
-     "resources/data/floors/floor_01_consumable_spawns.duf" */
+  /* "resources/data/floors/floor_01/floor_01.map" ->
+     "resources/data/floors/floor_01/floor_01_consumable_spawns.duf" */
   strncpy( out, map_path, out_size - 1 );
   out[out_size - 1] = '\0';
 

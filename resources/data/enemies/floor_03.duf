@@ -55,6 +55,76 @@
     description: "The thing the horrors were before they forgot. It remembers."
 }
 
+@cult_caster {
+    name: "Cult Caster"
+    glyph: "c"
+    hp: 12
+    damage: 4
+    defense: 0
+    ai: "ranged_telegraph"
+    range: 5
+    sight_range: 8
+    gold_drop: 2
+    color: [180, 120, 200, 255]
+    image_path: "resources/assets/enemies/cultist.png"
+    description: "A robed figure chanting from a distance. The hum answers back."
+}
+
+@gatekeeper {
+    name: "The Gatekeeper"
+    glyph: "G"
+    hp: 50
+    damage: 7
+    defense: 3
+    ai: "basic"
+    sight_range: 10
+    gold_drop: 5
+    death_flag: "gatekeeper_dead"
+    color: [100, 80, 120, 255]
+    image_path: "resources/assets/enemies/gatekeeper.png"
+    description: "The final test. It does not think. It does not bargain. It judges."
+}
+
+@hum_stone_green {
+    name: "Humming Stone"
+    glyph: "o"
+    hp: 12
+    damage: 1
+    defense: 2
+    ai: "static"
+    sight_range: 0
+    gold_drop: 0
+    color: [80, 200, 80, 255]
+    description: "A green crystal vibrating in harmony with the walls. It strengthens what stands near it."
+}
+
+@hum_stone_red {
+    name: "Humming Stone"
+    glyph: "o"
+    hp: 12
+    damage: 0
+    defense: 0
+    ai: "stone_healer"
+    sight_range: 0
+    gold_drop: 0
+    color: [200, 80, 80, 255]
+    description: "A red crystal pulsing with warmth. Wounds close in its presence."
+}
+
+@hum_stone_blue {
+    name: "Humming Stone"
+    glyph: "o"
+    hp: 12
+    damage: 4
+    defense: 0
+    ai: "stone_ranged"
+    range: 6
+    sight_range: 10
+    gold_drop: 0
+    color: [80, 120, 200, 255]
+    description: "A blue crystal crackling with energy. It fires bolts at anything that moves."
+}
+
 @void_slime {
     name: "Void Slime"
     glyph: "S"

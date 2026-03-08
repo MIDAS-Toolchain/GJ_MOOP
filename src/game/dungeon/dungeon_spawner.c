@@ -303,7 +303,15 @@ void DungeonSpawnFromDUF( const char* path,
       if ( m == pick )
       {
         /* Spawn the pick item */
-        if ( strcmp( pool->pick_type, "equipment" ) == 0 )
+        if ( strcmp( pool->pick_type, "class_equipment" ) == 0 )
+        {
+          int ci = SpawnerGetClassIdx();
+          int idx = EquipmentByKey( pool->pick_class_keys[ci] );
+          if ( idx >= 0 )
+            GroundItemSpawnEquipment( items, num_items, idx,
+                                      pt->row, pt->col, tw, th );
+        }
+        else if ( strcmp( pool->pick_type, "equipment" ) == 0 )
         {
           int idx = EquipmentByKey( pool->pick_key );
           if ( idx >= 0 )

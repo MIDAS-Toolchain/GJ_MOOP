@@ -337,3 +337,36 @@
     mage: "conduit_staff"
     note: "behind goblin door"
 }
+
+@pool_0 {
+    rule: "pick_one"
+    pick_type: "class_equipment"
+    mercenary: "fracture_knuckle"
+    rogue: "flicker_ring"
+    mage: "grimoire_locket"
+    fill_type: "random_t2"
+}
+
+@spawn_45 {
+    row: 24
+    col: 26
+    type: "pool"
+    pool: "pool_0"
+    note: "room 5 deep"
+}
+
+@spawn_46 {
+    row: 44
+    col: 27
+    type: "pool"
+    pool: "pool_0"
+    note: "room @ deep"
+}
+
+@spawn_47 {
+    row: 74
+    col: 27
+    type: "pool"
+    pool: "pool_0"
+    note: "room ! deep"
+}

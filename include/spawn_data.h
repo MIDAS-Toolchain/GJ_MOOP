@@ -25,9 +25,10 @@ typedef struct
 
 typedef struct
 {
-  char  pick_type[32];  /* "equipment", "consumable", etc. */
-  char  pick_key[64];   /* e.g. "golden_ring" */
-  char  fill_type[32];  /* e.g. "random_t2" */
+  char  pick_type[32];          /* "equipment", "consumable", "class_equipment" */
+  char  pick_key[64];           /* e.g. "golden_ring" (single-item picks) */
+  char  pick_class_keys[3][64]; /* [0]=mercenary [1]=rogue [2]=mage */
+  char  fill_type[32];          /* e.g. "random_t2" */
 } SpawnPool_t;
 
 typedef struct

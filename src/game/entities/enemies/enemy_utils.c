@@ -200,7 +200,9 @@ Enemy_t* EnemyMobileAt( Enemy_t* list, int count, int row, int col )
   for ( int i = 0; i < count; i++ )
   {
     if ( list[i].alive && list[i].row == row && list[i].col == col
-         && strcmp( g_enemy_types[list[i].type_idx].ai, "static" ) != 0 )
+         && strcmp( g_enemy_types[list[i].type_idx].ai, "static" ) != 0
+         && strcmp( g_enemy_types[list[i].type_idx].ai, "stone_healer" ) != 0
+         && strcmp( g_enemy_types[list[i].type_idx].ai, "stone_ranged" ) != 0 )
       return &list[i];
   }
   return NULL;

@@ -61,14 +61,11 @@ int e_GetCellAtMouseInViewport( const int width,   const int height,
   float relative_x = world_mouse_x - originx;
   float relative_y = world_mouse_y - originy;
 
-  int cell_x = (int)( relative_x / 16 );
-  int cell_y = (int)( relative_y / 16 );
+  int cell_x = (int)( relative_x / tile_w );
+  int cell_y = (int)( relative_y / tile_h );
   
-  int extreme_w = ( width * tile_w );
-  int extreme_h = ( height * tile_h );
-
-  if ( cell_x >= 0 && cell_x < extreme_w &&
-       cell_y >= 0 && cell_y < extreme_h )
+  if ( cell_x >= 0 && cell_x < width &&
+       cell_y >= 0 && cell_y < height )
   {
     *grid_x = cell_x;
     *grid_y = cell_y;

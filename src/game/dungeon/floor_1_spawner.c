@@ -221,7 +221,7 @@ void SpawnFloor1( NPC_t* npcs, int* num_npcs,
             10, 1, world->tile_w, world->tile_h );
 
   /* Consumable/item spawns from DUF */
-  DungeonSpawnFromDUF( "resources/data/floors/floor_01_consumable_spawns.duf",
+  DungeonSpawnFromDUF( "resources/data/floors/floor_01/floor_01_consumable_spawns.duf",
                        items, num_items, world );
 
   /* Old crates - scattered across corridors and side areas */

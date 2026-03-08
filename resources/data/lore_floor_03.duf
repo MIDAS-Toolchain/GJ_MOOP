@@ -47,3 +47,17 @@
     category: "People"
     description: "Mayor of Millhaven. Cult leader. Forty years of feeding adventurers to the dungeon. She heard the hum as a girl and it told her to bring them. So she built a town that looked like a town, posted a guard who didn't know he was bait, and kept a ledger of every name. Soldiers, thieves, mages. Dozens of them. All fed."
 }
+
+# ==============================
+# MYSTERIES (SENTRY / GATEKEEPER)
+# ==============================
+@the_sentry {
+    title: "The Sentry"
+    category: "Mysteries"
+    description: "A stone automaton standing before the Gatekeeper's chamber. It has no memory of being built. It counts candidates. Four hundred and twelve before you. None passed the Gatekeeper. It does not know who placed it. It does not know why. It just counts."
+}
+@the_gatekeeper {
+    title: "The Gatekeeper"
+    category: "Mysteries"
+    description: "The final test before the feast table. It does not think. It does not bargain. It was placed the same day as the Sentry. The Sentry counts. The Gatekeeper judges. In four hundred and twelve attempts, its judgment has never been 'worthy.'"
+}

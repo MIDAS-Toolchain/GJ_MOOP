@@ -206,6 +206,26 @@ void CombatHandleEnemyDeath( Enemy_t* e )
     }
   }
 
+  /* Linked death: gatekeeper dies → humming stones shatter */
+  if ( strcmp( t->key, "gatekeeper" ) == 0
+       && combat_enemies && combat_enemy_count )
+  {
+    for ( int i = 0; i < *combat_enemy_count; i++ )
+    {
+      if ( !combat_enemies[i].alive ) continue;
+      const char* ai = g_enemy_types[combat_enemies[i].type_idx].ai;
+      if ( strcmp( ai, "static" ) != 0
+           && strcmp( ai, "stone_healer" ) != 0
+           && strcmp( ai, "stone_ranged" ) != 0 )
+        continue;
+      combat_enemies[i].alive = 0;
+      CombatVFXSpawnText( combat_enemies[i].world_x, combat_enemies[i].world_y,
+                          "Shatters!", (aColor_t){ 140, 120, 180, 255 } );
+      ConsolePushF( console, (aColor_t){ 140, 120, 180, 255 },
+                    "The Humming Stone shatters!" );
+    }
+  }
+
   /* Linked death: horror dies → baby horrors dissolve */
   if ( strcmp( t->ai, "horror" ) == 0
        && combat_enemies && combat_enemy_count )

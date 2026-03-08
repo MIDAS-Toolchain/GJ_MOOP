@@ -173,6 +173,6 @@ void SpawnFloor2( NPC_t* npcs, int* num_npcs,
             53, 47, tw, th );
 
   /* Consumable/item spawns from DUF */
-  DungeonSpawnFromDUF( "resources/data/floors/floor_02_consumable_spawns.duf",
+  DungeonSpawnFromDUF( "resources/data/floors/floor_02/floor_02_consumable_spawns.duf",
                        items, num_items, world );
 }

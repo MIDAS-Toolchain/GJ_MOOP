@@ -37,12 +37,20 @@ static int selected       = 0;
 static Tile_t* clipboard  = NULL;
 static int clipbard_amout = 0;
 
+/* Consumable spawn overlay (declared early for undo) */
+SpawnList_t g_edit_spawns = {0};
+int         g_spawns_loaded = 0;
+
 /* Undo / Redo */
+enum { EDIT_TILE, EDIT_SPAWN_ADD, EDIT_SPAWN_REMOVE };
+
 typedef struct {
+  int edit_type;
   int index;
   int old_bg, old_mg, old_fg;
   int new_bg, new_mg, new_fg;
   int old_room, new_room;
+  SpawnPoint_t spawn;
 } TileEdit_t;
 
 static dArray_t* undo_stack = NULL;
@@ -57,7 +65,8 @@ static void UndoInit( void )
 static void UndoPush( int index, int new_bg, int new_mg, int new_fg )
 {
   if ( !undo_stack || !g_map ) return;
-  TileEdit_t e;
+  TileEdit_t e = {0};
+  e.edit_type = EDIT_TILE;
   e.index  = index;
   e.old_bg = (int)g_map->background[index].tile;
   e.old_mg = (int)g_map->midground[index].tile;
@@ -74,7 +83,8 @@ static void UndoPush( int index, int new_bg, int new_mg, int new_fg )
 static void UndoPushRoom( int index, int new_room )
 {
   if ( !undo_stack || !g_map ) return;
-  TileEdit_t e;
+  TileEdit_t e = {0};
+  e.edit_type = EDIT_TILE;
   e.index  = index;
   e.old_bg = (int)g_map->background[index].tile;
   e.old_mg = (int)g_map->midground[index].tile;
@@ -88,6 +98,26 @@ static void UndoPushRoom( int index, int new_room )
   d_ArrayClear( redo_stack );
 }
 
+static void UndoPushSpawnAdd( SpawnPoint_t sp )
+{
+  if ( !undo_stack ) return;
+  TileEdit_t e = {0};
+  e.edit_type = EDIT_SPAWN_ADD;
+  e.spawn = sp;
+  d_ArrayAppend( undo_stack, &e );
+  d_ArrayClear( redo_stack );
+}
+
+static void UndoPushSpawnRemove( SpawnPoint_t sp )
+{
+  if ( !undo_stack ) return;
+  TileEdit_t e = {0};
+  e.edit_type = EDIT_SPAWN_REMOVE;
+  e.spawn = sp;
+  d_ArrayAppend( undo_stack, &e );
+  d_ArrayClear( redo_stack );
+}
+
 static void UndoPerform( void )
 {
   if ( !undo_stack || undo_stack->count == 0 ) return;
@@ -95,8 +125,21 @@ static void UndoPerform( void )
   if ( !e ) return;
   TileEdit_t re = *e;
   d_ArrayAppend( redo_stack, &re );
-  e_UpdateTile( re.index, re.old_bg, re.old_mg, re.old_fg );
-  g_map->room_ids[re.index] = re.old_room;
+
+  if ( re.edit_type == EDIT_SPAWN_ADD )
+  {
+    int idx = SpawnListFindAt( &g_edit_spawns, re.spawn.row, re.spawn.col );
+    if ( idx >= 0 ) SpawnListRemoveAt( &g_edit_spawns, idx );
+  }
+  else if ( re.edit_type == EDIT_SPAWN_REMOVE )
+  {
+    SpawnListAdd( &g_edit_spawns, re.spawn );
+  }
+  else
+  {
+    e_UpdateTile( re.index, re.old_bg, re.old_mg, re.old_fg );
+    g_map->room_ids[re.index] = re.old_room;
+  }
 }
 
 static void RedoPerform( void )
@@ -106,13 +149,23 @@ static void RedoPerform( void )
   if ( !e ) return;
   TileEdit_t ue = *e;
   d_ArrayAppend( undo_stack, &ue );
-  e_UpdateTile( ue.index, ue.new_bg, ue.new_mg, ue.new_fg );
-  g_map->room_ids[ue.index] = ue.new_room;
+
+  if ( ue.edit_type == EDIT_SPAWN_ADD )
+  {
+    SpawnListAdd( &g_edit_spawns, ue.spawn );
+  }
+  else if ( ue.edit_type == EDIT_SPAWN_REMOVE )
+  {
+    int idx = SpawnListFindAt( &g_edit_spawns, ue.spawn.row, ue.spawn.col );
+    if ( idx >= 0 ) SpawnListRemoveAt( &g_edit_spawns, idx );
+  }
+  else
+  {
+    e_UpdateTile( ue.index, ue.new_bg, ue.new_mg, ue.new_fg );
+    g_map->room_ids[ue.index] = ue.new_room;
+  }
 }
 
-/* Consumable spawn overlay */
-SpawnList_t g_edit_spawns = {0};
-int         g_spawns_loaded = 0;
 static int  g_spawn_type_cursor = SPAWN_RANDOM_T1;
 static int  g_hover_spawn_idx  = -1;
 static float g_hover_cycle_timer = 0.0f;
@@ -156,9 +209,10 @@ static int ctx_screen_x = 0, ctx_screen_y = 0;  /* screen pos where menu opened 
 #define CTX_ED_ROW_H 24.0f
 #define CTX_ED_PAD    4.0f
 #define CTX_ED_W    170.0f
-static const char* ctx_labels_normal[] = { "Select", "Select Same Tile" };
-static const char* ctx_labels_cons[]   = { "Select", "Select Same Tile",
-                                            "Select Same Consumable" };
+static const char* ctx_labels_normal[] = { "Select", "Prepare Same Tile" };
+static const char* ctx_labels_cons[]   = { "Select", "Prepare Same Tile",
+                                            "Prepare Same Consumable",
+                                            "Remove Consumable" };
 static const char** ctx_labels = ctx_labels_normal;
 static int ctx_count = 2;
 
@@ -318,7 +372,7 @@ static void we_EditLogic( float dt )
           int idx = ctx_col * g_map->width + ctx_row;
           tile_index = (int)g_map->background[idx].tile;
         }
-        else if ( ctx_cursor == 2 ) /* Select Same Consumable */
+        else if ( ctx_cursor == 2 ) /* Prepare Same Consumable */
         {
           int si = SpawnListFindAt( &g_edit_spawns, ctx_row, ctx_col );
           if ( si >= 0 )
@@ -331,6 +385,15 @@ static void we_EditLogic( float dt )
             else if ( sp->type == SPAWN_POOL )
               g_spawn_selected_pool = sp->pool_id;
             g_cons_last_type = -1;  /* force filtered list rebuild */
+          }
+        }
+        else if ( ctx_cursor == 3 ) /* Remove Consumable */
+        {
+          int si = SpawnListFindAt( &g_edit_spawns, ctx_row, ctx_col );
+          if ( si >= 0 )
+          {
+            UndoPushSpawnRemove( g_edit_spawns.points[si] );
+            SpawnListRemoveAt( &g_edit_spawns, si );
           }
         }
         ctx_open = 0;
@@ -464,12 +527,12 @@ static void we_EditLogic( float dt )
     }
   }
   
-  if ( app.mouse.button == 3 && app.mouse.state == 1
-       && !( g_toggle_consumable && g_spawns_loaded ) )
+  if ( app.mouse.button == 3 && app.mouse.state == 1 )
   {
     app.mouse.button = 0, app.mouse.state = 0;
-    e_ColorMouseCheck( color_x, color_y,
-                      &fg_index, &selected_fg.x, &selected_fg.y, 0 );
+    if ( !( g_toggle_consumable && g_spawns_loaded ) )
+      e_ColorMouseCheck( color_x, color_y,
+                        &fg_index, &selected_fg.x, &selected_fg.y, 0 );
 
     if ( g_map != NULL )
     {
@@ -510,7 +573,7 @@ static void we_EditLogic( float dt )
                SpawnListFindAt( &g_edit_spawns, grid_x, grid_y ) >= 0 )
           {
             ctx_labels = ctx_labels_cons;
-            ctx_count  = 3;
+            ctx_count  = 4;
           }
           else
           {
@@ -675,26 +738,11 @@ static void we_EditLogic( float dt )
           }
 
           SpawnListAdd( &g_edit_spawns, pt );
+          UndoPushSpawnAdd( pt );
         }
       }
     }
 
-    if ( app.mouse.button == 3 && app.mouse.state == 1 )
-    {
-      app.mouse.button = 0; app.mouse.state = 0;
-      int grid_x = 0, grid_y = 0;
-      if ( !g_toggle_ascii &&
-           e_GetCellAtMouseInViewport( g_map->width, g_map->height,
-                                       g_map->tile_w, g_map->tile_h,
-                                       edit_menu_rect,
-                                       originx, originy,
-                                       &grid_x, &grid_y ) )
-      {
-        int idx = SpawnListFindAt( &g_edit_spawns, grid_x, grid_y );
-        if ( idx >= 0 )
-          SpawnListRemoveAt( &g_edit_spawns, idx );
-      }
-    }
   }
 
   /* Ctrl+Z: undo */
@@ -1021,7 +1069,10 @@ static void we_EditDraw( float dt )
           if ( i == g_hover_spawn_idx )
           {
             /* Hovered: show the pick item (image or glyph) */
-            int idx = EdItemByKey( pool->pick_key );
+            const char* pk = pool->pick_key;
+            if ( strcmp( pool->pick_type, "class_equipment" ) == 0 )
+              pk = pool->pick_class_keys[0];
+            int idx = EdItemByKey( pk );
             if ( idx >= 0 )
             {
               float sx = ( world_x - tw - view_x ) * scale.y;
@@ -1131,9 +1182,16 @@ static void we_EditDraw( float dt )
         {
           SpawnPool_t* pool = &g_edit_spawns.pools[pt->pool_id];
           static char pool_tip[256];
-          snprintf( pool_tip, sizeof(pool_tip),
-                    "pool_%d\nrule: pick_one\npick_type: %s\npick_key: %s\nfill_type: %s",
-                    pt->pool_id, pool->pick_type, pool->pick_key, pool->fill_type );
+          if ( strcmp( pool->pick_type, "class_equipment" ) == 0 )
+            snprintf( pool_tip, sizeof(pool_tip),
+                      "pool_%d\npick: class_equipment\nmerc: %s\nrogue: %s\nmage: %s\nfill: %s",
+                      pt->pool_id, pool->pick_class_keys[0],
+                      pool->pick_class_keys[1], pool->pick_class_keys[2],
+                      pool->fill_type );
+          else
+            snprintf( pool_tip, sizeof(pool_tip),
+                      "pool_%d\npick: %s\nkey: %s\nfill: %s",
+                      pt->pool_id, pool->pick_type, pool->pick_key, pool->fill_type );
           tooltip = pool_tip;
         }
       }
@@ -1188,7 +1246,10 @@ static void we_EditDraw( float dt )
              && pt->pool_id >= 0 && pt->pool_id < g_edit_spawns.num_pools )
         {
           SpawnPool_t* pool = &g_edit_spawns.pools[pt->pool_id];
-          int pidx = EdItemByKey( pool->pick_key );
+          const char* bk = pool->pick_key;
+          if ( strcmp( pool->pick_type, "class_equipment" ) == 0 )
+            bk = pool->pick_class_keys[0];
+          int pidx = EdItemByKey( bk );
           if ( pidx >= 0 ) border = g_ed_items[pidx].color;
         }
 

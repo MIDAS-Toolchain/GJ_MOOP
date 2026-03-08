@@ -130,10 +130,10 @@ int g_current_floor = 1;
 void DungeonBuild( World_t* world )
 {
   const char* map_path = ( g_current_floor >= 3 )
-    ? "resources/data/floors/floor_03.map"
+    ? "resources/data/floors/floor_03/floor_03.map"
     : ( g_current_floor == 2 )
-    ? "resources/data/floors/floor_02.map"
-    : "resources/data/floors/floor_01.map";
+    ? "resources/data/floors/floor_02/floor_02.map"
+    : "resources/data/floors/floor_01/floor_01.map";
   dString_t** floor = dungeon_load_map( map_path );
   if ( !floor )
   {

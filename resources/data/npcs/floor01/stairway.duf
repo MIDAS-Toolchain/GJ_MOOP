@@ -1,10 +1,11 @@
 @npc {
-    name: "Stairway"
-    glyph: ">"
-    color: [222, 158, 65, 255]
-    description: "A stone stairway spiraling downward into darkness."
+    name: "Hole in Floor"
+    glyph: "O"
+    color: [120, 100, 80, 255]
+    description: "A jagged hole in the stone floor. Something hums far below."
     action: "Walk"
     no_face: true
+    image_path: "resources/assets/tiles/hole.png"
 }
 
 # ==============================
@@ -13,20 +14,20 @@
 @start {
     start: true
     priority: 0
-    text: "A stone stairway carved into the floor. Cold air drifts up from below."
+    text: "A gaping hole in the floor. Cold air rises from the darkness below. You can't see the bottom."
     options: ["opt_descend", "opt_back"]
 }
 
 # ==============================
-# DESCEND - next floor (not yet available)
+# JUMP DOWN
 # ==============================
 @opt_descend {
-    label: "Descend deeper."
+    label: "Jump down."
     color: "quest"
     goto: "descend_reply"
 }
 @descend_reply {
-    text: "The stairs spiral down where the hum is much deeper. The air thickens. Whatever is below, it's waiting."
+    text: "You drop into the dark. The hum gets louder. The landing is harder than you expected."
     set_flag: "stair_descend"
     options: ["opt_back"]
 }
@@ -35,6 +36,6 @@
 # BACK
 # ==============================
 @opt_back {
-    label: "[Continue]"
+    label: "[Back away]"
     goto: "end"
 }

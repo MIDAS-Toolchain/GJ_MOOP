@@ -121,6 +121,7 @@ ENEMIES_SRCS = enemies.c \
 							 enemy_skeleton.c \
 							 enemy_shaman.c \
 							 enemy_horror.c \
+							 enemy_stone.c \
 							 rendering.c
 
 NPC_SRCS = npc.c \
