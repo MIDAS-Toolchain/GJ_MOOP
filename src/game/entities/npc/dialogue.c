@@ -683,10 +683,20 @@ static int execute_actions( DialogueEntry_t* de )
 
   if ( d_StringGetLength( de->give_item ) > 0 )
   {
+    const char* gi = d_StringPeek( de->give_item );
+    int found = 0;
     for ( int i = 0; i < g_num_consumables; i++ )
     {
-      if ( strcmp( g_consumables[i].name, d_StringPeek( de->give_item ) ) == 0 )
-      { InventoryAdd( INV_CONSUMABLE, i ); break; }
+      if ( strcmp( g_consumables[i].name, gi ) == 0 )
+      { InventoryAdd( INV_CONSUMABLE, i ); found = 1; break; }
+    }
+    if ( !found )
+    {
+      for ( int i = 0; i < g_num_equipment; i++ )
+      {
+        if ( strcmp( g_equipment[i].name, gi ) == 0 )
+        { InventoryAdd( INV_EQUIPMENT, i ); break; }
+      }
     }
   }
 

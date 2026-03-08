@@ -66,6 +66,7 @@ typedef struct
   int last_room_id;                     /* detect room changes */
   int root_turns;                       /* forced skip turns (spider web etc.) */
   int max_health_ups;                   /* max health pickups collected (persists across floors) */
+  int companion_counter;                /* turns toward next companion nip */
 } Player_t;
 
 void PlayerInitStats( void );

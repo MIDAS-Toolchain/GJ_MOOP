@@ -104,24 +104,11 @@
 @rescued_reply {
     text: "I can hear her. She's scratching at the wall. That's her happy noise. Thank you. I don't... I can't... here. Take this. It's all I have."
     set_flag: "told_drem_rescued"
-    options: ["opt_reward_merc", "opt_reward_rogue", "opt_reward_mage"]
+    options: ["opt_reward"]
 }
-@opt_reward_merc {
+@opt_reward {
     label: "[Take reward]"
-    require_class: "Mercenary"
-    give_item: "Dragon Pepper"
-    goto: "end"
-}
-@opt_reward_rogue {
-    label: "[Take reward]"
-    require_class: "Rogue"
-    give_item: "Smoke Bomb"
-    goto: "end"
-}
-@opt_reward_mage {
-    label: "[Take reward]"
-    require_class: "Mage"
-    give_item: "Scroll of Teleport"
+    give_item: "Bloop's Fang"
     goto: "end"
 }
 

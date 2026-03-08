@@ -157,8 +157,8 @@ void EnemyBossGretaSpawn( int npc_type_idx )
   int ei = EnemyTypeByKey( "elder_horror" );
   if ( ei >= 0 )
   {
-    static const int dx[] = { 0, 1, -1, 0 };
-    static const int dy[] = { 1, -1, 0, 0 };
+    static const int dx[] = { 1, -1, 0, 0 };
+    static const int dy[] = { 0, 0, 1, -1 };
     for ( int d = 0; d < 4; d++ )
     {
       int nr = row + dx[d], nc = col + dy[d];

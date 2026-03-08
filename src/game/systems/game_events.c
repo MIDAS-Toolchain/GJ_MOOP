@@ -592,8 +592,8 @@ int GameEventResolveTarget( int consumable_idx, int inv_slot,
       return 0;
     }
 
-    PlacedTrapSpawn( target_row, target_col, dmg, 2 );
-    ConsolePushF( con, hit_color, "You set a bear trap." );
+    PlacedTrapSpawn( target_row, target_col, dmg, 2, c->image );
+    ConsolePushF( con, hit_color, "You set a %s.", c->name );
 
     consume_scroll( inv_slot );
     consumable_used = 1;

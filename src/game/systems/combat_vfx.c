@@ -53,6 +53,21 @@ typedef struct
 
 static TextMarker_t text_markers[MAX_TEXT_MARKERS];
 
+/* ---- Chomp VFX data (Bloop's Fang) ---- */
+
+#define MAX_CHOMPS 2
+
+typedef struct
+{
+  float    wx, wy;
+  float    jaw;       /* jaw offset: starts open, snaps shut */
+  float    alpha;
+  aColor_t color;
+  int      active;
+} ChompMarker_t;
+
+static ChompMarker_t chomps[MAX_CHOMPS];
+
 void CombatVFXInit( void )
 {
   InitTweenManager( &vfx_tweens );
@@ -60,6 +75,8 @@ void CombatVFXInit( void )
     markers[i].active = 0;
   for ( int i = 0; i < MAX_TEXT_MARKERS; i++ )
     text_markers[i].active = 0;
+  for ( int i = 0; i < MAX_CHOMPS; i++ )
+    chomps[i].active = 0;
 }
 
 void CombatVFXUpdate( float dt )
@@ -76,6 +93,11 @@ void CombatVFXUpdate( float dt )
   {
     if ( text_markers[i].active && text_markers[i].alpha < 1.0f )
       text_markers[i].active = 0;
+  }
+  for ( int i = 0; i < MAX_CHOMPS; i++ )
+  {
+    if ( chomps[i].active && chomps[i].alpha < 1.0f )
+      chomps[i].active = 0;
   }
 }
 
@@ -134,6 +156,8 @@ void CombatVFXSpawnText( float wx, float wy, const char* text, aColor_t color )
   TweenFloat( &vfx_tweens, &m->alpha, 0.0f, 1.2f, TWEEN_EASE_IN_CUBIC );
 }
 
+static void draw_chomps( aRectf_t vp_rect, GameCamera_t* cam );
+
 void CombatVFXDraw( aRectf_t vp_rect, GameCamera_t* cam )
 {
   float sx, sy, cl, ct;
@@ -179,6 +203,72 @@ void CombatVFXDraw( aRectf_t vp_rect, GameCamera_t* cam )
     ts.scale = 1.2f;
     ts.align = TEXT_ALIGN_CENTER;
     a_DrawText( m->text, (int)screen_x, (int)screen_y, ts );
+  }
+
+  draw_chomps( vp_rect, cam );
+}
+
+/* ---- Chomp VFX functions (Bloop's Fang) ---- */
+
+void CombatVFXSpawnChomp( float wx, float wy, aColor_t color )
+{
+  int slot = -1;
+  for ( int i = 0; i < MAX_CHOMPS; i++ )
+    if ( !chomps[i].active ) { slot = i; break; }
+  if ( slot < 0 ) return;
+
+  ChompMarker_t* c = &chomps[slot];
+  c->wx     = wx;
+  c->wy     = wy;
+  c->jaw    = 6.0f;    /* start open */
+  c->alpha  = 255.0f;
+  c->color  = color;
+  c->active = 1;
+
+  /* Snap shut fast, then fade */
+  TweenFloat( &vfx_tweens, &c->jaw, 0.0f, 0.15f, TWEEN_EASE_IN_QUAD );
+  TweenFloat( &vfx_tweens, &c->alpha, 0.0f, 0.6f, TWEEN_EASE_IN_CUBIC );
+}
+
+static void draw_chomps( aRectf_t vp_rect, GameCamera_t* cam )
+{
+  float sx, sy, cl, ct;
+  vfx_transform( vp_rect, cam, &sx, &sy, &cl, &ct );
+
+  for ( int i = 0; i < MAX_CHOMPS; i++ )
+  {
+    if ( !chomps[i].active ) continue;
+    ChompMarker_t* c = &chomps[i];
+
+    float cx = ( c->wx - cl ) * sx + vp_rect.x;
+    float cy = ( c->wy - ct ) * sy + vp_rect.y;
+    float jaw = c->jaw * sy;
+    int a = (int)c->alpha;
+
+    aColor_t col = c->color;
+    col.a = a;
+
+    /* Upper jaw - 3 teeth pointing down */
+    float uy = cy - jaw;
+    for ( int t = -1; t <= 1; t++ )
+    {
+      float tx = cx + t * 4.0f * sx;
+      a_DrawLine( (int)( tx - 2 * sx ), (int)uy,
+                  (int)tx, (int)( uy + 3 * sy ), col );
+      a_DrawLine( (int)( tx + 2 * sx ), (int)uy,
+                  (int)tx, (int)( uy + 3 * sy ), col );
+    }
+
+    /* Lower jaw - 3 teeth pointing up */
+    float ly = cy + jaw;
+    for ( int t = -1; t <= 1; t++ )
+    {
+      float tx = cx + t * 4.0f * sx;
+      a_DrawLine( (int)( tx - 2 * sx ), (int)ly,
+                  (int)tx, (int)( ly - 3 * sy ), col );
+      a_DrawLine( (int)( tx + 2 * sx ), (int)ly,
+                  (int)tx, (int)( ly - 3 * sy ), col );
+    }
   }
 }
 

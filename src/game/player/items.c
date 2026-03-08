@@ -552,6 +552,7 @@ void PlayerFullReset( int class_index )
   player.attack_counter = 0;
   player.root_turns = 0;
   player.max_health_ups = 0;
+  player.companion_counter = 0;
   player.last_room_id = -1;
   for ( int i = 0; i < EQUIP_SLOTS; i++ )
     player.equipment[i] = -1;

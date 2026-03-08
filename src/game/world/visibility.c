@@ -8,11 +8,17 @@
 
 static World_t* world;
 static float*   vis;
+static int (*npc_blocks)(int,int) = NULL;
 
 void VisibilityInit( World_t* w )
 {
   world = w;
   vis   = calloc( w->tile_count, sizeof( float ) );
+}
+
+void VisibilitySetNPCBlocker( int (*fn)(int,int) )
+{
+  npc_blocks = fn;
 }
 
 /* Bresenham line-of-sight check.
@@ -46,6 +52,7 @@ int los_clear( int x0, int y0, int x1, int y1 )
     int idx = cy * world->width + cx;
     if ( world->background[idx].solid )  return 0;
     if ( world->midground[idx].solid )   return 0;
+    if ( npc_blocks && npc_blocks( cx, cy ) ) return 0;
   }
 
   return 1;

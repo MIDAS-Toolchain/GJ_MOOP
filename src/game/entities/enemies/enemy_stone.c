@@ -68,127 +68,95 @@ void EnemyStoneHealerTick( Enemy_t* e, int player_row, int player_col,
 }
 
 /* ---- Stone Ranged AI ---- */
-/* Immobile. Fires a ranged shot at the player every other turn. */
-/* ai_state: 0 = acquire, 1 = telegraph, 2 = cooldown */
+/* Immobile. Targets player from anywhere. Locks onto a tile, telegraphs, fires. */
+/* ai_state: 0,1 = charging, 2 = telegraph (lock tile), 3 = fire at locked tile */
+/* ai_dir_row/ai_dir_col store the locked target tile. */
 
-#define SST_ACQUIRE   0
-#define SST_TELEGRAPH 1
-#define SST_COOLDOWN  2
+#define SST_CHARGE1    0
+#define SST_CHARGE2    1
+#define SST_TELEGRAPH  2
+#define SST_FIRE       3
 
-/* Check if player is on a clear cardinal line within range. */
-static int stone_has_shot( Enemy_t* e, int pr, int pc, int range,
-                           int (*walkable)(int,int),
-                           int* out_dr, int* out_dc )
-{
-  if ( e->row == pr && e->col != pc )
-  {
-    int dc = ( pc > e->col ) ? 1 : -1;
-    int dist = abs( pc - e->col );
-    if ( dist > range ) return 0;
-    int cc = e->col;
-    for ( int s = 0; s < dist; s++ )
-    {
-      cc += dc;
-      if ( !walkable( e->row, cc ) ) return 0;
-      if ( EnemyBlockedByNPC( e->row, cc ) ) return 0;
-    }
-    *out_dr = 0;
-    *out_dc = dc;
-    return 1;
-  }
-  else if ( e->col == pc && e->row != pr )
-  {
-    int dr = ( pr > e->row ) ? 1 : -1;
-    int dist = abs( pr - e->row );
-    if ( dist > range ) return 0;
-    int cr = e->row;
-    for ( int s = 0; s < dist; s++ )
-    {
-      cr += dr;
-      if ( !walkable( cr, e->col ) ) return 0;
-      if ( EnemyBlockedByNPC( cr, e->col ) ) return 0;
-    }
-    *out_dr = dr;
-    *out_dc = 0;
-    return 1;
-  }
-  return 0;
-}
+/* Stored target tile for rendering the telegraph marker */
+static int s_stone_tgt_row = -1;
+static int s_stone_tgt_col = -1;
+static int s_stone_tgt_active = 0;
+
+int  EnemyStoneTargetActive( void ) { return s_stone_tgt_active; }
+int  EnemyStoneTargetRow( void )    { return s_stone_tgt_row; }
+int  EnemyStoneTargetCol( void )    { return s_stone_tgt_col; }
 
 void EnemyStoneRangedTick( Enemy_t* e, int player_row, int player_col,
                            int (*walkable)(int,int),
                            Enemy_t* all, int count )
 {
-  (void)all; (void)count;
-  if ( !e->alive ) return;
+  (void)walkable;
+  if ( !e->alive ) { s_stone_tgt_active = 0; return; }
   if ( e->stun_turns > 0 ) return;
 
-  EnemyType_t* t = &g_enemy_types[e->type_idx];
-  int dr = abs( player_row - e->row );
-  int dc = abs( player_col - e->col );
-  int dist = dr + dc;
-
-  int can_see = ( dist <= t->sight_range
-                  && los_clear( e->row, e->col, player_row, player_col ) );
+  /* Only active while the gatekeeper is alive */
+  int gk_alive = 0;
+  for ( int i = 0; i < count; i++ )
+  {
+    if ( all[i].alive && strcmp( g_enemy_types[all[i].type_idx].key, "gatekeeper" ) == 0 )
+    { gk_alive = 1; break; }
+  }
+  if ( !gk_alive ) { s_stone_tgt_active = 0; return; }
 
   switch ( e->ai_state )
   {
-    case SST_ACQUIRE:
-    {
-      int shot_dr, shot_dc;
-      if ( can_see
-           && stone_has_shot( e, player_row, player_col, t->range,
-                              walkable, &shot_dr, &shot_dc ) )
-      {
-        e->ai_dir_row = shot_dr;
-        e->ai_dir_col = shot_dc;
-        e->ai_state = SST_TELEGRAPH;
-      }
-      /* If no shot, just wait (stone can't move) */
+    case SST_CHARGE1:
+      s_stone_tgt_active = 0;
+      e->ai_state = SST_CHARGE2;
       break;
-    }
+
+    case SST_CHARGE2:
+      e->ai_state = SST_TELEGRAPH;
+      /* Lock onto player's current tile */
+      e->ai_dir_row = player_row;
+      e->ai_dir_col = player_col;
+      s_stone_tgt_row = player_row;
+      s_stone_tgt_col = player_col;
+      s_stone_tgt_active = 1;
+      CombatVFXSpawnText( e->world_x, e->world_y,
+                          "Charging...", (aColor_t){ 0x50, 0x50, 0xc8, 255 } );
+      break;
 
     case SST_TELEGRAPH:
-    {
-      /* Fire along locked direction */
-      int cr = e->row;
-      int cc = e->col;
-
-      for ( int step = 0; step < t->range; step++ )
-      {
-        cr += e->ai_dir_row;
-        cc += e->ai_dir_col;
-        if ( !walkable( cr, cc ) ) break;
-        if ( EnemyBlockedByNPC( cr, cc ) ) break;
-
-        if ( cr == player_row && cc == player_col )
-        {
-          CombatEnemyHit( e );
-          break;
-        }
-      }
-
-      /* Spawn projectile VFX */
-      {
-        float tw = EnemyTileW(), th = EnemyTileH();
-        EnemyProjectileSpawn( e->world_x, e->world_y,
-                              cr * tw + tw / 2.0f, cc * th + th / 2.0f,
-                              e->ai_dir_row, e->ai_dir_col );
-      }
-
-      e->ai_state = SST_COOLDOWN;
+      /* Target tile stays visible — player has this turn to move */
+      e->ai_state = SST_FIRE;
       break;
-    }
 
-    case SST_COOLDOWN:
+    case SST_FIRE:
     {
-      /* One turn cooldown, then back to acquire */
-      e->ai_state = SST_ACQUIRE;
+      s_stone_tgt_active = 0;
+      float tw = EnemyTileW(), th = EnemyTileH();
+      float tx = e->ai_dir_row * tw + tw / 2.0f;
+      float ty = e->ai_dir_col * th + th / 2.0f;
+
+      SpellVFXSpark( e->world_x, e->world_y, tx, ty );
+
+      /* Only hit if player is still on the locked tile */
+      if ( player_row == e->ai_dir_row && player_col == e->ai_dir_col )
+      {
+        CombatEnemyHit( e );
+        ConsolePushF( GameEventsGetConsole(), (aColor_t){ 0x50, 0x50, 0xc8, 255 },
+                      "The Humming Stone blasts you!" );
+      }
+      else
+      {
+        ConsolePushF( GameEventsGetConsole(), (aColor_t){ 0x50, 0x50, 0xc8, 255 },
+                      "The Humming Stone's bolt misses!" );
+      }
+
+      CombatVFXSpawnText( e->world_x, e->world_y,
+                          "Hums!", (aColor_t){ 0x50, 0x50, 0xc8, 255 } );
+      e->ai_state = SST_CHARGE1;
       break;
     }
 
     default:
-      e->ai_state = SST_ACQUIRE;
+      e->ai_state = SST_CHARGE1;
       break;
   }
 }

@@ -49,11 +49,28 @@ void SpawnFloor3( NPC_t* npcs, int* num_npcs,
   EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "cult_caster" ), 31, 27, tw, th );
   EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "cult_caster" ), 36, 27, tw, th );
   EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "elder_horror" ), 28, 3, tw, th );
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "elder_horror" ), 56, 11, tw, th );
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "elder_horror" ), 52, 6, tw, th );
+  EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "elder_horror" ), 54, 16, tw, th );
   EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "void_slime" ), 20, 4, tw, th );
 
   /* The Sentry - automaton before the Gatekeeper's chamber */
   NPCSpawn( npcs, num_npcs, NPCTypeByKey( "sentry" ),
             16, 12, tw, th );
+
+  /* Sentry's Door - blocks entry to boss room until gate_opened */
+  NPCSpawn( npcs, num_npcs, NPCTypeByKey( "sentrys_door" ),
+            11, 12, tw, th );
+  NPCSpawn( npcs, num_npcs, NPCTypeByKey( "sentrys_door" ),
+            11, 13, tw, th );
+
+  /* Keeper's Gate - blocks exit until gatekeeper is dead */
+  NPCSpawn( npcs, num_npcs, NPCTypeByKey( "keepers_gate" ),
+            4, 9, tw, th );
+  NPCSpawn( npcs, num_npcs, NPCTypeByKey( "keepers_gate" ),
+            5, 9, tw, th );
+  NPCSpawn( npcs, num_npcs, NPCTypeByKey( "keepers_gate" ),
+            6, 9, tw, th );
 
   /* The Gatekeeper - final boss */
   EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "gatekeeper" ),
@@ -61,11 +78,11 @@ void SpawnFloor3( NPC_t* npcs, int* num_npcs,
 
   /* Humming Stones - red (healer), green (buff), blue (ranged) */
   EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "hum_stone_red" ),
-              5, 9, tw, th );
+              5, 12, tw, th );
   EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "hum_stone_green" ),
-              9, 9, tw, th );
+              7, 12, tw, th );
   EnemySpawn( enemies, num_enemies, EnemyTypeByKey( "hum_stone_blue" ),
-              7, 7, tw, th );
+              7, 10, tw, th );
 
   /* Greta's Door - blocks passage until Greta is killed */
   NPCSpawn( npcs, num_npcs, NPCTypeByKey( "gretas_door" ),
@@ -79,6 +96,15 @@ void SpawnFloor3( NPC_t* npcs, int* num_npcs,
   NPCSpawn( npcs, num_npcs, NPCTypeByKey( "murl" ),
             57, 49, tw, th );
   ShopSpawn( world );
+
+  /* Second shop - consumable-only rug near the sentry */
+  {
+    static const int rug2[6][2] = {
+      {17,12}, {18,12}, {19,12},
+      {17,13}, {18,13}, {19,13}
+    };
+    ShopSpawnConsumableRug( world, rug2 );
+  }
 
   /* Found Horror — Bloop (room )) */
   NPCSpawn( npcs, num_npcs, NPCTypeByKey( "found_horror" ),
@@ -131,6 +157,7 @@ void SpawnFloor3( NPC_t* npcs, int* num_npcs,
   /* Lost horrors (enemies only — consumable drops are in DUF) */
   {
     int lh = EnemyTypeByKey( "lost_horror" );
+    EnemySpawn( enemies, num_enemies, lh, 45, 12, tw, th );
     EnemySpawn( enemies, num_enemies, lh, 67, 46, tw, th );
     EnemySpawn( enemies, num_enemies, lh, 67, 40, tw, th );
     EnemySpawn( enemies, num_enemies, lh, 57, 39, tw, th );

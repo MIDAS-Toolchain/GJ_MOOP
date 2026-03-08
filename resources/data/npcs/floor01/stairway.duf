@@ -27,7 +27,7 @@
     goto: "descend_reply"
 }
 @descend_reply {
-    text: "You drop into the dark. The hum gets louder. The landing is harder than you expected."
+    text: "You drop into the dark. The hum gets louder as you fall."
     set_flag: "stair_descend"
     options: ["opt_back"]
 }
@@ -36,6 +36,6 @@
 # BACK
 # ==============================
 @opt_back {
-    label: "[Back away]"
+    label: "[Continue]"
     goto: "end"
 }

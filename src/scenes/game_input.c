@@ -381,7 +381,7 @@ void GameInputMovement( void )
       ITileUrnCheck( gi_world, tr, tc, &gold );
     else
       ITileCrateCheck( gi_world, tr, tc, &gold );
-    PlayerWallBump( dr, dc );
+    PlayerLunge( dr, dc );
     const char* name = is_urn ? "urn" : "old crate";
     if ( gold > 0 )
     {
@@ -406,7 +406,7 @@ void GameInputMovement( void )
   {
     int gold = 0, horror = -1;
     ITileVoidPortalCheck( gi_world, tr, tc, &gold, &horror );
-    PlayerWallBump( dr, dc );
+    PlayerLunge( dr, dc );
     if ( gold > 0 )
     {
       PlayerAddGold( gold );

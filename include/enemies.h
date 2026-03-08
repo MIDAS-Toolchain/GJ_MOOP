@@ -104,6 +104,9 @@ void EnemyStoneHealerTick( Enemy_t* e, int player_row, int player_col,
 void EnemyStoneRangedTick( Enemy_t* e, int player_row, int player_col,
                            int (*walkable)(int,int),
                            Enemy_t* all, int count );
+int  EnemyStoneTargetActive( void );
+int  EnemyStoneTargetRow( void );
+int  EnemyStoneTargetCol( void );
 
 /* Horror AI */
 void EnemyHorrorTick( Enemy_t* e, int player_row, int player_col,

@@ -144,9 +144,6 @@ void WorldDraw( const int x_off, const int y_off,
 
     if ( has_viewport && !draw_ascii )
     {
-      draw_x += world->tile_w;
-      draw_y += world->tile_h;
-
       /*if ( x + world->tile_w < ( app.g_viewport.x - app.g_viewport.w ) ||
            x > ( app.g_viewport.x + app.g_viewport.w ) ||
            y + world->tile_h < ( app.g_viewport.x - app.g_viewport.w ) ||

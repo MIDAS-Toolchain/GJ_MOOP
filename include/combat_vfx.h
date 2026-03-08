@@ -17,6 +17,9 @@ void CombatVFXSpawnNumberScaled( float wx, float wy, int amount, aColor_t color,
 /* Spawn floating text at world position (speech bubbles, etc.) */
 void CombatVFXSpawnText( float wx, float wy, const char* text, aColor_t color );
 
+/* Spawn a purple chomp (Bloop's Fang bite) */
+void CombatVFXSpawnChomp( float wx, float wy, aColor_t color );
+
 /* Draw a health bar above an entity - only shows when hp < max_hp */
 void CombatVFXDrawHealthBar( aRectf_t vp_rect, GameCamera_t* cam,
                               float wx, float wy,

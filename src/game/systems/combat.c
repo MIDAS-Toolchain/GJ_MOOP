@@ -245,7 +245,7 @@ void CombatHandleEnemyDeath( Enemy_t* e )
 }
 
 /* Totem aura: sum a stat field from nearby static enemies */
-#define TOTEM_RADIUS 3
+#define TOTEM_RADIUS 5
 
 static int totem_buff_at( Enemy_t* target, int use_damage )
 {
@@ -352,18 +352,20 @@ int CombatAttack( Enemy_t* e )
                   "First Strike! +%d bonus damage!", fs );
   }
 
-  /* Passive: berserk - +effect_value damage per 40% HP missing (max 2) */
+  /* Passive: berserk - +1 damage per threshold% HP missing */
   int berserk = PlayerEquipEffect( "berserk" );
   if ( berserk > 0 && player.max_hp > 0 )
   {
+    int threshold  = ( berserk >= 2 ) ? 20 : 40;
+    int max_stacks = ( berserk >= 2 ) ? 4  : 2;
     int missing_pct = ( ( player.max_hp - player.hp ) * 100 ) / player.max_hp;
-    int stacks = missing_pct / 40;
-    if ( stacks > 2 ) stacks = 2;
+    int stacks = missing_pct / threshold;
+    if ( stacks > max_stacks ) stacks = max_stacks;
     if ( stacks > 0 )
     {
-      pdmg += berserk * stacks;
+      pdmg += stacks;
       ConsolePushF( console, (aColor_t){ 0xa5, 0x30, 0x30, 255 },
-                    "Berserk! +%d damage!", berserk * stacks );
+                    "Berserk! +%d damage!", stacks );
     }
   }
 
@@ -497,6 +499,57 @@ void CombatEnemyHit( Enemy_t* e )
       deal_damage( e, thorns, (aColor_t){ 0xde, 0x9e, 0x41, 255 } );
     }
   }
+}
+
+/* Companion trinket: Bloop nips a random alive enemy every N turns */
+void CombatCompanionTick( void )
+{
+  int interval = PlayerEquipEffect( "companion" );
+  if ( interval <= 0 ) return;
+  if ( !combat_enemies || !combat_enemy_count ) return;
+
+  player.companion_counter++;
+  if ( player.companion_counter < interval ) return;
+  player.companion_counter = 0;
+
+  /* Build list of alive enemies near the player */
+  int pr, pc;
+  PlayerGetTile( &pr, &pc );
+
+  int alive[512];
+  int num_alive = 0;
+  for ( int i = 0; i < *combat_enemy_count && num_alive < 512; i++ )
+  {
+    if ( !combat_enemies[i].alive ) continue;
+    int er = combat_enemies[i].row;
+    int ec = combat_enemies[i].col;
+    int dr = abs( er - pr );
+    int dc = abs( ec - pc );
+    if ( dr + dc <= 8 && VisibilityGet( er, ec ) > 0.01f )
+      alive[num_alive++] = i;
+  }
+
+  if ( num_alive == 0 ) return;
+
+  Enemy_t* target = &combat_enemies[alive[rand() % num_alive]];
+  int dmg = 1;
+
+  /* Purple chomp on target */
+  CombatVFXSpawnChomp( target->world_x, target->world_y,
+                       (aColor_t){ 140, 40, 80, 255 } );
+
+  target->hp -= dmg;
+  target->turns_since_hit = 0;
+  CombatVFXSpawnNumber( target->world_x, target->world_y, dmg,
+                        (aColor_t){ 140, 40, 80, 255 } );
+  CombatVFXSpawnText( target->world_x, target->world_y - 8,
+                      "Nip!", (aColor_t){ 140, 40, 80, 255 } );
+  ConsolePushF( console, (aColor_t){ 140, 40, 80, 255 },
+                "Bloop nips %s for %d damage!",
+                g_enemy_types[target->type_idx].name, dmg );
+
+  if ( target->hp <= 0 )
+    CombatHandleEnemyDeath( target );
 }
 
 void CombatDrawTotemAura( aRectf_t vp_rect, GameCamera_t* cam, World_t* w )

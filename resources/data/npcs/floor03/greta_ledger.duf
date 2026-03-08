@@ -37,6 +37,7 @@
 # ==============================
 @opt_read_on {
     label: "[Read on]"
+    color: "lore"
     goto: "page_town"
 }
 @page_town {
@@ -50,6 +51,7 @@
 # ==============================
 @opt_continue_method {
     label: "[Continue]"
+    color: "lore"
     goto: "page_method"
 }
 @page_method {
@@ -62,6 +64,7 @@
 # ==============================
 @opt_continue_feast {
     label: "[Continue]"
+    color: "lore"
     goto: "page_feast"
 }
 @page_feast {
@@ -75,6 +78,7 @@
 # ==============================
 @opt_continue_purpose {
     label: "[Continue]"
+    color: "lore"
     goto: "page_purpose"
 }
 @page_purpose {
@@ -87,6 +91,7 @@
 # ==============================
 @opt_continue_final {
     label: "[Continue]"
+    color: "lore"
     goto: "page_final"
 }
 @page_final {
@@ -100,6 +105,7 @@
 # ==============================
 @opt_close {
     label: "[Close the ledger]"
+    color: "lore"
     goto: "close_reply"
 }
 @close_reply {
@@ -112,5 +118,6 @@
 # ==============================
 @opt_leave {
     label: "[Put it down]"
+    color: "lore"
     goto: "end"
 }

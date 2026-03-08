@@ -20,7 +20,9 @@ static int             spawn_max  = 6;
 
 /* Rug tile positions - set per floor in ShopSpawn */
 #define NUM_RUG_TILES 6
-static int rug[NUM_RUG_TILES][2];
+#define MAX_RUG_TILES 12   /* up to 2 rugs */
+static int rug[MAX_RUG_TILES][2];
+static int num_rug_tiles = 0;
 static const int rug_tile_ids[NUM_RUG_TILES] = { 6, 7, 8, 15, 16, 17 };
 
 #define RUG_COLOR (aColor_t){ 0x60, 0x2c, 0x2c, 255 }
@@ -89,7 +91,7 @@ void ShopSpawn( World_t* world )
       {54,49}, {55,49}, {56,49},
       {54,50}, {55,50}, {56,50}
     };
-    memcpy( rug, f3, sizeof(rug) );
+    memcpy( rug, f3, sizeof(f3) );
   }
   else if ( g_current_floor == 2 )
   {
@@ -97,7 +99,7 @@ void ShopSpawn( World_t* world )
       {11,2}, {12,2}, {13,2},
       {11,3}, {12,3}, {13,3}
     };
-    memcpy( rug, f2, sizeof(rug) );
+    memcpy( rug, f2, sizeof(f2) );
   }
   else
   {
@@ -105,8 +107,10 @@ void ShopSpawn( World_t* world )
       {21,29}, {22,29}, {23,29},
       {21,30}, {22,30}, {23,30}
     };
-    memcpy( rug, f1, sizeof(rug) );
+    memcpy( rug, f1, sizeof(f1) );
   }
+
+  num_rug_tiles = NUM_RUG_TILES;
 
   /* Stamp carpet tiles onto the background layer */
   for ( int i = 0; i < NUM_RUG_TILES; i++ )
@@ -154,9 +158,9 @@ void ShopSpawn( World_t* world )
     },
     /* Floor 3 */
     {
-      { "Mercenary", "blackiron_plate",     36, "fracture_knuckle", 42 },
-      { "Rogue",     "void_shroud",         36, "flicker_ring",     42 },
-      { "Mage",      "spellwoven_mantle",   36, "grimoire_locket",  42 },
+      { "Mercenary", "blackiron_plate",     36, "bloodrage_medal",  42 },
+      { "Rogue",     "void_shroud",         36, "venom_fang",       42 },
+      { "Mage",      "spellwoven_mantle",   36, "storm_stone",      42 },
     },
   };
 
@@ -249,6 +253,80 @@ void ShopSpawn( World_t* world )
   }
 }
 
+void ShopSpawnConsumableRug( World_t* world, const int pos[][2] )
+{
+  /* Add rug tiles to the tracked set */
+  for ( int i = 0; i < NUM_RUG_TILES && num_rug_tiles < MAX_RUG_TILES; i++ )
+  {
+    rug[num_rug_tiles][0] = pos[i][0];
+    rug[num_rug_tiles][1] = pos[i][1];
+    num_rug_tiles++;
+
+    int idx = pos[i][1] * world->width + pos[i][0];
+    world->background[idx].tile = rug_tile_ids[i];
+  }
+
+  /* Shuffle positions */
+  int tiles[NUM_RUG_TILES][2];
+  for ( int i = 0; i < NUM_RUG_TILES; i++ )
+  {
+    tiles[i][0] = pos[i][0];
+    tiles[i][1] = pos[i][1];
+  }
+  for ( int i = NUM_RUG_TILES - 1; i > 0; i-- )
+  {
+    int j = rand() % ( i + 1 );
+    int tr = tiles[i][0], tc = tiles[i][1];
+    tiles[i][0] = tiles[j][0]; tiles[i][1] = tiles[j][1];
+    tiles[j][0] = tr;          tiles[j][1] = tc;
+  }
+
+  /* Build filtered consumable pool */
+  int filtered[MAX_SHOP_POOL];
+  int num_filtered = 0;
+  int total_weight = 0;
+  for ( int i = 0; i < pool_count; i++ )
+  {
+    if ( strcmp( pool[i].type, "consumable" ) != 0 ) continue;
+    if ( pool[i].class_name[0] == '\0'
+         || strcmp( pool[i].class_name, player.name ) == 0 )
+    {
+      filtered[num_filtered++] = i;
+      total_weight += pool[i].weight;
+    }
+  }
+  if ( total_weight == 0 ) return;
+
+  for ( int slot = 0; slot < NUM_RUG_TILES; slot++ )
+  {
+    if ( g_num_shop_items >= MAX_SHOP_ITEMS ) break;
+
+    int roll = rand() % total_weight;
+    int accum = 0;
+    int pick = filtered[0];
+    for ( int f = 0; f < num_filtered; f++ )
+    {
+      accum += pool[filtered[f]].weight;
+      if ( accum > roll ) { pick = filtered[f]; break; }
+    }
+
+    ShopPoolEntry_t* pe = &pool[pick];
+    ShopItem_t* si = &g_shop_items[g_num_shop_items];
+    memset( si, 0, sizeof( ShopItem_t ) );
+    si->item_type  = INV_CONSUMABLE;
+    si->item_index = ConsumableByKey( pe->item_key );
+    if ( si->item_index < 0 ) continue;
+
+    si->cost    = pe->cost;
+    si->row     = tiles[slot][0];
+    si->col     = tiles[slot][1];
+    si->world_x = si->row * world->tile_w + world->tile_w / 2.0f;
+    si->world_y = si->col * world->tile_h + world->tile_h / 2.0f;
+    si->alive   = 1;
+    g_num_shop_items++;
+  }
+}
+
 ShopItem_t* ShopItemAt( int row, int col )
 {
   for ( int i = 0; i < g_num_shop_items; i++ )
@@ -263,7 +341,7 @@ ShopItem_t* ShopItemAt( int row, int col )
 
 int ShopIsRugTile( int row, int col )
 {
-  for ( int i = 0; i < NUM_RUG_TILES; i++ )
+  for ( int i = 0; i < num_rug_tiles; i++ )
   {
     if ( rug[i][0] == row && rug[i][1] == col )
       return 1;
@@ -278,7 +356,7 @@ void ShopDrawRug( aRectf_t vp_rect, GameCamera_t* cam,
   if ( gfx_mode == GFX_IMAGE ) return;
 
   /* ASCII mode: draw colored rectangles as fallback */
-  for ( int i = 0; i < NUM_RUG_TILES; i++ )
+  for ( int i = 0; i < num_rug_tiles; i++ )
   {
     int r = rug[i][0];
     int c = rug[i][1];

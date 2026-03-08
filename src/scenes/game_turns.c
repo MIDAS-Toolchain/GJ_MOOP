@@ -276,6 +276,7 @@ void GameTurnsHandleTurnEnd( float dt, int turn_skipped )
       ITileTick();
       GameEventsNewTurn();
       PlayerTickTurnsSinceHit();
+      CombatCompanionTick();
       turn_count++;
       if ( turn_count == 5 && !skip_hint_shown )
       {

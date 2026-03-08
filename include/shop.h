@@ -5,7 +5,7 @@
 #include "world.h"
 #include "game_viewport.h"
 
-#define MAX_SHOP_ITEMS    8
+#define MAX_SHOP_ITEMS   14
 #define MAX_SHOP_POOL    16
 
 typedef struct
@@ -29,6 +29,7 @@ typedef struct
 
 void        ShopLoadPool( const char* path );
 void        ShopSpawn( World_t* world );
+void        ShopSpawnConsumableRug( World_t* world, const int pos[][2] );
 ShopItem_t* ShopItemAt( int row, int col );
 int         ShopIsRugTile( int row, int col );
 

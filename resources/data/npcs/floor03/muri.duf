@@ -128,6 +128,7 @@
 @opt_drem {
     label: "What's wrong with Drem?"
     color: "quest"
+    require_not_flag: "quest_bloop"
     require_not_flag: "told_drem_rescued"
     require_not_flag: "drem_grieving"
     goto: "drem_reply"

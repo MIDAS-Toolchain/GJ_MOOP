@@ -313,6 +313,49 @@
 }
 
 # ==============================
+# UPGRADED TRINKETS (floor 3 shop)
+# ==============================
+@venom_fang {
+    name: "Venom Fang"
+    kind: "trinket"
+    slot: "trinket"
+    glyph: "o"
+    damage: 0
+    defense: 0
+    effect: "poison"
+    effect_value: 2
+    class: "rogue"
+    description: "Dripping with something worse. Melee attacks poison enemies for 2 damage."
+    color: [100, 200, 100, 255]
+}
+@bloodrage_medal {
+    name: "Bloodrage Medal"
+    kind: "trinket"
+    slot: "trinket"
+    glyph: "o"
+    damage: 0
+    defense: 0
+    effect: "berserk"
+    effect_value: 2
+    class: "mercenary"
+    description: "+1 damage for each 20% HP missing."
+    color: [200, 100, 100, 255]
+}
+@storm_stone {
+    name: "Storm Stone"
+    kind: "trinket"
+    slot: "trinket"
+    glyph: "o"
+    damage: 0
+    defense: 0
+    effect: "amplify"
+    effect_value: 2
+    class: "mage"
+    description: "Scrolls crackle with violent force. +2 scroll damage."
+    color: [100, 100, 200, 255]
+}
+
+# ==============================
 # COUNTING TRINKETS (floor 3)
 # ==============================
 @fracture_knuckle {
@@ -371,4 +414,17 @@
     description: "Grants +1 gold per enemy killed."
     image_path: "resources/assets/equipment/golden_ring.png"
     color: [218, 175, 32, 255]
+}
+@bloops_fang {
+    name: "Bloop's Fang"
+    kind: "trinket"
+    slot: "trinket"
+    glyph: "o"
+    damage: 0
+    defense: 0
+    effect: "companion"
+    effect_value: 3
+    class: ""
+    description: "A tiny fang, warm to the touch. Every 3 turns, Bloop nips a random enemy for 1 damage."
+    color: [140, 40, 80, 255]
 }

@@ -69,8 +69,7 @@ void EnemiesDrawTelegraph( aRectf_t vp_rect, GameCamera_t* cam,
   {
     if ( !list[i].alive ) continue;
     EnemyType_t* et = &g_enemy_types[list[i].type_idx];
-    if ( strcmp( et->ai, "ranged_telegraph" ) != 0
-         && strcmp( et->ai, "stone_ranged" ) != 0 ) continue;
+    if ( strcmp( et->ai, "ranged_telegraph" ) != 0 ) continue;
     if ( list[i].ai_state != 1 ) continue;
 
     int tw = world->tile_w;
@@ -127,6 +126,20 @@ void EnemiesDrawTelegraph( aRectf_t vp_rect, GameCamera_t* cam,
                   col );
       pos += dash + gap;
     }
+  }
+
+  /* Stone ranged: draw target tile marker */
+  if ( EnemyStoneTargetActive() )
+  {
+    int tr = EnemyStoneTargetRow();
+    int tc = EnemyStoneTargetCol();
+    int tw = world->tile_w;
+    int th = world->tile_h;
+    float wx = tr * tw + tw / 2.0f;
+    float wy = tc * th + th / 2.0f;
+    GV_DrawFilledRect( vp_rect, cam, wx, wy,
+                       (float)tw, (float)th,
+                       (aColor_t){ 0x50, 0x50, 0xc8, 100 } );
   }
 }
 

@@ -68,6 +68,21 @@ static Console_t console;
 
 static int hud_pause_clicked = 0;
 
+/* Door NPCs block line of sight */
+static NPC_t* gs_npcs_ptr;
+static int*   gs_num_npcs_ptr;
+static int npc_blocks_los( int r, int c )
+{
+  for ( int i = 0; i < *gs_num_npcs_ptr; i++ )
+  {
+    NPC_t* n = &gs_npcs_ptr[i];
+    if ( !n->alive ) continue;
+    if ( n->row != r || n->col != c ) continue;
+    if ( g_npc_types[n->type_idx].no_face ) return 1;
+  }
+  return 0;
+}
+
 /* Enemies */
 static Enemy_t  enemies[MAX_ENEMIES];
 static int      num_enemies = 0;
@@ -122,6 +137,9 @@ void GameSceneInit( void )
                              world->tile_w, world->tile_h );
 
   VisibilityInit( world );
+  gs_npcs_ptr = npcs;
+  gs_num_npcs_ptr = &num_npcs;
+  VisibilitySetNPCBlocker( npc_blocks_los );
 
   GameEventsInit( &console );
   ConsolePush( &console, "Welcome, adventurer.", white );
@@ -239,6 +257,15 @@ static void gs_Logic( float dt )
   }
 
   DungeonDeferredSpawns( npcs, num_npcs, enemies, &num_enemies, world );
+
+  /* Gate opened - teleport player into Gatekeeper's chamber */
+  if ( !DialogueActive() && FlagGet( "gate_opened" ) )
+  {
+    FlagClear( "gate_opened" );
+    float tw = world->tile_w, th = world->tile_h;
+    PlayerSetWorldPos( 10 * tw + tw / 2.0f, 12 * th + th / 2.0f );
+    GameCameraFollow();
+  }
 
   /* Stairway descend - transition to next floor */
   if ( !DialogueActive() && FlagGet( "stair_descend" ) )

@@ -8,21 +8,19 @@
 static PlacedTrap_t traps[MAX_PLACED_TRAPS];
 static int          num_traps = 0;
 static Console_t*   console   = NULL;
-static aImage_t*    trap_image = NULL;
-
 #define TRAP_COLOR       (aColor_t){ 160, 160, 160, 80 }
 #define TRAP_GLYPH_COLOR (aColor_t){ 160, 160, 160, 200 }
+#define TRAP_PLACED_DOT  (aColor_t){ 0x40, 0xc0, 0x40, 200 }
 
 void PlacedTrapsInit( Console_t* con )
 {
   console = con;
   memset( traps, 0, sizeof( traps ) );
   num_traps = 0;
-  if ( !trap_image )
-    trap_image = a_ImageLoad( "resources/assets/consumables/bear_trap.png" );
 }
 
-void PlacedTrapSpawn( int row, int col, int damage, int stun_turns )
+void PlacedTrapSpawn( int row, int col, int damage, int stun_turns,
+                      aImage_t* image )
 {
   int slot = -1;
   for ( int i = 0; i < num_traps; i++ )
@@ -40,6 +38,7 @@ void PlacedTrapSpawn( int row, int col, int damage, int stun_turns )
   traps[slot].damage      = damage;
   traps[slot].stun_turns  = stun_turns;
   traps[slot].active      = 1;
+  traps[slot].image       = image;
 }
 
 PlacedTrap_t* PlacedTrapAt( int row, int col )
@@ -68,9 +67,19 @@ void PlacedTrapsDrawAll( aRectf_t vp_rect, GameCamera_t* cam,
     float wx = traps[i].row * world->tile_w + world->tile_w / 2.0f;
     float wy = traps[i].col * world->tile_h + world->tile_h / 2.0f;
 
-    if ( trap_image && gfx_mode == GFX_IMAGE )
+    /* Convert tile top-left to screen coords for pixel overlays */
+    float sx, sy;
+    GV_WorldToScreen( vp_rect, cam,
+                      wx - world->tile_w / 2.0f,
+                      wy - world->tile_h / 2.0f,
+                      &sx, &sy );
+    float half_w = cam->half_h * ( vp_rect.w / vp_rect.h );
+    float nw = world->tile_w * ( vp_rect.w / ( half_w * 2.0f ) );
+    float nh = world->tile_h * ( vp_rect.h / ( cam->half_h * 2.0f ) );
+
+    if ( traps[i].image && gfx_mode == GFX_IMAGE )
     {
-      GV_DrawSprite( vp_rect, cam, trap_image,
+      GV_DrawSprite( vp_rect, cam, traps[i].image,
                      wx, wy,
                      (float)world->tile_w, (float)world->tile_h );
     }
@@ -80,17 +89,17 @@ void PlacedTrapsDrawAll( aRectf_t vp_rect, GameCamera_t* cam,
                          (float)world->tile_w, (float)world->tile_h,
                          TRAP_COLOR );
 
-      float sx, sy;
-      GV_WorldToScreen( vp_rect, cam,
-                        wx - world->tile_w / 2.0f,
-                        wy - world->tile_h / 2.0f,
-                        &sx, &sy );
-      float half_w = cam->half_h * ( vp_rect.w / vp_rect.h );
-      int dw = (int)( world->tile_w * ( vp_rect.w / ( half_w * 2.0f ) ) );
-      int dh = (int)( world->tile_h * ( vp_rect.h / ( cam->half_h * 2.0f ) ) );
-      a_DrawGlyph( "^", (int)sx, (int)sy, dw, dh,
+      a_DrawGlyph( "^", (int)sx, (int)sy, (int)nw, (int)nh,
                    TRAP_GLYPH_COLOR, (aColor_t){ 0, 0, 0, 0 },
                    FONT_CODE_PAGE_437 );
     }
+
+    /* Green dot overlay to distinguish placed traps from pickups */
+    float gs = nw * 0.12f;
+    float gp = nw * 0.1f;
+    a_DrawFilledRect( (aRectf_t){ sx + gp,            sy + gp,            gs, gs }, TRAP_PLACED_DOT );
+    a_DrawFilledRect( (aRectf_t){ sx + nw - gp - gs,  sy + gp,            gs, gs }, TRAP_PLACED_DOT );
+    a_DrawFilledRect( (aRectf_t){ sx + gp,            sy + nh - gp - gs,  gs, gs }, TRAP_PLACED_DOT );
+    a_DrawFilledRect( (aRectf_t){ sx + nw - gp - gs,  sy + nh - gp - gs,  gs, gs }, TRAP_PLACED_DOT );
   }
 }

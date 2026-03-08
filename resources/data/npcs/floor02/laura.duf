@@ -72,7 +72,7 @@
     priority: 6
     require_flag: "laura_relocated"
     text: "This is it. The passage south. I barricaded it when I came back up. Whatever's down there... it's getting louder."
-    options: ["opt_whats_down_there", "opt_ready_go", "opt_leave"]
+    options: ["opt_whats_down_there", "opt_im_ready", "opt_ready_go", "opt_leave"]
 }
 @opt_whats_down_there {
     label: "What did you see down there?"
@@ -80,7 +80,16 @@
 }
 @whats_down_reply {
     text: "Shapes. Kneeling. Chanting. I didn't stay long enough to count them. The hum was so loud I could feel it in my teeth."
-    options: ["opt_ready_go", "opt_leave"]
+    options: ["opt_im_ready", "opt_ready_go", "opt_leave"]
+}
+@opt_im_ready {
+    label: "I'm ready."
+    color: "quest"
+    goto: "im_ready_reply"
+}
+@im_ready_reply {
+    text: "Then hop the barricade. I'll be right behind you. ...probably."
+    options: ["opt_leave"]
 }
 @opt_ready_go {
     label: "I'm not ready yet."

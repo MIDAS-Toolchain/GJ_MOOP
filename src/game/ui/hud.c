@@ -157,6 +157,7 @@ int HUDDrawTopBar( int in_combat )
     if ( strcmp( e->effect, "berserk" ) == 0 ) continue;
     if ( strcmp( e->effect, "poison" ) == 0 ) continue;
     if ( strcmp( e->effect, "amplify" ) == 0 ) continue;
+    if ( strcmp( e->effect, "companion" ) == 0 ) continue;
     snprintf( buf, sizeof( buf ), "%s(%d)", e->effect, e->effect_value );
     float tw = strlen( buf ) * 8.0f * TB_STAT_SCALE;
     PassiveAdd( sx, ty + 4, tw, r.y + r.h - ( ty + 4 ), player.equipment[i] );
@@ -197,13 +198,15 @@ int HUDDrawTopBar( int in_combat )
     int bsk = PlayerEquipEffect( "berserk" );
     if ( bsk > 0 && player.max_hp > 0 )
     {
+      int threshold  = ( bsk >= 2 ) ? 20 : 40;
+      int max_stacks = ( bsk >= 2 ) ? 4  : 2;
       int missing_pct = ( ( player.max_hp - player.hp ) * 100 ) / player.max_hp;
-      int stacks = missing_pct / 40;
-      if ( stacks > 2 ) stacks = 2;
+      int stacks = missing_pct / threshold;
+      if ( stacks > max_stacks ) stacks = max_stacks;
       ts.fg = ( stacks > 0 )
         ? (aColor_t){ 0xa5, 0x30, 0x30, 255 }
         : (aColor_t){ 0x6e, 0x3b, 0x3b, 255 };
-      snprintf( buf, sizeof( buf ), "BERSERK(+%d)", bsk * stacks );
+      snprintf( buf, sizeof( buf ), "BERSERK(+%d)", stacks );
       float pw = strlen( buf ) * 8.0f * TB_STAT_SCALE;
       PassiveAdd( sx, ty + 4, pw, r.y + r.h - ( ty + 4 ), FindEquipByEffect( "berserk" ) );
       a_DrawText( buf, (int)sx, (int)( ty + 4 ), ts );
@@ -262,6 +265,20 @@ int HUDDrawTopBar( int in_combat )
       snprintf( buf, sizeof( buf ), "SHIELD" );
       float pw = strlen( buf ) * 8.0f * TB_STAT_SCALE;
       PassiveAdd( sx, ty + 4, pw, r.y + r.h - ( ty + 4 ), FindEquipByEffect( "mana_shield" ) );
+      a_DrawText( buf, (int)sx, (int)( ty + 4 ), ts );
+      sx += pw + TB_STAT_GAP;
+    }
+  }
+
+  /* companion (Bloop's Fang) - pink, show counter progress */
+  {
+    int comp = PlayerEquipEffect( "companion" );
+    if ( comp > 0 )
+    {
+      ts.fg = (aColor_t){ 140, 40, 80, 255 };
+      snprintf( buf, sizeof( buf ), "FANG(%d/%d)", player.companion_counter, comp );
+      float pw = strlen( buf ) * 8.0f * TB_STAT_SCALE;
+      PassiveAdd( sx, ty + 4, pw, r.y + r.h - ( ty + 4 ), FindEquipByEffect( "companion" ) );
       a_DrawText( buf, (int)sx, (int)( ty + 4 ), ts );
       sx += pw + TB_STAT_GAP;
     }

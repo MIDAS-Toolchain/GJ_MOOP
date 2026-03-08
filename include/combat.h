@@ -23,6 +23,9 @@ void CombatEnemyHit( Enemy_t* e );
    Sets alive = 0. */
 void CombatHandleEnemyDeath( Enemy_t* e );
 
+/* Companion trinket: Bloop nips a random enemy every N turns */
+void CombatCompanionTick( void );
+
 /* Totem defense aura: returns damage reduction for enemy at position */
 int  CombatTotemDefenseFor( Enemy_t* e );
 

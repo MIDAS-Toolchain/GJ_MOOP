@@ -1,0 +1,50 @@
+@npc {
+    name: "Keeper's Gate"
+    glyph: "+"
+    color: [100, 80, 120, 255]
+    image_path: "resources/assets/npcs/goblin_door.png"
+    description: "A towering gate of fused stone and iron. It pulses with a low, rhythmic hum."
+    action: "Open"
+    no_face: true
+    no_shadow: true
+}
+
+# ==============================
+# LOCKED (default)
+# ==============================
+@locked {
+    start: true
+    priority: 0
+    require_not_flag: "gatekeeper_dead"
+    text: "The gate holds firm. The hum is deafening up close."
+    options: ["opt_leave"]
+}
+
+# ==============================
+# GATEKEEPER DEAD — UNLOCKED
+# ==============================
+@unlocked {
+    start: true
+    priority: 5
+    require_flag: "gatekeeper_dead"
+    text: "The humming has stopped. The gate groans and slowly swings open."
+    options: ["opt_pass", "opt_leave"]
+}
+
+# ==============================
+# OPTIONS
+# ==============================
+@opt_pass {
+    label: "Pass through"
+    color: "complete"
+    action: "relocate:0,0"
+    goto: "end"
+}
+
+# ==============================
+# LEAVE
+# ==============================
+@opt_leave {
+    label: "[Step away]"
+    goto: "end"
+}

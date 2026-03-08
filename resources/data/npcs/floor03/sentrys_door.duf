@@ -1,0 +1,50 @@
+@npc {
+    name: "Sentry's Door"
+    glyph: "+"
+    color: [100, 80, 120, 255]
+    image_path: "resources/assets/npcs/goblin_door.png"
+    description: "A massive stone slab. It hums faintly, vibrating in tune with the walls."
+    action: "Open"
+    no_face: true
+    no_shadow: true
+}
+
+# ==============================
+# LOCKED (default)
+# ==============================
+@locked {
+    start: true
+    priority: 0
+    require_not_flag: "gate_opened"
+    text: "The slab won't move. The humming grows louder when you touch it."
+    options: ["opt_leave"]
+}
+
+# ==============================
+# GATE OPENED — UNLOCKED
+# ==============================
+@unlocked {
+    start: true
+    priority: 5
+    require_flag: "gate_opened"
+    text: "The slab slides aside with a grinding shudder."
+    options: ["opt_enter", "opt_leave"]
+}
+
+# ==============================
+# OPTIONS
+# ==============================
+@opt_enter {
+    label: "Enter"
+    color: "danger"
+    action: "relocate:0,0"
+    goto: "end"
+}
+
+# ==============================
+# LEAVE
+# ==============================
+@opt_leave {
+    label: "[Step away]"
+    goto: "end"
+}
